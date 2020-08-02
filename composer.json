@@ -1,0 +1,23 @@
+{
+  "name": "rotlesnake/mapdaprest",
+  "description": "",
+  "keywords": [""],
+  "license": "",
+  "authors": [
+    {
+      "name": "rotlesnake",
+      "email": "rotlesnake@yandex.ru"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "MapDapRest\\": "src/"
+    },
+  },
+  "require": {
+    "php": ">=5.4.0",
+    "illuminate/database": "^5.4",
+    "illuminate/events": "^5.4",
+    "nikic/fast-route": "^1.3"
+  }
+}
