@@ -1,8 +1,8 @@
 {
   "name": "rotlesnake/mapdaprest",
-  "description": "",
-  "keywords": [""],
-  "license": "",
+  "description": "rest service",
+  "keywords": ["rest"],
+  "license": "BSD",
   "authors": [
     {
       "name": "rotlesnake",
