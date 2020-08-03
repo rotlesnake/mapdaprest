@@ -43,6 +43,8 @@ class Auth
 
         //Авторизуемся в системе входные параметры [login, password, refresh_token, token]
         public function login($credentials) {
+            $APP = App::getInstance();
+
             if (isset($credentials['login'])) {
                 $ModelUsers = $this->ModelUsers;
                 $tmpuser = $ModelUsers::where('login', $credentials['login'])->where('status', 1)->first();
@@ -54,7 +56,7 @@ class Auth
                     $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
                     $this->user->save();
 
-                    setcookie("token", $this->user->token);
+                    setcookie("token", $this->user->token, time()+3600, $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                     return true;
                 }
             }
@@ -70,7 +72,7 @@ class Auth
                     $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
                     $this->user->save();
 
-                    setcookie("token", $this->user->token);
+                    setcookie("token", $this->user->token, time()+3600, $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                     return true;
                 }
             }
@@ -103,7 +105,7 @@ class Auth
             $this->user->token_expire = date("Y-m-d H:i:s");
             $this->user->save();
             $this->user = null;
-            setcookie( "token", "", time()-3600, '/', '',0 );
+            setcookie( "token", "", time()-3600, '/', '');
         }
 
         //изменить пароль
@@ -138,6 +140,7 @@ class Auth
 
         //получить список ролей массивом
         public function getRoles() {
+           if (gettype($this->user->roles)=="array") return $this->user->roles;
            return array_map('intval', explode(',', $this->user->roles));
         }
 

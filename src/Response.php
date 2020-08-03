@@ -17,7 +17,7 @@ class Response
                       "4"=>"access denied",
                       "5"=>"data divergence",
                     ];
-    public $error = ["error"=>0];
+    public $error = null;
 
 
     public function __construct()
@@ -70,12 +70,12 @@ class Response
        }
        
        if (gettype($this->body)=="array") {
-          $this->body = array_merge( $this->error , $this->body );
+          if ($this->error) $this->body = array_merge( $this->error , $this->body );
           $this->body = json_encode($this->body);
        }
        if (gettype($this->body)=="object") {
           $this->body = Utils::objectToArray($this->body);
-          $this->body = array_merge( $this->error , $this->body );
+          if ($this->error) $this->body = array_merge( $this->error , $this->body );
           $this->body = json_encode($this->body);
        }
 

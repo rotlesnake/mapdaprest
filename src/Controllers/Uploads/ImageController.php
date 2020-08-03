@@ -16,7 +16,7 @@ class ImageController  extends \MapDapRest\Controller
     }
 
 
-    public function anyAction($request, $response, $table, $filename)
+    public function anyAction($request, $response, $type, $table, $filename)
     {
       if (ob_get_level()) { ob_end_clean(); }
       $file = ROOT_PATH."uploads/".$table."/".$filename[0];

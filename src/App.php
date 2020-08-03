@@ -102,7 +102,9 @@ class App
            $controller = (isset($args['controller']) ? ucfirst($args['controller'])."Controller" : "IndexController");
            $action     = (isset($args['action'])     ? $args['action']."Action" : "indexAction");
            $params     = (isset($args['params'])     ? explode("/",$args['params']) : []);
-  
+
+           if (!isset($args['controller'])) { $args['controller']=""; }
+           if (!isset($args['action'])) { $args['action']=""; }
  
            $this->request = new Request($this);
            $this->response = new Response($this);
@@ -115,10 +117,13 @@ class App
  
            $className = "\\".$handler."\\".$module."\\Controllers\\".$controller;
            if (!class_exists($className)) { 
+              $anyClassName = "\\".$handler."\\".$module."\\Controllers\\AnyController";
+              if (class_exists($anyClassName)) { $className = $anyClassName; }
+           }
+
+           if (!class_exists($className)) { 
               $localClassName = "\\MapDapRest\\Controllers\\".$module."\\".$controller;
-              if (class_exists($localClassName)) { 
-                 $className = $localClassName;
-              }
+              if (class_exists($localClassName)) { $className = $localClassName; }
            }
 
            if (!class_exists($className)) { 
@@ -146,7 +151,7 @@ class App
            if (method_exists($controllerClass, $action)) {
              $body = $controllerClass->$action($this->request, $this->response, $params);
            } else {
-             $body = $controllerClass->anyAction($this->request, $this->response, $args['action'], $params);
+             $body = $controllerClass->anyAction($this->request, $this->response, $args['controller'], $args['action'], $params);
            }
  
            if ($body) {

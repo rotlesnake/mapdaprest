@@ -70,7 +70,7 @@ class Migrate {
             //если нет таблицы то создаем
             if (!$APP->DB->schema()->hasTable($tableInfo["table"])) {
                $table_created = true;
-               $rez .= " - Создаем таблицу (<b>".$tableInfo["table"]."<b>) <br>";
+               $rez .= " - Создаем таблицу (<b>".$tableInfo["table"]."</b>) <br>";
                $APP->DB->schema()->create($tableInfo["table"], function($table) use($APP, $tableInfo){
                  $table->increments('id');
                  $table->integer('created_by_user')->unsigned();
