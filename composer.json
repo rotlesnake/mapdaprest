@@ -12,7 +12,7 @@
   "autoload": {
     "psr-4": {
       "MapDapRest\\": "src/"
-    },
+    }
   },
   "require": {
     "php": ">=5.4.0",
