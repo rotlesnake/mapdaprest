@@ -56,8 +56,15 @@ class App
         $this->DB->setEventDispatcher(new \Illuminate\Events\Dispatcher(new \Illuminate\Container\Container));
         $this->DB->setAsGlobal();
         $this->DB->bootEloquent();
-    }
 
+        try {
+           $this->DB->connection()->getPdo();
+        } catch (\Exception $e) {
+           die("Could not connect to the database. Please check your configuration. error:");
+        }
+
+    }
+  
 
     public function setAuth($auth) {
         $this->auth = $auth;
@@ -109,33 +116,36 @@ class App
            $this->request = new Request($this);
            $this->response = new Response($this);
 
-           //Пытаемся авторизоваться
+           //Пытаемся авторизоваться автоматически
            $this->auth->autoLogin( $this->request );
 
-           if ($handler=="site") { $this->response->redirect($this->site_folder); }
+           if ($handler=="site") { $this->response->redirect($this->site_folder); return; }
  
- 
+           //Ищем контроллер в папке приложения
            $className = "\\".$handler."\\".$module."\\Controllers\\".$controller;
            if (!class_exists($className)) { 
               $anyClassName = "\\".$handler."\\".$module."\\Controllers\\AnyController";
               if (class_exists($anyClassName)) { $className = $anyClassName; }
            }
-
+           //Контроллера нет тогда ищем в движке
            if (!class_exists($className)) { 
               $localClassName = "\\MapDapRest\\Controllers\\".$module."\\".$controller;
               if (class_exists($localClassName)) { $className = $localClassName; }
            }
-
+          
+           //Контроллера нигде нет
            if (!class_exists($className)) { 
               $this->response->setResponseCode(401);
               $this->response->setError(5, $className);
               $this->response->send();
               return false;
            }
-
+ 
+           //Создаем контроллер
            $controllerClass = new $className($this, $this->request, $this->response, $params);
 
            //Контроллер создан. перед вызовом методов проверяем состояние авторизации
+           //Если авторизации нет то выходим
            if ($this->auth->isGuest()) {
               $this->response->setResponseCode(401);
               $this->response->setError(1, "Пользователь не найден");
@@ -145,6 +155,7 @@ class App
               $this->response->send();
               return false;
            }
+
 
            
            $body = "";
@@ -159,6 +170,7 @@ class App
            }
            $this->response->send();
            return true;
+
         } else {
            //url not found
         }

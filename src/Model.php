@@ -93,8 +93,8 @@ class Model extends EloquentModel
         $link_field = $this->modelInfo()["columns"][$field]["field"];
         $link_field_max = 250;
         if (isset($this->modelInfo()["columns"][$field]["field_max"])) $link_field_max = $this->modelInfo()["columns"][$field]["field_max"];
-        
-        $rows = $APP->DB::table($link_table)->whereIn('id', $field_values )->get();
+ 
+        $rows = $APP->DB->table($link_table)->whereIn('id', $field_values )->get();
         if (!$asString) return $rows;
 
         $rez="";
