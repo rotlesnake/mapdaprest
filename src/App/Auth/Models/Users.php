@@ -1,10 +1,10 @@
 <?php
 
-namespace MapDapRest\Models;
+namespace MapDapRest\App\Auth\Models;
 
 
 
-class SystemUsers extends \MapDapRest\Model
+class Users extends \MapDapRest\Model
 {
 
     protected $table = 'users';

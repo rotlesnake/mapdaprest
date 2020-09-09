@@ -1,1 +1,1 @@
-{"users":"App\\Auth\\Models\\Users"}
+{"sys_logs":"MapDapRest\\App\\Auth\\Models\\SystemLogs","roles":"MapDapRest\\App\\Auth\\Models\\SystemRoles","users":"App\\Auth\\Models\\Users"}

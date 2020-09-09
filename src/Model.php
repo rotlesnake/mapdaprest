@@ -5,7 +5,7 @@ namespace MapDapRest;
 use \Illuminate\Database\Eloquent\Model as EloquentModel;
 
 
-use \MapDapRest\Models\SystemLogs as Logs;
+use \MapDapRest\App\Auth\Models\SystemLogs as Logs;
 
 
 class Model extends EloquentModel

@@ -1,6 +1,6 @@
 <?php
 
-namespace MapDapRest\Controllers\Uploads;
+namespace MapDapRest\App\Uploads\Controllers;
 
 
 class ImageController  extends \MapDapRest\Controller

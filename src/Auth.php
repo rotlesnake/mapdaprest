@@ -7,7 +7,7 @@ namespace MapDapRest;
 class Auth
 {
 
-	public $ModelUsers = "\\MapDapRest\\Models\\SystemUsers";
+	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\Users";
 	public $user = null;
 	
 	public function __construct(){
@@ -115,20 +115,28 @@ class Auth
         }
 
 
-        //Поля таблицы пользователя
-        public function getFields($keys=[]) {
-          $fields = $this->getAllFields();
-          unset($fields["created_by_user"]);
-          unset($fields["password"]);
-          unset($fields["created_at"]);
-          unset($fields["updated_at"]);
 
-          if (count($keys)>0) {
-             $fields = array_filter($fields, function($k) use($keys) { return in_array($k,$keys); }, ARRAY_FILTER_USE_KEY);
-          }
-          
-          return $fields;
+
+        //Поля таблицы пользователя
+        public function getFields($keys=[], $exclude=[]) {
+            $fields = $this->getAllFields();
+            unset($fields["created_by_user"]);
+            unset($fields["password"]);
+            unset($fields["created_at"]);
+            unset($fields["updated_at"]);
+  
+            if (count($keys)>0) {
+               $fields = array_filter($fields, function($k) use($keys) { return in_array($k,$keys); }, ARRAY_FILTER_USE_KEY);
+            }
+            if (count($exclude)>0) {
+               foreach ($exclude as $k=>$v) {
+                  unset($fields[$v]);
+               }
+            }
+            
+            return $fields;
         }
+
 
         //Поля таблицы пользователя
         public function getAllFields() {

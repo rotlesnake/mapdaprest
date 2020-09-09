@@ -1,6 +1,6 @@
 <?php
 
-namespace MapDapRest\Models;
+namespace MapDapRest\App\Auth\Models;
 
 use \Illuminate\Database\Eloquent\Model as EloquentModel;
 

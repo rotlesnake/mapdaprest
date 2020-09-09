@@ -1,6 +1,6 @@
 <?php
 
-namespace MapDapRest\Controllers\Auth;
+namespace MapDapRest\App\Auth\Controllers;
 
 class LoginController extends \MapDapRest\Controller
 {

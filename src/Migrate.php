@@ -6,14 +6,10 @@ namespace MapDapRest;
 class Migrate {
 
 
-    //Сгенерировать список всех моделей в системе
-    public static function receiveAllModels() {
-        $APP = App::getInstance();
+    //Сгенерировать список всех моделей в папках
+    public static function receiveAllModels($extDir, $all_models=[]) {
         $php_parser = new PhpParser();
-        
-        $all_models = [];
 
-        $extDir = $APP->APP_PATH;
         if ($dh = opendir($extDir)) {
             while (($file = readdir($dh)) !== false) {
                if ($file != "." && $file != ".." && is_dir($extDir."/".$file)) {
@@ -31,26 +27,32 @@ class Migrate {
             }
         closedir($dh);
         }
-        if (!file_exists(__DIR__."/cache")) { mkdir(__DIR__."/cache", 0777); };
-        file_put_contents(__DIR__."/cache/models.json", json_encode($all_models));
- 
-        return $all_models;
 
+
+        return $all_models;
     }
 
 
 
     public static function migrate() {
         $rez="";
-        $models = [
-           "sys_logs" => "\\MapDapRest\\Models\\SystemLogs",
-           "users" => "\\MapDapRest\\Models\\SystemUsers",
-           "roles" => "\\MapDapRest\\Models\\SystemRoles",
-        ];
-        $rez .= static::doMigrate($models);
 
-        $models = static::receiveAllModels();
-        $rez .=static::doMigrate($models);
+        $APP = App::getInstance();
+        $all_models = [];
+
+        $extDir = __DIR__."/App/";
+        $all_models = static::receiveAllModels($extDir, $all_models);
+        $rez .=static::doMigrate($all_models);
+
+
+        $extDir = $APP->APP_PATH;
+        $all_models = static::receiveAllModels($extDir, $all_models);
+        $rez .=static::doMigrate($all_models);
+
+
+        if (!file_exists(__DIR__."/cache")) { mkdir(__DIR__."/cache", 0777); };
+        file_put_contents(__DIR__."/cache/models.json", json_encode($all_models));
+
         return $rez;
     }
 
@@ -66,11 +68,11 @@ class Migrate {
             $tableInfo = $class::modelInfo();
             $table_created = false;
            
-            $rez .= "Миграция  <b>".$class."</b> <br>";
+            $rez .= "Миграция  <b>".$class."</b> <br>\r\n";
             //если нет таблицы то создаем
             if (!$APP->DB->schema()->hasTable($tableInfo["table"])) {
                $table_created = true;
-               $rez .= " - Создаем таблицу (<b>".$tableInfo["table"]."</b>) <br>";
+               $rez .= " - Создаем таблицу (<b>".$tableInfo["table"]."</b>) <br>\r\n";
                $APP->DB->schema()->create($tableInfo["table"], function($table) use($APP, $tableInfo){
                  $table->increments('id');
                  $table->integer('created_by_user')->unsigned();
@@ -88,7 +90,7 @@ class Migrate {
                  if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { continue; }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
 
-                 $rez .= " - Добавляем поле (".$x.") <br>";
+                 $rez .= " - Добавляем поле (".$x.") <br>\r\n";
 
                  if (in_array($y["type"], ["string", "password", "masked"]))  { $fld = $table->string($x)->nullable(); }
                  if (in_array($y["type"], ["integer", "checkBox"])) { $fld = $table->integer($x)->nullable(); }
@@ -114,15 +116,15 @@ class Migrate {
                }//foreach
             });
 
-            $rez .= " ---------------------------- <br>";
+            $rez .= " ---------------------------- <br>\r\n";
             if ($table_created && isset($tableInfo["seeds"])) { 
                $class::insert( $tableInfo["seeds"] ); 
-               $rez .= "Таблица (<b>".$tableInfo["table"]."</b>) создается впервые, засееваем её семенами...<br>"; 
+               $rez .= "Таблица (<b>".$tableInfo["table"]."</b>) создается впервые, засееваем её семенами...<br>\r\n"; 
             }
-            $rez .= "<hr>";
+            $rez .= "<hr>\r\n\r\n";
 
  
-            } catch (Exception $e) { $rez .= "Ошибка миграции -> ".$class."<br>";  $rez .= "<font color=red>".$e->getMessage()."</font><hr>"; }
+            } catch (Exception $e) { $rez .= "Ошибка миграции -> ".$class."<br>\r\n";  $rez .= "<font color=red>".$e->getMessage()."</font><hr>\r\n\r\n"; }
  
         }//foreach models
 

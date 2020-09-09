@@ -119,33 +119,41 @@ class App
            //Пытаемся авторизоваться автоматически
            $this->auth->autoLogin( $this->request );
 
+           //Запросили корень, перенаправляем на сайт
            if ($handler=="site") { $this->response->redirect($this->site_folder); return; }
  
            //Ищем контроллер в папке приложения
-           $className = "\\".$handler."\\".$module."\\Controllers\\".$controller;
+           $className = "\\App\\".$module."\\Controllers\\".$controller;
            if (!class_exists($className)) { 
-              $anyClassName = "\\".$handler."\\".$module."\\Controllers\\AnyController";
+              //Ищем any контроллер в папке приложения
+              $anyClassName = "\\App\\".$module."\\Controllers\\AnyController";
               if (class_exists($anyClassName)) { $className = $anyClassName; }
            }
-           //Контроллера нет тогда ищем в движке
+
+           //Контроллера нет тогда ищем в MapDapRest
            if (!class_exists($className)) { 
-              $localClassName = "\\MapDapRest\\Controllers\\".$module."\\".$controller;
-              if (class_exists($localClassName)) { $className = $localClassName; }
+              $localClassName = "\\MapDapRest\\".$module."\\Controllers\\".$controller;
+              if (class_exists($localClassName)) { 
+                 $className = $localClassName; 
+              } else {
+                 $anyClassName = "\\MapDapRest\\".$module."\\Controllers\\AnyController";
+                 if (class_exists($anyClassName)) { $className = $anyClassName; }
+              }
            }
           
-           //Контроллера нигде нет
+           //Контроллера нигде нет выбаем ошибку 404
            if (!class_exists($className)) { 
-              $this->response->setResponseCode(401);
+              $this->response->setResponseCode(404);
               $this->response->setError(5, $className);
               $this->response->send();
               return false;
            }
  
-           //Создаем контроллер
+           //Создаем контроллер, даем возможность решить что делать дальше
            $controllerClass = new $className($this, $this->request, $this->response, $params);
 
            //Контроллер создан. перед вызовом методов проверяем состояние авторизации
-           //Если авторизации нет то выходим
+           //Если авторизации нет то выдаем ошибку 401
            if ($this->auth->isGuest()) {
               $this->response->setResponseCode(401);
               $this->response->setError(1, "Пользователь не найден");
@@ -157,7 +165,7 @@ class App
            }
 
 
-           
+           //Вызываем контроллер и возвращаем результат
            $body = "";
            if (method_exists($controllerClass, $action)) {
              $body = $controllerClass->$action($this->request, $this->response, $params);
