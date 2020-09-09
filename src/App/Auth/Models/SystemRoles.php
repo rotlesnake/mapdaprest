@@ -10,6 +10,21 @@ class SystemRoles extends \MapDapRest\Model
     protected $table = 'roles';
 
 
+    public function scopeFilterRead($query)
+    {
+        return $query;
+    }
+
+    public function scopeFilterEdit($query)
+    {
+        return $query;
+    }
+
+    public function scopeFilterDelete($query)
+    {
+        return $query;
+    }
+
 
     public static function modelInfo() {
       $acc_admin = [1];
@@ -25,10 +40,10 @@ class SystemRoles extends \MapDapRest\Model
         "itemsPerPage"=>100,
         "itemsPerPageVariants"=>[50,100,200,300,500,1000],
 
-	"read"=>[],
-	"add"=>[],
-	"edit"=>[],
-	"delete"=>[],
+	"read"=>$acc_all,
+	"add"=>$acc_admin,
+	"edit"=>$acc_admin,
+	"delete"=>$acc_admin,
 	
 	"type"=>"standart",
         "style"=>["outlined"=>true, "filled"=>false, "color"=>"#909090", "counter"=>true, "dark"=>false, "dense"=>false, "hide-details"=>false, "persistent-hint"=>false, "rounded"=>false, "shaped"=>false, "clearable"=>false],
@@ -49,7 +64,7 @@ class SystemRoles extends \MapDapRest\Model
  			"label"=>"id",
  			"width"=>200,
  			"visible"=>true,
- 			"read"=>[],
+ 			"read"=>$acc_all,
  			"add"=>[],
  			"edit"=>[],
 		],
@@ -57,7 +72,7 @@ class SystemRoles extends \MapDapRest\Model
  			"type"=>"dateTime",
  			"label"=>"Дата создания",
  			"width"=>200,
- 			"read"=>[],
+ 			"read"=>$acc_all,
  			"add"=>[],
  			"edit"=>[],
 		],
@@ -66,7 +81,7 @@ class SystemRoles extends \MapDapRest\Model
  			"label"=>"Дата изменения",
  			"width"=>200,
  			"hidden"=>true,
- 			"read"=>[],
+ 			"read"=>$acc_all,
  			"add"=>[],
  			"edit"=>[],
 		],
@@ -80,7 +95,7 @@ class SystemRoles extends \MapDapRest\Model
  			"object"=>false,
  			"width"=>200,
  			"hidden"=>true,
- 			"read"=>[],
+ 			"read"=>$acc_all,
  			"add"=>[],
  			"edit"=>[],
 		],
@@ -92,7 +107,7 @@ class SystemRoles extends \MapDapRest\Model
  			"placeholder"=>"",
  			"width"=>200,
  			"rules"=>"[ v => v.length>2 || 'Обязательное поле' ]",
- 			"read"=>[],
+ 			"read"=>$acc_all,
  			"add"=>[],
  			"edit"=>[],
 		],

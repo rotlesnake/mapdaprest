@@ -9,19 +9,36 @@ class SystemLogs extends EloquentModel
 
     protected $table = 'sys_logs';
 
+    public function scopeFilterRead($query)
+    {
+        return $query;
+    }
+
+    public function scopeFilterEdit($query)
+    {
+        return $query;
+    }
+
+    public function scopeFilterDelete($query)
+    {
+        return $query;
+    }
+
 
 
     public static function modelInfo() {
+      $acc_admin = [1];
+      $acc_all = [1,2,3,4,5,6,7,8];
 
       return [
 	"table"=>"sys_logs",
 	"category"=>"Система",
 	"name"=>"Логи",
 
-	"read"=>[],
-	"add"=>[],
-	"edit"=>[],
-	"delete"=>[],
+	"read"=>$acc_admin,
+	"add"=>$acc_admin,
+	"edit"=>$acc_admin,
+	"delete"=>$acc_admin,
 	
 	"columns"=>[
 		"id"=>[

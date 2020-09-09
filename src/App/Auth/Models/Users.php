@@ -9,6 +9,20 @@ class Users extends \MapDapRest\Model
 
     protected $table = 'users';
 
+    public function scopeFilterRead($query)
+    {
+        return $query;
+    }
+
+    public function scopeFilterEdit($query)
+    {
+        return $query;
+    }
+
+    public function scopeFilterDelete($query)
+    {
+        return $query;
+    }
 
 
     public static function modelInfo() {

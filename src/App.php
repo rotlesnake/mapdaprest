@@ -37,7 +37,7 @@ class App
         if (file_exists(__DIR__."/cache/models.json")) {
           $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
         } else {
-          $this->models = Migrate::receiveAllModels();
+          $this->models = Migrate::migrate();
         }
 
         static::$instance = $this;
@@ -193,6 +193,16 @@ class App
         if ($this->{$property}) {
             return $this->{$property};
         }
+    }
+
+
+    public function hasModel($tablename)
+    {
+        return isset($this->models[$tablename]);
+    }
+    public function getModel($tablename)
+    {
+        return $this->models[$tablename];
     }
 
 }
