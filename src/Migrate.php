@@ -95,17 +95,31 @@ class Migrate {
                  if (in_array($y["type"], ["string", "password", "masked"]))  { $fld = $table->string($x)->nullable(); }
                  if (in_array($y["type"], ["integer", "checkBox"])) { $fld = $table->integer($x)->nullable(); }
                  if (in_array($y["type"], ["bigInteger"])) { $fld = $table->bigInteger($x)->nullable(); }
-                 if (in_array($y["type"], ["select", "linkTable"])) { 
+                 if (in_array($y["type"], ["select"])) {
                       if (!isset($y["multiple"]))  { $y["multiple"] = false; }
-                      if (!$y["multiple"]) {$fld = $table->integer($x)->nullable();} else {$fld = $table->text($x)->nullable();}
+                      if ($y["multiple"]) {
+                         $fld = $table->text($x)->nullable();
+                      } else {
+                         $fld = $table->integer($x)->unsigned()->nullable();
+                      }
+                 }
+                 if (in_array($y["type"], ["linkTable"])) { 
+                      if (!isset($y["multiple"]))  { $y["multiple"] = false; }
+                      if ($y["multiple"]) {
+                         $fld = $table->text($x)->nullable();
+                      } else {
+                         $fld = $table->integer($x)->unsigned()->index()->nullable();
+                         $table->foreign($x)->references('id')->on($y["table"]);
+                      }
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }
                  if (in_array($y["type"], ["double"]))  { $fld = $table->double($x)->nullable(); }
                  if (in_array($y["type"], ["text", "images", "files", "html"]))  { $fld = $table->longText($x)->nullable(); }
                  if (in_array($y["type"], ["date"]))      { $fld = $table->date($x)->nullable(); }
-                 if (in_array($y["type"], ["time"]))      { $fld = $table->time($x)->nullable(); }
-                 if (in_array($y["type"], ["dateTime"]))  { $fld = $table->dateTime($x)->nullable(); }
-                 if (in_array($y["type"], ["dateTimeTz"])) { $fld = $table->dateTimeTz($x)->nullable(); }
+                 if (in_array($y["type"], ["time"]))      { $fld = $table->time($x,0)->nullable(); }
+                 if (in_array($y["type"], ["dateTime"]))  { $fld = $table->dateTime($x,0)->nullable(); }
+                 if (in_array($y["type"], ["dateTimeTz"])) { $fld = $table->dateTimeTz($x,0)->nullable(); }
+                 if (in_array($y["type"], ["timestamp"]))  { $fld = $table->timestamp($x,0); }
 
                  if (isset($y["default"])) $fld->default($y["default"]);
                  if (isset($y["unsigned"])) $fld->unsigned();

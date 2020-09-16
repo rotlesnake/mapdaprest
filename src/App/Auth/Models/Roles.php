@@ -4,10 +4,13 @@ namespace MapDapRest\App\Auth\Models;
 
 
 
-class SystemRoles extends \MapDapRest\Model
+class Roles extends \MapDapRest\Model
 {
-
     protected $table = 'roles';
+    protected $primaryKey = 'id';
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
+
 
 
     public function scopeFilterRead($query)
@@ -32,6 +35,7 @@ class SystemRoles extends \MapDapRest\Model
       
       return [
 	"table"=>"roles",
+	"primary_key"=>"id",
 	"category"=>"Система",
 	"name"=>"Роли",
 
@@ -63,13 +67,12 @@ class SystemRoles extends \MapDapRest\Model
  			"type"=>"integer",
  			"label"=>"id",
  			"width"=>200,
- 			"visible"=>true,
  			"read"=>$acc_all,
  			"add"=>[],
  			"edit"=>[],
 		],
 		"created_at"=>[
- 			"type"=>"dateTime",
+ 			"type"=>"timestamp",
  			"label"=>"Дата создания",
  			"width"=>200,
  			"read"=>$acc_all,
@@ -77,7 +80,7 @@ class SystemRoles extends \MapDapRest\Model
  			"edit"=>[],
 		],
 		"updated_at"=>[
- 			"type"=>"dateTime",
+ 			"type"=>"timestamp",
  			"label"=>"Дата изменения",
  			"width"=>200,
  			"hidden"=>true,
@@ -108,8 +111,8 @@ class SystemRoles extends \MapDapRest\Model
  			"width"=>200,
  			"rules"=>"[ v => v.length>2 || 'Обязательное поле' ]",
  			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
+ 			"add"=>$acc_admin,
+ 			"edit"=>$acc_admin,
 		],
 
 
@@ -125,15 +128,20 @@ class SystemRoles extends \MapDapRest\Model
 	             [
                       'id'    => 2,
                       'created_by_user'    => 1,
-                      'name'    => 'Директор',
+                      'name'    => 'Помошник администратора',
                      ],
 	             [
                       'id'    => 3,
                       'created_by_user'    => 1,
-                      'name'    => 'Бухгалтер',
+                      'name'    => 'Директор',
                      ],
 	             [
                       'id'    => 4,
+                      'created_by_user'    => 1,
+                      'name'    => 'Бухгалтер',
+                     ],
+	             [
+                      'id'    => 5,
                       'created_by_user'    => 1,
                       'name'    => 'Пользователь',
                      ],

@@ -37,7 +37,7 @@ class App
         if (file_exists(__DIR__."/cache/models.json")) {
           $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
         } else {
-          $this->models = Migrate::migrate();
+          $this->models = false;
         }
 
         static::$instance = $this;
@@ -59,6 +59,11 @@ class App
 
         try {
            $this->DB->connection()->getPdo();
+
+           if (!$this->models) {
+               $this->models = Migrate::migrate();
+           }
+
         } catch (\Exception $e) {
            die("Could not connect to the database. Please check your configuration. error:");
         }
@@ -132,11 +137,11 @@ class App
 
            //Контроллера нет тогда ищем в MapDapRest
            if (!class_exists($className)) { 
-              $localClassName = "\\MapDapRest\\".$module."\\Controllers\\".$controller;
+              $localClassName = "\\MapDapRest\\App\\".$module."\\Controllers\\".$controller;
               if (class_exists($localClassName)) { 
                  $className = $localClassName; 
               } else {
-                 $anyClassName = "\\MapDapRest\\".$module."\\Controllers\\AnyController";
+                 $anyClassName = "\\MapDapRest\\App\\".$module."\\Controllers\\AnyController";
                  if (class_exists($anyClassName)) { $className = $anyClassName; }
               }
            }

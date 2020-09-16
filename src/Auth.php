@@ -7,7 +7,7 @@ namespace MapDapRest;
 class Auth
 {
 
-	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\Users";
+	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\User";
 	public $user = null;
 	
 	public function __construct(){
@@ -55,7 +55,6 @@ class Auth
                     $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+8 hours"));
                     $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
                     $this->user->save();
-
                     setcookie("token", $this->user->token, time()+3600, $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                     return true;
                 }
@@ -120,8 +119,8 @@ class Auth
         //Поля таблицы пользователя
         public function getFields($keys=[], $exclude=[]) {
             $fields = $this->getAllFields();
-            unset($fields["created_by_user"]);
             unset($fields["password"]);
+            unset($fields["created_by_user"]);
             unset($fields["created_at"]);
             unset($fields["updated_at"]);
   
@@ -141,30 +140,19 @@ class Auth
         //Поля таблицы пользователя
         public function getAllFields() {
           $fields = $this->user->attributesToArray();
-          $fields["roles"] = $this->getRoles();
           return $fields;
         }
 
-
-        //получить список ролей массивом
-        public function getRoles() {
-           if (gettype($this->user->roles)=="array") return $this->user->roles;
-           return array_map('intval', explode(',', $this->user->roles));
-        }
-
-        //проверить на содержание одной из ролей
         public function hasRoles($checkList=[]) {
-          if (gettype($checkList)!="array") $checkList = explode(",", $checkList);
-          if (count($checkList)==0) return false;
-
-          $rolesList = $this->getRoles();
-          foreach ($checkList as $v) {
-             if (in_array($v, $rolesList)) return true;
-          }
-          return false;
+            return $this->user->hasRoles($checkList);
         }
-        
 
+        public function __get($property)
+        {
+            if ($this->user->{$property}) {
+                return $this->user->{$property};
+            }
+        }
 
 
 }//class

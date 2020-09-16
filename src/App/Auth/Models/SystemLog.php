@@ -4,10 +4,14 @@ namespace MapDapRest\App\Auth\Models;
 
 use \Illuminate\Database\Eloquent\Model as EloquentModel;
 
-class SystemLogs extends EloquentModel
+class SystemLog extends EloquentModel
 {
+    protected $table = 'sys_log';
+    protected $primaryKey = 'id';
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
 
-    protected $table = 'sys_logs';
+
 
     public function scopeFilterRead($query)
     {
@@ -31,14 +35,15 @@ class SystemLogs extends EloquentModel
       $acc_all = [1,2,3,4,5,6,7,8];
 
       return [
-	"table"=>"sys_logs",
+	"table"=>"sys_log",
+	"primary_key"=>"id",
 	"category"=>"Система",
 	"name"=>"Логи",
 
 	"read"=>$acc_admin,
-	"add"=>$acc_admin,
-	"edit"=>$acc_admin,
-	"delete"=>$acc_admin,
+	"add"=>[],
+	"edit"=>[],
+	"delete"=>[],
 	
 	"columns"=>[
 		"id"=>[
