@@ -44,18 +44,20 @@ class Auth
         //Авторизуемся в системе входные параметры [login, password, refresh_token, token]
         public function login($credentials) {
             $APP = App::getInstance();
+            $hours_token = 4;
+            $hours_refresh_token = 25;
 
             if (isset($credentials['login'])) {
                 $ModelUsers = $this->ModelUsers;
                 $tmpuser = $ModelUsers::where('login', $credentials['login'])->where('status', 1)->first();
                 if ($tmpuser && password_verify($credentials['password'], $tmpuser->password)) {
                     $this->user = $tmpuser;
-                    $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+1 hours"));
+                    $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_token." hours"));
                     $this->user->token = sha1($credentials['login'].$this->user->password.$this->user->token_expire);
-                    $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+8 hours"));
+                    $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_refresh_token." hours"));
                     $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
                     $this->user->save();
-                    setcookie("token", $this->user->token, time()+3600, $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
+                    setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                     return true;
                 }
             }
@@ -65,13 +67,13 @@ class Auth
                 $tmpuser = $ModelUsers::where('refresh_token', $credentials['refresh_token'])->where('status', 1)->first();
                 if ($tmpuser && strtotime("now") < strtotime($tmpuser->refresh_token_expire) ) { 
                     $this->user = $tmpuser;
-                    $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+1 hours"));
+                    $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_token." hours"));
                     $this->user->token = sha1($credentials['login'].$this->user->password.$this->user->token_expire);
-                    $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+8 hours"));
+                    $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_refresh_token." hours"));
                     $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
                     $this->user->save();
 
-                    setcookie("token", $this->user->token, time()+3600, $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
+                    setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                     return true;
                 }
             }
@@ -116,6 +118,8 @@ class Auth
 
 
 
+        //***************************************************************************************************************************
+        //***************************************************************************************************************************
         //Поля таблицы пользователя
         public function getFields($keys=[], $exclude=[]) {
             $fields = $this->getAllFields();
