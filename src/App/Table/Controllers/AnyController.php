@@ -38,6 +38,13 @@ class AnyController  extends \MapDapRest\Controller
          if ($action=="add")    $rows = $tableHandler->add($tablename, $request->params);
          if ($action=="edit")   $rows = $tableHandler->edit($tablename, $id, $request->params);
          if ($action=="delete") $rows = $tableHandler->delete($tablename, $id);
+
+         if ($action=="get")    {
+            $reqFields = [];
+            if (isset($request->params["fields"])) $reqFields = $request->params["fields"];
+            $rows = $tableHandler->get($tablename, $id, $reqFields, $request->params);
+            if (!isset($args[1])) { $rows = $rows["rows"]; }
+         }
          
          return $rows;
       }//---POST-----------------------------------
