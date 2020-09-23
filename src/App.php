@@ -179,7 +179,7 @@ class App
 
 
            //Вызываем контроллер и возвращаем результат
-           $body = "";
+           $body = [];
            if (method_exists($controllerClass, $action)) {
              $body = $controllerClass->$action($this->request, $this->response, $params);
            } else {
