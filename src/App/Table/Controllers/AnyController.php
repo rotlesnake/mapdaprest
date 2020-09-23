@@ -11,7 +11,7 @@ class AnyController  extends \MapDapRest\Controller
     {
  
       //
-      if ($request->method=="GET") {
+      if ($request->method=="GET") {  //table/users/all/info  {fields:[], filter:[ {field:name, oper:'like', value:'asd'} ], sortBy:'', sortDesc:'', itemsPerPage:100, page:1, parent_table:[name:users , id:999] }
          $id = (int)$action_or_id;
 
          $tableHandler = new TableHandler($this->APP);
@@ -39,7 +39,7 @@ class AnyController  extends \MapDapRest\Controller
          if ($action=="edit")   $rows = $tableHandler->edit($tablename, $id, $request->params);
          if ($action=="delete") $rows = $tableHandler->delete($tablename, $id);
 
-         if ($action=="get")    {
+         if ($action=="get")    {  //table/users/get/all/info  {fields:[], filter:[ {field:name, oper:'like', value:'asd'} ], sortBy:'', sortDesc:'', itemsPerPage:100, page:1, parent_table:[name:users , id:999] }
             $reqFields = [];
             if (isset($request->params["fields"])) $reqFields = $request->params["fields"];
             $rows = $tableHandler->get($tablename, $id, $reqFields, $request->params);
