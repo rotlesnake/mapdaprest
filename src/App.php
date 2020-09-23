@@ -17,6 +17,7 @@ class App
 
     public $site_folder;
     public $app_folder;
+    public $app_class;
     
     public $auth = null;
     public $request;
@@ -24,7 +25,7 @@ class App
     public $models = [];
     
     
-    public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $site_folder="www")
+    public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="backend", $app_class="App", $site_folder="frontend")
     {
         $this->SERVER = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"];
         $this->ROOT_PATH = $ROOT_PATH;
@@ -32,6 +33,7 @@ class App
         $this->ROOT_URL = $ROOT_URL;
         $this->FULL_URL = $this->SERVER.$ROOT_URL;
         $this->app_folder = $app_folder;
+        $this->app_class = $app_class;
         $this->site_folder = $site_folder;
  
         if (file_exists(__DIR__."/cache/models.json")) {
@@ -65,7 +67,11 @@ class App
            }
 
         } catch (\Exception $e) {
-           die("Could not connect to the database. Please check your configuration. error:");
+           echo "Could not connect to the database. Please check your configuration. Error:";
+           echo "<pre>";
+           echo $e;
+           echo "</pre>";
+           die();
         }
 
     }
@@ -122,16 +128,18 @@ class App
            $this->response = new Response($this);
 
            //Пытаемся авторизоваться автоматически
-           $this->auth->autoLogin( $this->request );
+           if (method_exists($this->auth, "autoLogin")) {
+                $this->auth->autoLogin( $this->request );
+           }
 
            //Запросили корень, перенаправляем на сайт
            if ($handler=="site") { $this->response->redirect($this->site_folder); return; }
  
            //Ищем контроллер в папке приложения
-           $className = "\\App\\".$module."\\Controllers\\".$controller;
+           $className = "\\".$this->app_class."\\".$module."\\Controllers\\".$controller;
            if (!class_exists($className)) { 
               //Ищем any контроллер в папке приложения
-              $anyClassName = "\\App\\".$module."\\Controllers\\AnyController";
+              $anyClassName = "\\".$this->app_class."\\".$module."\\Controllers\\AnyController";
               if (class_exists($anyClassName)) { $className = $anyClassName; }
            }
 

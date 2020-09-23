@@ -12,7 +12,7 @@ class Migrate {
 
         if ($dh = opendir($extDir)) {
             while (($file = readdir($dh)) !== false) {
-               if ($file != "." && $file != ".." && is_dir($extDir."/".$file)) {
+               if ($file != "." && $file != ".." && is_dir($extDir."/".$file) && is_dir($extDir."/".$file."/Models")) {
                    
                    $files = glob($extDir.$file."/Models/*.php");
                    foreach ($files as $model) {
@@ -75,7 +75,7 @@ class Migrate {
                $rez .= " - Создаем таблицу (<b>".$tableInfo["table"]."</b>) <br>\r\n";
                $APP->DB->schema()->create($tableInfo["table"], function($table) use($APP, $tableInfo){
                  $table->increments('id');
-                 $table->integer('created_by_user')->unsigned();
+                 $table->integer('created_by_user')->unsigned()->nullable()->default(0);
                  $table->timestamps();
                  
                  $table->engine = $APP->db_settings['engine'];
