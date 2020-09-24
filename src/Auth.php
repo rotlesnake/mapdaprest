@@ -19,6 +19,7 @@ class Auth
         public function isGuest() {
           if (!isset($this->user)) return true;
           if (!isset($this->user->id)) return true;
+          return false;
         }
         
         //Пытаемся авторизоваться по данным из кукисов и хедеров

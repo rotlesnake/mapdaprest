@@ -167,7 +167,8 @@ class App
 
            //Контроллер создан. перед вызовом методов проверяем состояние авторизации
            //Если авторизации нет то выдаем ошибку 401
-           if ($this->auth->isGuest()) {
+           if (method_exists($this->auth, "isGuest") && $this->auth->isGuest()===false) {
+           } else {
               $this->response->setResponseCode(401);
               $this->response->setError(1, "Пользователь не найден");
               if ($this->request->hasHeader('token')) { 
