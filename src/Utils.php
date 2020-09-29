@@ -90,7 +90,21 @@ class Utils {
         return $out;
     }
 
+    //Получить список всех ролей
+    public static function getAllRoles($ids=true) {
+        if (!file_exists(__DIR__."/cache/models.json") ) return [];
 
+	$APP = \MapDapRest\App::getInstance();
+	$roles = $APP->DB::table("roles")->get();
+	if (!$ids) return $roles;
+
+        $arr = [];
+        foreach ($roles as $row) {
+            array_push($arr, $row->id);
+        }
+
+        return $arr;
+    }
 
 
 }//CLASS************************************
