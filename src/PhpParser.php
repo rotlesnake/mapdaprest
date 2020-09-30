@@ -41,4 +41,20 @@ class PhpParser
         }
         return $res;
     }
-}
+
+
+
+    public function getMethods($class, $method)
+    {
+        $reflector = new \ReflectionClass("\\".$class);
+        return $reflector->getMethods();
+    }
+    public function getComments($class, $method)
+    {
+        $reflector = new \ReflectionClass("\\".$class);
+        $comment = $reflector->getMethod($method)->getDocComment();
+        return str_replace(["/**", "**/", "*/", "\r\n"],["","","","<br>"], $comment);
+    }
+
+
+}//class
