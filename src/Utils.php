@@ -6,7 +6,7 @@ namespace MapDapRest;
 class Utils {
 
 
-    public static function getSlug($str, $asFile=false) {
+    public static function getSlug($str, $asFile=false, $withCase=false) {
         $tr = array(
             "А"=>"a","Б"=>"b","В"=>"v","Г"=>"g",
             "Д"=>"d","Е"=>"e","Ж"=>"j","З"=>"z","И"=>"i",
@@ -27,7 +27,11 @@ class Utils {
         if ($asFile) {
           $tr["."]=".";
         }
-        return strtolower(strtr($str,$tr));
+        if ($withCase) {
+          return strtr($str,$tr);
+        } else {
+          return strtolower(strtr($str,$tr));
+        }
     }
    
     public static function strPadRight($str,$len,$ch) { $str = substr($str,0,$len); return str_pad($str, $len, $ch, STR_PAD_RIGHT); } 
