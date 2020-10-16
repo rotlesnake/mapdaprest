@@ -111,4 +111,34 @@ class Utils {
     }
 
 
+    //Получить список всех типов полей
+    public static function getAllColumnTypes() {
+        $arr = [];
+
+        $arr[] = ["value"=>"string", "text"=>"Строка до 255 символов"];
+        $arr[] = ["value"=>"password", "text"=>"Пароль зашифрованный"];
+        $arr[] = ["value"=>"text", "text"=>"Текст"];
+        $arr[] = ["value"=>"html", "text"=>"Html"];
+
+        $arr[] = ["value"=>"integer", "text"=>"Целое число"];
+        $arr[] = ["value"=>"bigInteger", "text"=>"Целое число большое"];
+        $arr[] = ["value"=>"float", "text"=>"Сумма"];
+        $arr[] = ["value"=>"double", "text"=>"Число с плавающей точкой"];
+
+        $arr[] = ["value"=>"checkBox", "text"=>"Да/Нет"];
+        $arr[] = ["value"=>"select", "text"=>"Выбор из списка"];
+        $arr[] = ["value"=>"linkTable", "text"=>"Ссыка на таблицу"];
+
+        $arr[] = ["value"=>"images", "text"=>"Картинки"];
+        $arr[] = ["value"=>"files", "text"=>"Файлы"];
+
+        $arr[] = ["value"=>"date", "text"=>"Дата"];
+        $arr[] = ["value"=>"time", "text"=>"Время"];
+        $arr[] = ["value"=>"dateTime", "text"=>"Дата и время"];
+        $arr[] = ["value"=>"dateTimeTz", "text"=>"ДатаВремя с временной зоной"];
+        $arr[] = ["value"=>"timestamp", "text"=>"Штамп времени"];
+
+        return $arr;
+    }
+
 }//CLASS************************************
