@@ -92,7 +92,7 @@ class Migrate {
 
                  $rez .= " - Добавляем поле (".$x.") <br>\r\n";
 
-                 if (in_array($y["type"], ["string", "password", "masked"]))  { $fld = $table->string($x)->nullable(); }
+                 if (in_array($y["type"], ["string", "password", "masked", "color"]))  { $fld = $table->string($x)->nullable(); }
                  if (in_array($y["type"], ["integer", "checkBox"])) { $fld = $table->integer($x)->nullable(); }
                  if (in_array($y["type"], ["bigInteger"])) { $fld = $table->bigInteger($x)->nullable(); }
                  if (in_array($y["type"], ["select"])) {
