@@ -124,7 +124,8 @@ class Migrate {
                  if (isset($y["default"])) $fld->default($y["default"]);
                  if (isset($y["unsigned"])) $fld->unsigned();
                  if (isset($y["index"])) { 
-                   if ($y["index"]=="unique") { $fld->unique(); } else { $fld->index(); }
+                   if ($y["index"]=="index") { $fld->index(); }
+                   if ($y["index"]=="unique") { $fld->unique(); }
                  }
 
                }//foreach

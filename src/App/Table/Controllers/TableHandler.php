@@ -205,7 +205,7 @@ class TableHandler
               if (!$this->APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
               $item[$x] = $row->{$x};
 
-              if ($y["type"]=="linkTable" || $y["type"]=="Select") { 
+              if ($y["type"]=="linkTable" || $y["type"]=="select") { 
                  $item[$x."_text"] = $row->getFieldLinks($x, true); 
                  if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $row->getFieldLinks($x, false); 
               } 

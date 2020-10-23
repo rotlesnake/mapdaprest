@@ -27,7 +27,7 @@ class AnyController  extends \MapDapRest\Controller
       }//---GET-----------------------------------
  
 
-      //
+      //table/users/edit/1
       if ($request->method=="POST") {
          $action = $action_or_id;
          $id = $args[0];
