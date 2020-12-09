@@ -15,7 +15,7 @@ class Request
     public function __construct()
     {
         $this->method = $_SERVER['REQUEST_METHOD'];
-        $this->headers = apache_request_headers();
+        $this->headers = array_change_key_case( apache_request_headers(), CASE_LOWER );
         $post = json_decode(file_get_contents('php://input'), true);
         $this->params = array_merge( $_REQUEST, (array)$post );
         $this->files = $_FILES;

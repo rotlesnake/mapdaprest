@@ -89,6 +89,8 @@ class Migrate {
                  //колонка уже есть тогда ничего не делаем
                  if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { continue; }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
+                 //Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
+                 if ($y["type"]=="linkTable" && !$APP->DB->schema()->hasTable($y["table"])) { $rez .= " - Поле не создано требуется повторная миграция (<font color=red>".$x."</font>) <br>\r\n";  continue; }
 
                  $rez .= " - Добавляем поле (".$x.") <br>\r\n";
 
