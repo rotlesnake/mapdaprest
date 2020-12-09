@@ -6,6 +6,7 @@ namespace MapDapRest;
 class Controller
 {
         
+    public $requireAuth = true;
     public $APP;
 
 

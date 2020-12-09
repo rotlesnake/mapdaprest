@@ -167,7 +167,7 @@ class App
            $controllerClass = new $className($this, $this->request, $this->response, $params);
 
            //Контроллер создан. перед вызовом методов проверяем состояние авторизации
-           if (method_exists($this->auth, "isGuest") && $this->auth->isGuest()===false) {
+           if ((method_exists($this->auth, "isGuest") && $this->auth->isGuest()===false) || $controllerClass->requireAuth===false) {
               //Пользователь авторизован тогда идем дальше
            } else {
               //Если авторизации нет то выдаем ошибку 401
