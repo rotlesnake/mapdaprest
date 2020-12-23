@@ -90,36 +90,37 @@ class App
            $this->auth = new Auth();
         }
 
-        $route_dispatcher = \FastRoute\simpleDispatcher( function(\FastRoute\RouteCollector $route) use($methods) {
-        
-            $route->addRoute($methods, $this->ROOT_URL, "site");
-
-            $route->addRoute($methods, $this->ROOT_URL.'{module}[/]', ucfirst($this->app_folder));
-            $route->addRoute($methods, $this->ROOT_URL.'{module}/{controller}[/]', ucfirst($this->app_folder));
-            $route->addRoute($methods, $this->ROOT_URL.'{module}/{controller}/{action}[/]', ucfirst($this->app_folder));
-            $route->addRoute($methods, $this->ROOT_URL.'{module}/{controller}/{action}/{params:.+}', ucfirst($this->app_folder));
-            
-        });
-
-     
         $httpMethod = $_SERVER['REQUEST_METHOD'];
+        if (!in_array($httpMethod, $methods)) {
+            echo "REQUEST METHOD NOT ALLOWED";
+            return false;
+        }
+
         $uri = $_SERVER['REQUEST_URI'];
 
         if (false !== $pos = strpos($uri, '?')) { $uri = substr($uri, 0, $pos); }
         $uri = rawurldecode($uri);
-        
+        $uri = substr($uri, strlen($this->ROOT_URL));
+        $uri = trim($uri, '/');
 
-        $routeInfo = $route_dispatcher->dispatch($httpMethod, $uri);
+        $args = [];
+        $routes = explode("/",$uri);
 
-        if ($routeInfo[0] == \FastRoute\Dispatcher::FOUND) {
+        foreach ($routes as $k=>$v) {
+            if (strlen($v)==0) continue;
+            if ($k==0) $args['module'] = $v;
+            if ($k==1) $args['controller'] = $v;
+            if ($k==2) $args['action'] = $v;
+            if ($k>=3) $args['params'][] = $v;
+        }
 
-           $handler = $routeInfo[1];
-           $args = $routeInfo[2];
+        //Путь пустой - Запросили корень, перенаправляем на сайт
+        if (count($args)==0) { $this->response->redirect($this->site_folder); return true; }
    
            $module     = ucfirst($args['module']);
            $controller = (isset($args['controller']) ? ucfirst($args['controller'])."Controller" : "IndexController");
            $action     = (isset($args['action'])     ? $args['action']."Action" : "indexAction");
-           $params     = (isset($args['params'])     ? explode("/",$args['params']) : []);
+           $params     = (isset($args['params'])     ? $args['params'] : []);
 
            if (!isset($args['controller'])) { $args['controller']=""; }
            if (!isset($args['action'])) { $args['action']=""; }
@@ -132,9 +133,6 @@ class App
                 $this->auth->autoLogin( $this->request );
            }
 
-           //Запросили корень, перенаправляем на сайт
-           if ($handler=="site") { $this->response->redirect($this->site_folder); return; }
- 
            //Ищем контроллер в папке приложения
            $className = "\\".$this->app_class."\\".$module."\\Controllers\\".$controller;
            if (!class_exists($className)) { 
@@ -196,13 +194,9 @@ class App
               $this->response->setBody($body);
            }
            $this->response->send();
+
            return true;
-
-        } else {
-           //url not found
-        }
-
-    }
+    }//run
 
 
 

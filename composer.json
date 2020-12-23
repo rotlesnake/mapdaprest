@@ -17,7 +17,6 @@
   "require": {
     "php": "^7.2.5",
     "illuminate/database": "^7.24",
-    "illuminate/events": "^7.24",
-    "nikic/fast-route": "dev-master"
+    "illuminate/events": "^7.24"
   }
 }
