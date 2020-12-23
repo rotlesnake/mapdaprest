@@ -11,7 +11,7 @@ class PhpParser
         $tokens = @token_get_all($code);
         $namespace = $class = $classLevel = $level = NULL;
         $classes = [];
-        while (list(, $token) = each($tokens)) {
+        foreach ($tokens as $key=>$token) {
             switch (is_array($token) ? $token[0] : $token) {
                 case T_NAMESPACE:
                     $namespace = ltrim($this->fetch($tokens, [T_STRING, T_NS_SEPARATOR]) . '\\', '\\');
