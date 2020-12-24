@@ -19,7 +19,7 @@ class Model extends EloquentModel
 	  $app = \MapDapRest\App::getInstance();
           if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 	  
-          $model->sys_log_created_by = $app->auth->getFields()['id'];
+          $model->created_by_user = $app->auth->getFields()['id'];
           return $model->beforeAdd($model);
         });
         static::created(function($model) {
@@ -28,6 +28,7 @@ class Model extends EloquentModel
 
           $log = new SystemLog();
           $log->user_id = $app->auth->getFields()['id'];
+          $log->created_by_user = $log->user_id;
           $log->table_name = $model->table;
           $log->row_id = $model->id;
           $log->action = 1;
@@ -46,6 +47,7 @@ class Model extends EloquentModel
 
           $log = new SystemLog();
           $log->user_id = $app->auth->getFields()['id'];
+          $log->created_by_user = $log->user_id;
           $log->table_name = $model->table;
           $log->row_id = $model->id;
           $log->action = 2;
@@ -64,6 +66,7 @@ class Model extends EloquentModel
 
           $log = new SystemLog();
           $log->user_id = $app->auth->getFields()['id'];
+          $log->created_by_user = $log->user_id;
           $log->table_name = $model->table;
           $log->row_id = $model->id;
           $log->action = 3;

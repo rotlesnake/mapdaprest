@@ -86,6 +86,9 @@ class App
  
     public function run($methods=['GET','POST']) {
 
+        $this->request = new Request($this);
+        $this->response = new Response($this);
+
         if (!$this->auth) {
            $this->auth = new Auth();
         }
@@ -125,9 +128,6 @@ class App
            if (!isset($args['controller'])) { $args['controller']=""; }
            if (!isset($args['action'])) { $args['action']=""; }
  
-           $this->request = new Request($this);
-           $this->response = new Response($this);
-
            //Пытаемся авторизоваться автоматически
            if (method_exists($this->auth, "autoLogin")) {
                 $this->auth->autoLogin( $this->request );
