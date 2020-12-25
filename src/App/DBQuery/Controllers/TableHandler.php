@@ -146,7 +146,7 @@ class TableHandler
 
     
     //******************* CONVERT FOR OUT*******************************************************
-    public function rowConvert($tableInfo, $row){
+    public function rowConvert($tableInfo, $row, $fastMode=false){
             $item = [];
             $item["id"] = $row->id;
 
@@ -155,10 +155,12 @@ class TableHandler
               if (!$this->APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
               $item[$x] = $row->{$x};
               
-              if ($y["type"]=="linkTable" || $y["type"]=="select") { 
-                 $item[$x."_text"] = $row->getFieldLinks($x, true); 
-                 if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $row->getFieldLinks($x, false); 
+              if ($y["type"]=="linkTable") { 
+                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); }
               } 
+              if ($y["type"]=="select") { 
+                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); }
+              }
               if ($y["type"]=="integer")  { $item[$x] = (int)$row->{$x}; }
               if ($y["type"]=="float")    { $item[$x] = (float)$row->{$x}; }
               if ($y["type"]=="double")   { $item[$x] = (double)$row->{$x}; }
