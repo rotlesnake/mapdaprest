@@ -1,11 +1,11 @@
-## Install
+# Install
 ```
 composer install rotlesnake/mapdaprest
 
 ```
 
 
-## Init minimal app
+# Init minimal app
 /.htaccess
 ```
 RewriteEngine On
@@ -14,7 +14,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L,QSA]
 ```
-/.index.php
+/index.php
 ```
 require("vendor/autoload.php");
 $APP = new \MapDapRest\App(__DIR__);
@@ -34,8 +34,8 @@ $APP->run();
 ```
 
 
-#
-## Init full app
+# 
+# Init full app
 ```
 index.php
 
