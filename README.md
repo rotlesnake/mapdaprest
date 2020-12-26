@@ -81,6 +81,10 @@ application folder structure
 +www
  |--------index.html
 
+.htaccess
+index.php
+```
+
 /.htaccess
 ```
 Options All -Indexes
