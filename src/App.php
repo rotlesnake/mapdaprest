@@ -25,10 +25,10 @@ class App
     public $models = [];
     
     
-    public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="backend", $app_class="App", $site_folder="frontend")
+    public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder="www")
     {
         $this->SERVER = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"];
-        $this->ROOT_PATH = $ROOT_PATH;
+        $this->ROOT_PATH = str_replace("/", DIRECTORY_SEPARATOR, realpath($ROOT_PATH)."/");
         $this->APP_PATH = $ROOT_PATH.$app_folder."/";
         $this->ROOT_URL = $ROOT_URL;
         $this->FULL_URL = $this->SERVER.$ROOT_URL;
