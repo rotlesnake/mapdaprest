@@ -8,22 +8,33 @@ class PhpParser
     public function extractPhpClasses($path)
     {
         $code = file_get_contents($path);
-        $tokens = @token_get_all($code);
+        $tokens = token_get_all($code);
         $namespace = $class = $classLevel = $level = NULL;
         $classes = [];
-        foreach ($tokens as $key=>$token) {
-            switch (is_array($token) ? $token[0] : $token) {
-                case T_NAMESPACE:
-                    $namespace = ltrim($this->fetch($tokens, [T_STRING, T_NS_SEPARATOR]) . '\\', '\\');
-                    break;
-                case T_CLASS:
-                case T_INTERFACE:
-                    if ($name = $this->fetch($tokens, T_STRING)) {
-                        $classes[] = $namespace . $name;
+        $count = count($tokens);
+
+        for($i = 0; $i < $count; $i ++)
+        {
+            if ($tokens[$i][0]===T_NAMESPACE)
+            {
+                for ($j=$i+1;$j<$count;++$j)
+                {
+                    if ($tokens[$j][0]===T_STRING)
+                        $namespace.="\\".$tokens[$j][1];
+                    elseif ($tokens[$j]==='{' or $tokens[$j]===';')
+                        break;
+                }
+            }
+            if ($tokens[$i][0]===T_CLASS)
+            {
+                for ($j=$i+1;$j<$count;++$j)
+                    if ($tokens[$j]==='{')
+                    {
+                        $classes[]=$namespace."\\".$tokens[$i+2][1];
                     }
-                    break;
             }
         }
+
         return $classes;
     }
 

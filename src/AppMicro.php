@@ -1,7 +1,7 @@
 <?php
 namespace MapDapRest;
 
-class App
+class AppMicro
 {
 
     private static $instance = null;
@@ -18,7 +18,6 @@ class App
     public $app_folder;
     public $app_class;
     
-    public $auth = null;
     public $request;
     public $response;
     public $models = [];
@@ -42,31 +41,45 @@ class App
         }
 
         static::$instance = $this;
+
+        $this->initDB();
     }
    
  
     public static function getInstance() {
-        if (!static::$instance){ return AppMicro::getInstance(); }
         return static::$instance;
     }
 
 
-    public function initDB($settings) {
-        $this->db_settings = $settings;
+    public function initDB() {
+        $dbjson = $this->ROOT_PATH."App/database.json";
+        $dbhash = $this->ROOT_PATH."App/database.hash";
+        $dbfile = $this->ROOT_PATH."App/database.db";
+
+        if (!file_exists($dbfile)) file_put_contents($dbfile, '');
+
         $this->DB = new \Illuminate\Database\Capsule\Manager();
-        $this->DB->addConnection($settings);
+        $this->DB->addConnection(['driver'=>'sqlite', 'database'=>$dbfile, 'prefix'=>'']);
         $this->DB->setEventDispatcher(new \Illuminate\Events\Dispatcher(new \Illuminate\Container\Container));
         $this->DB->setAsGlobal();
         $this->DB->bootEloquent();
 
+        
         try {
            $this->DB->connection()->getPdo();
 
-           if (!$this->models) {
-               $this->models = Migrate::migrate();
-               $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
-           }
+           if (file_exists($dbjson)) {
+              $hash1 = "";
+              $hash2 = md5_file($dbjson);
+              if (file_exists($dbhash)) {$hash1 = file_get_contents($dbhash);}
 
+              if (!$this->models || $hash1!=$hash2) {
+                  $this->generateModels();
+                  $this->models = Migrate::migrate();
+                  echo $this->models;
+                  $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
+              }
+           }
         } catch (\Exception $e) {
            echo "Could not connect to the database. Please check your configuration. Error:";
            echo "<pre>";
@@ -76,23 +89,62 @@ class App
         }
 
     }
+
+
+
+
+    public function generateModels() {
+        $dbjson = $this->ROOT_PATH."App/database.json";
+        $dbhash = $this->ROOT_PATH."App/database.hash";
+        file_put_contents($dbhash, md5_file($dbjson));
+
+        if (!file_exists($this->APP_PATH."Site")) {
+            mkdir($this->APP_PATH."Site", 0777);
+            mkdir($this->APP_PATH."Site/Controllers", 0777);
+            $template = file_get_contents(__DIR__."/stub/controller.stub");
+            $template = str_replace("<%MODULE%>", "Site", $template);
+            file_put_contents($this->APP_PATH."Site/Controllers/IndexController.php", $template);
+        }
+
+        $models = json_decode( file_get_contents($dbjson), true);
+        foreach ($models as $momo=>$fields) {
+            $module = ucfirst(explode("/", $momo)[0]);
+            $model = ucfirst(explode("/", $momo)[1]);
+            if (!file_exists($this->APP_PATH.$module)) {
+               mkdir($this->APP_PATH.$module, 0777);
+               mkdir($this->APP_PATH.$module."/Models", 0777);
+               mkdir($this->APP_PATH.$module."/Controllers", 0777);
+            }
+
+            $template = file_get_contents(__DIR__."/stub/controller.stub");
+            $template = str_replace("<%MODULE%>", $module, $template);
+            file_put_contents($this->APP_PATH.$module."/Controllers/IndexController.php", $template);
+
+            $template = file_get_contents(__DIR__."/stub/model.stub");
+            $str="";
+            foreach ($fields as $fn=>$opts) {
+              $str .= "\"".$fn."\" => [";
+              foreach ($opts as $k=>$v) {
+                 $str .= "\"".$k."\"=>\"".$v."\", ";
+              }
+              $str .= "], \r\n";
+            }//fields
+            $template = str_replace("<%MODULE%>", $module, $template);
+            $template = str_replace("<%MODEL%>", $model, $template);
+            $template = str_replace("<%TABLE%>", strtolower($model), $template);
+            $template = str_replace("<%FIELDS%>", $str, $template);
+            file_put_contents($this->APP_PATH.$module."/Models/".$model.".php", $template);
+        }//models
+    }
+
+
   
 
-    public function setAuth($auth) {
-        $this->auth = $auth;
-    }
  
-
- 
- 
-    public function run($methods=['GET','POST']) {
+    public function run($methods=["GET", "POST", "PUT", "DELETE"]) {
 
         $this->request = new Request($this);
         $this->response = new Response($this);
-
-        if (!$this->auth) {
-           $this->auth = new Auth();
-        }
 
         $httpMethod = $_SERVER['REQUEST_METHOD'];
         if (!in_array($httpMethod, $methods)) {
@@ -101,7 +153,6 @@ class App
         }
 
         $uri = $_SERVER['REQUEST_URI'];
-
         if (false !== $pos = strpos($uri, '?')) { $uri = substr($uri, 0, $pos); }
         $uri = rawurldecode($uri);
         $uri = substr($uri, strlen($this->ROOT_URL));
@@ -136,11 +187,6 @@ class App
            if (!isset($args['controller'])) { $args['controller']=""; }
            if (!isset($args['action'])) { $args['action']=""; }
  
-           //Пытаемся авторизоваться автоматически
-           if (method_exists($this->auth, "autoLogin")) {
-                $this->auth->autoLogin( $this->request );
-           }
-
            //Ищем контроллер в папке приложения
            $className = "\\".$this->app_class."\\".$module."\\Controllers\\".$controller;
            if (!class_exists($className)) { 
@@ -171,21 +217,6 @@ class App
  
            //Создаем класс найденного контроллера, даем возможность контроллеру решить что делать дальше с этими данными и этим пользователем
            $controllerClass = new $className($this, $this->request, $this->response, $params);
-
-           //Контроллер создан. перед вызовом методов проверяем состояние авторизации
-           if ((method_exists($this->auth, "isGuest") && $this->auth->isGuest()===false) || $controllerClass->requireAuth===false) {
-              //Пользователь авторизован тогда идем дальше
-           } else {
-              //Если авторизации нет то выдаем ошибку 401
-              $this->response->setResponseCode(401);
-              $this->response->setError(1, "Пользователь не найден");
-              if ($this->request->hasHeader('token')) { 
-                $this->response->setError(3, "Токен просрочен либо не действителен");
-              }
-              $this->response->send();
-              return false;
-           }
-
 
            //Проверяем наличие метода в этом контроллере
            $body = [];

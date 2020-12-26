@@ -42,12 +42,12 @@ class Migrate {
 
         $extDir = __DIR__."/App/";
         $all_models = static::receiveAllModels($extDir, $all_models);
-        $rez .=static::doMigrate($all_models);
+        $rez .= static::doMigrate($all_models);
 
 
         $extDir = $APP->APP_PATH;
         $all_models = static::receiveAllModels($extDir, $all_models);
-        $rez .=static::doMigrate($all_models);
+        $rez .= static::doMigrate($all_models);
 
 
         if (!file_exists(__DIR__."/cache")) { mkdir(__DIR__."/cache", 0777); };
@@ -61,6 +61,7 @@ class Migrate {
     public static function doMigrate($models) {
         $php_parser = new PhpParser();
         $APP = App::getInstance();
+        $isSqlite = $APP->DB->connection()->getDriverName() == "sqlite";
         $rez="";
         
         foreach ($models as $tableName=>$class) {
@@ -78,7 +79,7 @@ class Migrate {
                  $table->integer('created_by_user')->unsigned()->nullable()->default(0);
                  $table->timestamps();
                  
-                 $table->engine = $APP->db_settings['engine'];
+                 if ($APP->db_settings) $table->engine = $APP->db_settings['engine'];
                });
             }//---hasTable---
 
@@ -111,7 +112,7 @@ class Migrate {
                          $fld = $table->text($x)->nullable();
                       } else {
                          $fld = $table->integer($x)->unsigned()->index()->nullable();
-                         $table->foreign($x)->references('id')->on($y["table"]);
+                         if (!$isSqlite) $table->foreign($x)->references('id')->on($y["table"]);
                       }
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }

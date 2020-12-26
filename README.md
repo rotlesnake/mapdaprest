@@ -5,24 +5,27 @@ composer install rotlesnake/mapdaprest
 ```
 
 
-# Init minimal app (server render)
-application folder structure
+# Init micro app
+### database sqllite
+### application folder structure
 ```
 +App
- |----Site
+ |----Auth
+ |    |------Controllers
+ |    |      |--------------LoginController.php
+ |    |------Models
+ |           |--------------Users.php
+ |----ModuleOne
  |    |------Controllers
  |    |      |--------------IndexController.php
  |    |------Models
- |    |------Views
- |           |--------------index.php
+ |           |--------------Items.php
  |
- |----OtherModule
-      |------Controllers
-      |      |--------------LoginController.php
-      |------Models
-      |      |--------------Users.php
-      |------Views
-             |--------------login.php
+ |----database.json
+ |----database.db
++www
+ |--------index.html
++vendor
 
 .htaccess
 index.php
@@ -31,6 +34,11 @@ index.php
 /.htaccess
 ```
 RewriteEngine On
+RedirectMatch 404 /App/
+
+RewriteCond %{REQUEST_URI} /www/
+RewriteRule ^(.*)$ $1 [L,QSA]
+
 RewriteCond %{REQUEST_FILENAME} !-l
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -40,19 +48,7 @@ RewriteRule ^(.*)$ index.php [L,QSA]
 /index.php
 ```
 require("vendor/autoload.php");
-$APP = new \MapDapRest\App(__DIR__);
-$APP->initDB([
-            'driver'    => 'mysql',
-            'host'      => 'localhost',
-            'port'      => '3306',
-            'database'  => 'mydatabase',
-            'username'  => 'root',
-            'password'  => '',
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => 'prj_',
-            'engine'    => 'InnoDB'
-        ]);
+$APP = new \MapDapRest\AppMicro(__DIR__);
 $APP->run();
 ```
 
@@ -80,6 +76,8 @@ application folder structure
           |--------photo.jpg
 +www
  |--------index.html
+
++vendor
 
 .htaccess
 index.php

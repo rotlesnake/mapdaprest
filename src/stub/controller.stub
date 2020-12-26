@@ -1,0 +1,13 @@
+<?php
+namespace App\<%MODULE%>\Controllers;
+
+class IndexController extends \MapDapRest\Controller
+{
+
+    public function indexAction($request, $response, $params) {
+
+       return [];
+    }
+
+
+}
