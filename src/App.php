@@ -25,7 +25,7 @@ class App
     public $models = [];
     
     
-    public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder="www")
+    public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder=null)
     {
         $this->SERVER = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"];
         $this->ROOT_PATH = str_replace("/", DIRECTORY_SEPARATOR, realpath($ROOT_PATH)."/");
@@ -117,8 +117,15 @@ class App
             if ($k>=3) $args['params'][] = $v;
         }
 
-        //Путь пустой - Запросили корень, перенаправляем на сайт
-        if (count($args)==0) { $this->response->redirect($this->site_folder); return true; }
+        //Если путь пустой то перенаправляем в папку сайта или в модуль Site\IndexController\indexAction
+        if (count($args)==0) { 
+            if ($this->site_folder) { 
+               $this->response->redirect($this->site_folder); 
+               return true;  
+            } else {
+               $args['module'] = "Site";
+            }
+        }
    
            $module     = ucfirst($args['module']);
            $controller = (isset($args['controller']) ? ucfirst($args['controller'])."Controller" : "IndexController");
