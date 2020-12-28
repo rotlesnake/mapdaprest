@@ -122,6 +122,15 @@ class TableHandler
         //Отладка для просмотра SQL запроса
         //die($MODEL->toSql());
 
+
+
+        //Проходим по колонкам, убираем лишние поля
+        foreach ($tableInfo["columns"] as $x=>$y) {
+            if (!in_array($x, $allowFields)) { unset($tableInfo["columns"][$x]); continue; } //Оставляем только те поля которые запросили и разрешены к просмотру
+            if (!$this->APP->auth->hasRoles($y["read"])) { unset($tableInfo["columns"][$x]); continue; } //Если чтение запрещено то удаляем поле
+        }
+
+
         if ($is_single) {
            $rows = $this->rowConvert($tableInfo, $rows);
         } else {
