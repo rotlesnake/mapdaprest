@@ -349,13 +349,13 @@ class TableHandler
         $row = $this->fillRowParams($row, "edit", $tableInfo, $request->params);  //Заполняем строку данными из формы
         
         //Событие
-        if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $args)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
+        if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
         $result = $row->save(); //Сохраняем запись
         if (!$result) { return ["error"=>4, "message"=>"save error"]; }  //Если ошибка сохранения то сообщаем и выходим
         
         //Событие
-        if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $args);  }
+        if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $request->params);  }
         
         
         $id = $row->id;
