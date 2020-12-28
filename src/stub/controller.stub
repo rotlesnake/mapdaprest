@@ -5,6 +5,7 @@ class IndexController extends \MapDapRest\Controller
 {
 
     public function indexAction($request, $response, $params) {
+       $user = $this->APP->DB->table('users')->find(1);
 
        return [];
     }

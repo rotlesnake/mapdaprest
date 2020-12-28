@@ -20,7 +20,7 @@ class AnyController  extends \MapDapRest\Controller
 
          $tableHandler = new TableHandler($this->APP);
          
-         $result = $tableHandler->get($tablename, $id, $request);
+         $result = $tableHandler->get($tablename, (int)$id, $request);
 
          return $result;
       }//---GET-----------------------------------

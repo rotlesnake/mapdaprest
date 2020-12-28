@@ -18,11 +18,11 @@ class TableHandler
 
 
     //******************* GET *******************************************************
-    public function get($tablename, $id, $reqFields=[], $args)
+    public function get($tablename, $id, $request)
     {
         $user = $this->APP->auth->getFields();
 
-        $json_response = [];
+        $json_response = ["error"=>0];
         $json_response["info"] = [];
         $json_response["rows"] = [];
         $json_response["pagination"] = [];
@@ -33,35 +33,87 @@ class TableHandler
         $modelClass = $this->APP->models[$tablename];
         $tableInfo = $modelClass::modelInfo();
 
+        if (trim($id)=="modelInfo()") {
+           unset($tableInfo["seeds"]);
+           return $tableInfo;
+        }
+
+        //если доступ на чтение отсутствует то выдаем сообщение
+        if (!$this->APP->auth->hasRoles($tableInfo["read"])) return ["error"=>4, "message"=>"table $tablename access denied"];
+
+
         //оставляем только поля разрешенные для чтения  или запрашиваемые клиентом $reqFields
+        $fields = [];
+        if ($request->hasParam("fields")) $fields = $request->getParam("fields");
         $allowFields=["id"];
         foreach ($tableInfo["columns"] as $x=>$y) {
-           if (count($reqFields)>0 && !in_array($x, $reqFields))  continue;
+           if (count($fields)>0 && !in_array($x, $fields))  continue;
            if (isset($y["is_virtual"]) && $y["is_virtual"]) continue;
            if ($this->APP->auth->hasRoles($y["read"])) array_push($allowFields, $x);
         }//----------------------------------------------------------------------------------
 
-        //Сортировка по умолчанию из модели если в аргументах нет требований сортировки
-        if (isset($tableInfo["sortBy"]) && (!isset($args["sortBy"]) || (isset($args["sortBy"]) && count($args["sortBy"])==0))) {
-           $args["sortBy"] = $tableInfo["sortBy"];
-           if (isset($tableInfo["sortDesc"])) $args["sortDesc"] = $tableInfo["sortDesc"];
+
+        $MODEL = $modelClass::select($allowFields)->filterRead();
+
+
+        //Запрашивают фильтр записей по полям
+        //filter:[ {field:name, oper:'like', value:'asd'} ]
+        $filter = [];
+        if ($request->hasParam("filter")) $filter = $request->getParam("filter");
+        if (count($filter)>0) {
+
+            foreach ($filter as $x=>$y) { //перебираем поля 
+                if (isset($filter[$x]["value"])) {  //поле есть - формируем фильтр
+                    $s_field=$filter[$x]["field"]; $s_oper=$filter[$x]["oper"]; $s_value=$filter[$x]["value"];
+
+                    if ($tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
+                    if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
+                    if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
+                    if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
+                    
+                    if ($s_oper=="in") {
+                       if (gettype($s_value)=="string") { $s_value=explode(",", $s_value); }
+                       $MODEL = $MODEL->whereIn($s_field, $s_value);
+                    } else {
+                       $MODEL = $MODEL->where($s_field, $s_oper, $s_value);
+                    }
+                }
+            }
         }//----------------------------------------------------------------------------------
 
-        $MODEL=null;
-        //если доступ на чтение отсутствует то выдаем сообщение
-        if (!$this->APP->auth->hasRoles($tableInfo["read"])) return ["error"=>4, "message"=>"table $tablename access denied"];
+
+
+        //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] ---------------------------------------
+        $sort = [];
+        if ($request->hasParam("sort")) $sort = $request->getParam("sort");
+        if (gettype($sort)=="string") { $sort = explode(",", $request->getParam("sort")); }
+        if (count($sort)==0 && isset($tableInfo["sortBy"])) { $sort = $tableInfo["sortBy"]; }
+        foreach ($sort as $fld) { //перебираем поля 
+            $ord = "asc";
+            if (substr($fld,0,1) == "-") {
+               $fld = substr($fld,1);
+               $ord = "desc";
+            }
+            $MODEL = $MODEL->orderBy($fld, $ord);
+        }
+
 
         //Значения по умолянию в описании модели
         if (!isset($tableInfo["itemsPerPage"])) $tableInfo["itemsPerPage"] = 100;
         if (!isset($tableInfo["itemsPerPageVariants"])) $tableInfo["itemsPerPageVariants"] = [50,100,200,300,500,1000];
-        //----------------------------------------------------------------------------------
-        //Значения по умолчанию в запросе
-        if (!isset($args["itemsPerPage"])) $args["itemsPerPage"]=$tableInfo["itemsPerPage"];
-        if ((int)$args["itemsPerPage"]<0)  $args["itemsPerPage"]=$tableInfo["itemsPerPage"];
-        if (!isset($args["page"])) $args["page"]=1;
-        //----------------------------------------------------------------------------------
+
+        //LIMIT
+        $limit = $tableInfo["itemsPerPage"];
+        if ($request->hasParam("limit")) $limit = $request->getParam("limit");
+
+        //PAGE
+        $page = 1;
+        if ($request->hasParam("page")) $page = $request->getParam("page");
+
+        $MODEL = $MODEL->offset( ($page-1)*$limit )->limit($limit);
 
 
+/*
         //Это дочерняя таблица - тогда фильтруем записи по родителю  -
         //parent_table : [name:users , id:999]
         if (isset($args["parent_table"]) && (int)$args["parent_table"]["id"]>0) {
@@ -71,66 +123,16 @@ class TableHandler
              }
              $MODEL = $modelClass::select($allowFields)->filterRead()->where($parent_field, (int)$args["parent_table"]["id"] );
         }//----------------------------------------------------------------------------------
+*/
 
-
-        $isFiltered = false;
-        //Запрашивают фильтр записей по полям
-        //filter:[ {field:name, oper:'like', value:'asd'} ]
-        if (isset($args["filter"]) && count($args["filter"])>0) {
-
-            $MODEL = $modelClass::select($allowFields)->filterRead();
-
-            foreach ($args["filter"] as $x=>$y) { //перебираем поля 
-                if (isset($args["filter"][$x]["value"])) {  //поле есть - формируем фильтр
-                    $isFiltered = true;
-                    $s_filed=$args["filter"][$x]["field"]; $s_oper=$args["filter"][$x]["oper"]; $s_value=$args["filter"][$x]["value"];
-
-                    if ($tableInfo["columns"][$s_filed]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
-                    if ($tableInfo["columns"][$s_filed]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
-                    if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
-                    if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
-                    
-                    if ($s_oper=="in") {
-                       $MODEL = $MODEL->whereIn($s_filed, $s_value);
-                    } else {
-                       $MODEL = $MODEL->where($s_filed, $s_oper, $s_value);
-                    }
-                }
-            }
-            if ($isFiltered) {
-                $all_records = $MODEL->count();
-                $MODEL = $MODEL->offset(($req_params["page"]-1)*$req_params["itemsPerPage"])->limit($req_params["itemsPerPage"]);
-                if (isset($args["sortBy"]) && isset($args["sortBy"][0]) && strlen(isset($args["sortBy"][0]))>0 ) $MODEL = $MODEL->orderBy($args["sortBy"][0], $args["sortDesc"][0]);
-                if (isset($args["sortBy"]) && isset($args["sortBy"][1]) && strlen(isset($args["sortBy"][1]))>0 ) $MODEL = $MODEL->orderBy($args["sortBy"][1], $args["sortDesc"][1]);
-                $rows = $MODEL->get();
-            }
-        }//----------------------------------------------------------------------------------
-
-
-
-        //фильтр по ИД
+        $rows = [];
+        //GET
         if ($id > 0) {
-            $isFiltered = true;
-            $all_records = 1;
-            $rows = $modelClass::select($allowFields)->filterRead()->where("id", $id)->get();
-            //Колизия - получили более одной записи, это вина (filterRead()) - выдаем ошибку, это косяк
+            $rows = $MODEL->where("id", $id)->get();
             if (count($rows)>1) return ["error"=>6, "message"=>"scope filterRead error"];
-        }//----------------------------------------------------------------------------------
-
-
-        
-        //Фильтров нет - выдаем все записи 
-        if (!$isFiltered) {
-            //полный запрос данных
-            if ($MODEL==null) { 
-                $MODEL = $modelClass::select($allowFields)->filterRead();
-            }
-            $all_records = $MODEL->count();
-            $MODEL = $MODEL->offset(((int)$args["page"]-1)*(int)$args["itemsPerPage"])->limit($args["itemsPerPage"]);
-            if (isset($args["sortBy"]) && isset($args["sortBy"][0]) && strlen(isset($args["sortBy"][0]))>0 ) $MODEL = $MODEL->orderBy($args["sortBy"][0], $args["sortDesc"][0]);
-            if (isset($args["sortBy"]) && isset($args["sortBy"][1]) && strlen(isset($args["sortBy"][1]))>0 ) $MODEL = $MODEL->orderBy($args["sortBy"][1], $args["sortDesc"][1]);
+        } else {
             $rows = $MODEL->get();
-        }//----------------------------------------------------------------------------------
+        }
 
 
 //Отладка для просмотра SQL запроса
@@ -140,11 +142,8 @@ class TableHandler
         //Выдаем информацию о таблице
         $json_response['info'] = $tableInfo;
 
-        //Если нет поля ID то добавляем его
-        //if (!isset($json_response['info']['columns']["id"])) { array_push($json_response['info']['columns'], ["id"=>HelperFieldTypes::typeInteger("id")->width(50)->roles_read([2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])->roles_edit([])->get()]  ); }
-
         //Проходим по колонкам, убираем лишние поля
-        foreach ($json_response['info']["columns"] as $x=>$y) {
+        foreach ($tableInfo["columns"] as $x=>$y) {
             if (!in_array($x, $allowFields)) { unset($json_response['info']["columns"][$x]); continue; } //Оставляем только те поля которые запросили и разрешены к просмотру
             if (!$this->APP->auth->hasRoles($y["read"])) { unset($json_response['info']["columns"][$x]); continue; } //Если чтение запрещено то удаляем поле
             if (!$this->APP->auth->hasRoles($y["edit"])) { $json_response['info']["columns"][$x]["protected"]=true; continue; } //Если редактирование запрещено то делаем отметку о защищенном поле
@@ -153,9 +152,9 @@ class TableHandler
         //Заполняем информацию о странице
         $json_response['pagination'] = [
                                 "key"=> "id",
-                                "page"=> $args["page"],
-                                "totalItems"=> (($all_records<=$args["itemsPerPage"])?-1:$all_records),
-                                "itemsPerPage"=> $args["itemsPerPage"],
+                                "page"=> $page,
+                                "totalItems"=> ((count($rows) <= $limit)? -1 : count($rows)),
+                                "itemsPerPage"=> $limit,
                                 ];
 
 
@@ -234,8 +233,9 @@ class TableHandler
 
     
     //******************* FILL ROW *******************************************************
-    public function fillRowParams($row, $action, $tableInfo, $params)
+    public function fillRowParams($row, $action, $tableInfo, $params, &$fill_count=null)
     {
+        $i=0;
         foreach ($tableInfo["columns"] as $x=>$y) {
           if (isset($y["is_virtual"]) && $y["is_virtual"]) continue;      //Поле виртуальное
           if (!isset($params[$x]))  continue;                             //Поле отсутствует
@@ -258,7 +258,10 @@ class TableHandler
           if ($y["type"]=="date")       { $row->{$x} = \MapDapRest\Utils::convDateToSQL($row->{$x}, false); }
           if ($y["type"]=="dateTime")   { $row->{$x} = \MapDapRest\Utils::convDateToSQL($row->{$x}, true);  }
           if ($y["type"]=="timestamp")  { $row->{$x} = \MapDapRest\Utils::convDateToSQL($row->{$x}, true);  }
+
+          $i++;
         }
+        if ($fill_count!==null) $fill_count = $i;
         return $row;
     }
     //******************* FILL ROW *******************************************************
@@ -326,9 +329,9 @@ class TableHandler
     
 
     //********************* ADD **************************************************************************************************
-    public function add($tablename, $args) {
+    public function add($tablename, $request) {
         $user = $this->APP->auth->getFields();
-        $json_response = [];
+        $json_response = ["error"=>0];
  
         if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
         if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
@@ -346,8 +349,9 @@ class TableHandler
         } catch(Exception $e) {
         }
 
-        $row = $this->fillRowParams($row, "add", $tableInfo, $args);  //Заполняем строку данными из формы
-
+        $row = $this->fillRowParams($row, "add", $tableInfo, $request->params, $fill_count);  //Заполняем строку данными из формы
+        if ($fill_count==0) return return ["error"=>7, "message"=>"fields not filled"];
+/*
         //Это дочерняя таблица - тогда устанавливаем родителя
         //&parentTables=["users"=>12, "posts"=>33]
         if (isset($tableInfo["parentTables"]) && count($tableInfo["parentTables"])>0 && isset($args["parentTables"])) {
@@ -355,25 +359,26 @@ class TableHandler
                 $row->{$y["id"]} = (int)$args["parentTables"][$y["table"]];
              }
         }
- 
+*/ 
         //Событие
-        if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("add", $row, $args)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
+        if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("add", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
         $result = $row->save(); //Сохраняем запись
         if (!$result) { return ["error"=>4, "message"=>"save error"];  }  //Если ошибка сохранения то сообщаем и выходим
         
         //Событие
-        if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("add", $row, $args);  }
+        if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("add", $row, $request->params);  }
 
 
-        $row = $this->fillRowParams($row, "add", $tableInfo, $args);  //Заполняем строку данными из формы
+        //Повторное заполнение необходимо для сохранения файла
+        $row = $this->fillRowParams($row, "add", $tableInfo, $request->params);  //Заполняем строку данными из формы
 
         $id = $row->id;
-        $row = $modelClass::filterRead()->filterEdit()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
+        $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
         
-        $item = $this->rowConvert($tableInfo, $row);
+        $json_response["rows"] = [ $this->rowConvert($tableInfo, $row) ];
 
-        return $item;
+        return $json_response;
 
     }
     //*****************************************************************************************************************************
@@ -381,9 +386,9 @@ class TableHandler
 
 
     //********************* EDIT **************************************************************************************************
-    public function edit($tablename, $id, $args) {
+    public function edit($tablename, $id, $request) {
         $user = $this->APP->auth->getFields();
-        $json_response = [];
+        $json_response = ["error"=>0];
  
         if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
         if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
@@ -399,25 +404,24 @@ class TableHandler
         if (!$row) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
         if ($row->id != $id) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
         
-        $row = $this->fillRowParams($row, "edit", $tableInfo, $args);  //Заполняем строку данными из формы
+        $row = $this->fillRowParams($row, "edit", $tableInfo, $request->params);  //Заполняем строку данными из формы
         
         //Событие
-        if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $args)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
+        if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
         $result = $row->save(); //Сохраняем запись
         if (!$result) { return ["error"=>4, "message"=>"save error"]; }  //Если ошибка сохранения то сообщаем и выходим
         
         //Событие
-        if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $args);  }
+        if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $request->params);  }
 
         
         $id = $row->id;
-        $row = $modelClass::filterRead()->filterEdit()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
+        $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
         
-        $item = $this->rowConvert($tableInfo, $row);
+        $json_response["rows"] = [ $this->rowConvert($tableInfo, $row) ];
 
-        return $item;
-
+        return $json_response;
     }
     //*****************************************************************************************************************************
  
@@ -427,7 +431,7 @@ class TableHandler
     //********************* DELETE **************************************************************************************************
     public function delete($tablename, $id) {
         $user = $this->APP->auth->getFields();
-        $json_response = [];
+        $json_response = ["error"=>0];
  
         if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
         if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
@@ -452,7 +456,7 @@ class TableHandler
         //Событие
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("delete", $row, []);  }
 
-        return $row;
+        return $json_response;
     }
     //*****************************************************************************************************************************
 

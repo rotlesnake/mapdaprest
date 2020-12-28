@@ -17,23 +17,28 @@ class Model extends EloquentModel
         
         static::creating(function($model) {
 	  $app = \MapDapRest\App::getInstance();
-          if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
-	  
-          $model->created_by_user = $app->auth->getFields()['id'];
+          if ($app->auth) {
+             if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
+             $model->created_by_user = $app->auth->getFields()['id'];
+          }
+
           return $model->beforeAdd($model);
         });
         static::created(function($model) {
 	  $app = \MapDapRest\App::getInstance();
-          if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
+          if ($app->auth) {
+             if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
-          $log = new SystemLog();
-          $log->user_id = $app->auth->getFields()['id'];
-          $log->created_by_user = $log->user_id;
-          $log->table_name = $model->table;
-          $log->row_id = $model->id;
-          $log->action = 1;
-          $log->fields = $model;
-          $log->save();
+             $log = new SystemLog();
+             $log->user_id = $app->auth->getFields()['id'];
+             $log->created_by_user = $log->user_id;
+             $log->table_name = $model->table;
+             $log->row_id = $model->id;
+             $log->action = 1;
+             $log->fields = $model;
+             $log->save();
+          }
+
           $model->afterAdd($model);
         });
 
@@ -43,16 +48,19 @@ class Model extends EloquentModel
         });
         static::updated(function($model) {
 	  $app = \MapDapRest\App::getInstance();
-          if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
+          if ($app->auth) {
+             if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
-          $log = new SystemLog();
-          $log->user_id = $app->auth->getFields()['id'];
-          $log->created_by_user = $log->user_id;
-          $log->table_name = $model->table;
-          $log->row_id = $model->id;
-          $log->action = 2;
-          $log->fields = $model;
-          $log->save();
+             $log = new SystemLog();
+             $log->user_id = $app->auth->getFields()['id'];
+             $log->created_by_user = $log->user_id;
+             $log->table_name = $model->table;
+             $log->row_id = $model->id;
+             $log->action = 2;
+             $log->fields = $model;
+             $log->save();
+          }
+
           $model->afterEdit($model);
         });
         
@@ -62,16 +70,19 @@ class Model extends EloquentModel
         });
         static::deleted(function($model) {
 	  $app = \MapDapRest\App::getInstance();
-          if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
+          if ($app->auth) {
+             if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
-          $log = new SystemLog();
-          $log->user_id = $app->auth->getFields()['id'];
-          $log->created_by_user = $log->user_id;
-          $log->table_name = $model->table;
-          $log->row_id = $model->id;
-          $log->action = 3;
-          $log->fields = $model;
-          $log->save();
+             $log = new SystemLog();
+             $log->user_id = $app->auth->getFields()['id'];
+             $log->created_by_user = $log->user_id;
+             $log->table_name = $model->table;
+             $log->row_id = $model->id;
+             $log->action = 3;
+             $log->fields = $model;
+             $log->save();
+          }
+
           $model->afterDelete($model);
         });
         
@@ -125,7 +136,6 @@ class Model extends EloquentModel
               if (!isset($selects[ $key ])) continue;
               array_push($response, ["value"=>$key, "text"=>$val]);
           }
-          if (!$asString) return $arr;
 
           return $response;
       }

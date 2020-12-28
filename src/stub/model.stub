@@ -108,7 +108,7 @@ class <%MODEL%> extends \MapDapRest\Model
         ],
 
 	"columns"=>[
-            <%FIELDS%>
+<%FIELDS%>
 	],
 
 

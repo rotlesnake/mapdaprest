@@ -17,6 +17,7 @@ class AppMicro
     public $site_folder;
     public $app_folder;
     public $app_class;
+    public $auth = null;
     
     public $request;
     public $response;
@@ -43,6 +44,8 @@ class AppMicro
         static::$instance = $this;
 
         $this->initDB();
+        $this->auth = new Auth();
+        $this->auth->setUser(1);
     }
    
  
@@ -114,6 +117,9 @@ class AppMicro
                mkdir($this->APP_PATH.$module, 0777);
                mkdir($this->APP_PATH.$module."/Models", 0777);
                mkdir($this->APP_PATH.$module."/Controllers", 0777);
+               $template = file_get_contents(__DIR__."/stub/controller.stub");
+               $template = str_replace("<%MODULE%>", $module, $template);
+               file_put_contents($this->APP_PATH.$module."/Controllers/IndexController.php", $template);
             }
 
             $template = file_get_contents(__DIR__."/stub/controller.stub");
@@ -122,13 +128,20 @@ class AppMicro
 
             $template = file_get_contents(__DIR__."/stub/model.stub");
             $str="";
+            $str .= "\"id\" => [\"type\"=>\"integer\", \"label\"=>\"id\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n";
+            $str .= "\"created_at\" => [\"type\"=>\"timestamp\", \"label\"=>\"Дата создания\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n";
+            $str .= "\"updated_at\" => [\"type\"=>\"timestamp\", \"label\"=>\"Дата изменения\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n";
+            $str .= "\"created_by_user\" => [\"type\"=>\"linkTable\", \"label\"=>\"Создано пользователем\", \"table\"=>\"user\", \"field\"=>\"login\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n\r\n";
+
             foreach ($fields as $fn=>$opts) {
               $str .= "\"".$fn."\" => [";
               foreach ($opts as $k=>$v) {
                  $str .= "\"".$k."\"=>\"".$v."\", ";
               }
+              $str .= " \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ";
               $str .= "], \r\n";
             }//fields
+
             $template = str_replace("<%MODULE%>", $module, $template);
             $template = str_replace("<%MODEL%>", $model, $template);
             $template = str_replace("<%TABLE%>", strtolower($model), $template);

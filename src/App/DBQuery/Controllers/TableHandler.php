@@ -32,9 +32,11 @@ class TableHandler
            unset($tableInfo["seeds"]);
            return $tableInfo;
         }
+
+        //если доступ на чтение отсутствует то выдаем сообщение
+        if (!$this->APP->auth->hasRoles($tableInfo["read"])) return ["error"=>4, "message"=>"table $tablename access denied"];
+
        
-        $id = (int)$id;
- 
         //оставляем только поля разрешенные для чтения  или запрашиваемые клиентом fields[] ------------------------------------------
         $fields = [];
         if ($request->hasParam("fields")) $fields = explode(",", $request->getParam("fields")[$tablename] );
@@ -46,12 +48,6 @@ class TableHandler
            if ($this->APP->auth->hasRoles($y["read"])) array_push($allowFields, $x);
         }//---------------------------------------------------------------------------------------------------------------------------
         
- 
-
-
-        //если доступ на чтение отсутствует то выдаем сообщение
-        if (!$this->APP->auth->hasRoles($tableInfo["read"])) return ["error"=>4, "message"=>"table $tablename access denied"];
-
 
         $MODEL = $modelClass::select($allowFields)->filterRead();
         
@@ -156,10 +152,13 @@ class TableHandler
               $item[$x] = $row->{$x};
               
               if ($y["type"]=="linkTable") { 
+                 $item[$x."_text"] = "";
                  if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); }
+                 if (!$fastMode) { $item[$x."_text"] = $row->getFieldLinks($x, true); }
               } 
               if ($y["type"]=="select") { 
                  if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); }
+                 $item[$x."_text"] = $row->getFieldLinks($x, true);
               }
               if ($y["type"]=="integer")  { $item[$x] = (int)$row->{$x}; }
               if ($y["type"]=="float")    { $item[$x] = (float)$row->{$x}; }
