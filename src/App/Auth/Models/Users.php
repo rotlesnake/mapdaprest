@@ -121,7 +121,7 @@ class Users extends \MapDapRest\Model
 		"created_by_user"=>[
  			"type"=>"linkTable",
  			"label"=>"Создано пользователем",
- 			"table"=>"user",
+ 			"table"=>"users",
  			"field"=>"<%login%>",
  			"multiple"=>false,
  			"typeSelect"=>"table",

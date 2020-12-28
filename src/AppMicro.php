@@ -131,7 +131,7 @@ class AppMicro
             $str .= "\"id\" => [\"type\"=>\"integer\", \"label\"=>\"id\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n";
             $str .= "\"created_at\" => [\"type\"=>\"timestamp\", \"label\"=>\"Дата создания\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n";
             $str .= "\"updated_at\" => [\"type\"=>\"timestamp\", \"label\"=>\"Дата изменения\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n";
-            $str .= "\"created_by_user\" => [\"type\"=>\"linkTable\", \"label\"=>\"Создано пользователем\", \"table\"=>\"user\", \"field\"=>\"login\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n\r\n";
+            $str .= "\"created_by_user\" => [\"type\"=>\"linkTable\", \"label\"=>\"Создано пользователем\", \"table\"=>\"users\", \"field\"=>\"login\", \"read\"=>\$acc_all, \"add\"=>\$acc_all, \"edit\"=>\$acc_all ],\r\n\r\n";
 
             foreach ($fields as $fn=>$opts) {
               $str .= "\"".$fn."\" => [";

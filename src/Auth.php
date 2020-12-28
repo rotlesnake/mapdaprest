@@ -7,7 +7,7 @@ namespace MapDapRest;
 class Auth
 {
 
-	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\User";
+	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\Users";
 	public $user = null;
 	
 	public function __construct(){
