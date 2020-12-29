@@ -349,6 +349,7 @@ class TableHandler
         } catch(Exception $e) {
         }
 
+        $fill_count=0;
         $row = $this->fillRowParams($row, "add", $tableInfo, $request->params, $fill_count);  //Заполняем строку данными из формы
         if ($fill_count==0) return ["error"=>7, "message"=>"fields not filled"];
 /*
