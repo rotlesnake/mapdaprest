@@ -32,9 +32,9 @@ class TableHandler
 
         $modelClass = $this->APP->models[$tablename];
         $tableInfo = $modelClass::modelInfo();
+        unset($tableInfo["seeds"]);
 
         if (trim($id)=="modelInfo()") {
-           unset($tableInfo["seeds"]);
            return $tableInfo;
         }
 
