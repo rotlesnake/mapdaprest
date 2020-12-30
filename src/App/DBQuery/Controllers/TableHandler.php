@@ -27,9 +27,9 @@ class TableHandler
 
         $modelClass = $this->APP->models[$tablename];
         $tableInfo = $modelClass::modelInfo();
+        unset($tableInfo["seeds"]);
 
         if (trim($id)=="modelInfo()") {
-           unset($tableInfo["seeds"]);
            return $tableInfo;
         }
 
@@ -105,7 +105,7 @@ class TableHandler
         $is_single = false;
 
         //FIND
-        if ($id > 0) {
+        if ((int)$id > 0) {
             $MODEL = $MODEL->where("id", $id);
             $rows = $MODEL->first();
             $is_single = true;
@@ -128,16 +128,26 @@ class TableHandler
         foreach ($tableInfo["columns"] as $x=>$y) {
             if (!in_array($x, $allowFields)) { unset($tableInfo["columns"][$x]); continue; } //Оставляем только те поля которые запросили и разрешены к просмотру
             if (!$this->APP->auth->hasRoles($y["read"])) { unset($tableInfo["columns"][$x]); continue; } //Если чтение запрещено то удаляем поле
+            if (!$this->APP->auth->hasRoles($y["edit"])) { $tableInfo["columns"][$x]["protected"]=true; continue; } //Если редактирование запрещено то делаем отметку о защищенном поле
         }
 
+        $isFast = $request->hasParam("fast");
 
         if ($is_single) {
-           $rows = $this->rowConvert($tableInfo, $rows);
+           $rows = $this->rowConvert($tableInfo, $rows, $isFast);
         } else {
           //Берем строки из таблицы и выдаем клиенту ----------------------------------------------------------------------------------
           foreach ($rows as $key=>$row) {
-              $rows[$key] = $this->rowConvert($tableInfo, $row); //Форматируем поля для вывода клиенту
+              $rows[$key] = $this->rowConvert($tableInfo, $row, $isFast); //Форматируем поля для вывода клиенту
           }//----------------------------------------------------------------------------------------------------------------------------
+        }
+
+
+        //убираем лишние данные
+        foreach ($tableInfo["columns"] as $x=>$y) {
+            if (isset($tableInfo["columns"][$x]["read"])) { unset($tableInfo["columns"][$x]["read"]); }
+            if (isset($tableInfo["columns"][$x]["add"]))  { unset($tableInfo["columns"][$x]["add"]); }
+            if (isset($tableInfo["columns"][$x]["edit"])) { unset($tableInfo["columns"][$x]["edit"]); }
         }
 
   
@@ -164,6 +174,7 @@ class TableHandler
                  $item[$x."_text"] = "";
                  if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); }
                  if (!$fastMode) { $item[$x."_text"] = $row->getFieldLinks($x, true); }
+                 if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $row->getFieldLinks($x, false);
               } 
               if ($y["type"]=="select") { 
                  if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); }

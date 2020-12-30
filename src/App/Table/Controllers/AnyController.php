@@ -11,11 +11,9 @@ class AnyController  extends \MapDapRest\Controller
     {
       //table/users/1?info=true
       if ($request->method=="GET") {
-         $id = (int)$action_or_id;
-
          $tableHandler = new TableHandler($this->APP);
 
-         $resp = $tableHandler->get($tablename, $id, $request);
+         $resp = $tableHandler->get($tablename, $action_or_id, $request);
 
          return $resp;
       }//---GET-----------------------------------
@@ -41,35 +39,6 @@ class AnyController  extends \MapDapRest\Controller
          return $rows;
       }//---POST-----------------------------------
 
-
-      //table/users/1
-      if ($request->method=="PUT") {
-         $id = $action_or_id;
-         $rows = [];
-
-         $tableHandler = new TableHandler($this->APP);
-         
-         if ($id==0) {
-            $rows = $tableHandler->add($tablename, $request);
-         } else {
-            $rows = $tableHandler->edit($tablename, $id, $request);
-         }
-
-         return $rows;
-      }//---PUT-----------------------------------
-
-
-      //table/users/1
-      if ($request->method=="DELETE") {
-         $id = (int)$action_or_id;
-         $rows = [];
-
-         $tableHandler = new TableHandler($this->APP);
-        
-         $rows = $tableHandler->delete($tablename, $id);
-         
-         return $rows;
-      }//---DELETE-----------------------------------
 
     }//Action
 

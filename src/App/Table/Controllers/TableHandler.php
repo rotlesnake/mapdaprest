@@ -127,7 +127,7 @@ class TableHandler
 
         $rows = [];
         //GET
-        if ($id > 0) {
+        if ((int)$id > 0) {
             $rows = $MODEL->where("id", $id)->get();
             if (count($rows)>1) return ["error"=>6, "message"=>"scope filterRead error"];
         } else {
@@ -162,8 +162,9 @@ class TableHandler
         //Берем строки из таблицы и выдаем клиенту ----------------------------------------------------------------------------------
         $need_footer = false;
         $footer_row = [];
+        $isFast = $request->hasParam("fast");
         foreach ($rows as $row) {
-            $item = $this->rowConvert($json_response['info'], $row); //Форматируем поля для вывода клиенту
+            $item = $this->rowConvert($json_response['info'], $row, $isFast ); //Форматируем поля для вывода клиенту
             array_push($json_response['rows'], $item);
 
             //Если для этого поля требуется агрегатная функция в итогах то вычисляем.
@@ -171,7 +172,7 @@ class TableHandler
                 if (isset($y["footer"])) {
                    if (!isset($footer_row[$x])) $footer_row[$x] = 0; //init
                    if ($y["footer"]=="count") $footer_row[$x] = 1; 
-                   if ($y["footer"]=="sum")   $footer_row[$x] += (float)$item[$x]; 
+                   if ($y["footer"]=="sum")   $footer_row[$x] += (float)$item[$x];
                    $need_footer = true; 
                 }
             }
@@ -185,6 +186,11 @@ class TableHandler
             if (isset($json_response['info']["columns"][$x]["read"])) { unset($json_response['info']["columns"][$x]["read"]); }
             if (isset($json_response['info']["columns"][$x]["add"])) { unset($json_response['info']["columns"][$x]["add"]); }
             if (isset($json_response['info']["columns"][$x]["edit"])) { unset($json_response['info']["columns"][$x]["edit"]); }
+        }
+
+        if ($request->hasParam("mini")) {
+           unset($json_response['info']);
+           unset($json_response['pagination']);
         }
 
         return $json_response;
@@ -211,7 +217,6 @@ class TableHandler
                  if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $row->getFieldLinks($x, false);
               } 
               if ($y["type"]=="select") { 
-                 $item[$x."_text"] = "";
                  if (gettype($item[$x])!=="array") { $item[$x] = explode(',', $item[$x]); }
                  $item[$x."_text"] = $row->getFieldLinks($x, true);
               }
