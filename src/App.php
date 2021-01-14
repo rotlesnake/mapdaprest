@@ -112,9 +112,9 @@ class App
 
         foreach ($routes as $k=>$v) {
             if (strlen($v)==0) continue;
-            if ($k==0) $args['module'] = $v;
-            if ($k==1) $args['controller'] = $v;
-            if ($k==2) $args['action'] = $v;
+            if ($k==0) $args['module'] = Utils::convertURL($v);
+            if ($k==1) $args['controller'] = Utils::convertURL($v);
+            if ($k==2) $args['action'] = lcfirst(Utils::convertURL($v));
             if ($k>=3) $args['params'][] = $v;
         }
 
@@ -128,8 +128,8 @@ class App
             }
         }
    
-           $module     = ucfirst($args['module']);
-           $controller = (isset($args['controller']) ? ucfirst($args['controller'])."Controller" : "IndexController");
+           $module     = $args['module'];
+           $controller = (isset($args['controller']) ? $args['controller']."Controller" : "IndexController");
            $action     = (isset($args['action'])     ? $args['action']."Action" : "indexAction");
            $params     = (isset($args['params'])     ? $args['params'] : []);
 

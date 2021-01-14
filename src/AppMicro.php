@@ -176,9 +176,9 @@ class AppMicro
 
         foreach ($routes as $k=>$v) {
             if (strlen($v)==0) continue;
-            if ($k==0) $args['module'] = $v;
-            if ($k==1) $args['controller'] = $v;
-            if ($k==2) $args['action'] = $v;
+            if ($k==0) $args['module'] = Utils::convertURL($v);
+            if ($k==1) $args['controller'] = Utils::convertURL($v);
+            if ($k==2) $args['action'] = lcfirst(Utils::convertURL($v));
             if ($k>=3) $args['params'][] = $v;
         }
 

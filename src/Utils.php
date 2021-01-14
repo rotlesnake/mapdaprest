@@ -94,6 +94,15 @@ class Utils {
         return $out;
     }
 
+    public static function convertURL($url) {
+        $urls = explode("-", $url); 
+        $out = ""; 
+        foreach ($urls as $x=>$y) {
+           $out .= ucfirst($y);
+        }
+        return $out;
+    }
+
     //Получить список всех ролей
     public static function getAllRoles($ids=true) {
         if (!file_exists(__DIR__."/cache/models.json") ) return [];
