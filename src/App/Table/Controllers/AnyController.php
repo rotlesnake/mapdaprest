@@ -9,6 +9,8 @@ class AnyController  extends \MapDapRest\Controller
     /*  return [ error:0, message:'', rows:[] ] */
     public function anyAction($request, $response, $tablename, $action_or_id, $args)
     {
+      $tablename = strtolower($tablename);
+
       //table/users/1?info=true
       if ($request->method=="GET") {
          $tableHandler = new TableHandler($this->APP);

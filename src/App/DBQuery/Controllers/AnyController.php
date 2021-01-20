@@ -9,7 +9,8 @@ class AnyController  extends \MapDapRest\Controller
 
     public function anyAction($request, $response, $tablename, $id, $args)
     {
- 
+      $tablename = strtolower($tablename);
+
       //GET - is SELECT
       if ($request->method=="GET") {
          //?filter[status]=1,2,3

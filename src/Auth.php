@@ -110,6 +110,21 @@ class Auth
             setcookie( "token", "", time()-3600, '/', '');
         }
 
+        //***************************************************************************************************************************
+        //***************************************************************************************************************************
+        public function register($login, $password, $role_id, $status) {
+            $ModelUsers = $this->ModelUsers;
+            $user = new $ModelUsers();
+            $user->login = $login;
+            $user->password = password_hash($password, PASSWORD_DEFAULT);
+            $user->role_id = $role_id;
+            $user->status = $status;
+            if (!$user->save()) return false;
+
+            return $user;
+        }
+
+
         //изменить пароль
         public function changePassword($newpassword) {
             $this->user->password = password_hash($newpassword, PASSWORD_DEFAULT);
