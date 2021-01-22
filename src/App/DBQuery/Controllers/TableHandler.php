@@ -184,8 +184,8 @@ class TableHandler
               if ($y["type"]=="float")    { $item[$x] = (float)$row->{$x}; }
               if ($y["type"]=="double")   { $item[$x] = (double)$row->{$x}; }
               if ($y["type"]=="checkBox") { $item[$x."_text"] = ((int)$row->{$x}==1?"Да":"Нет"); } 
-              if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x]), "image", $tableInfo["table"], $row->id, $x); }
-              if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x]), "file", $tableInfo["table"], $row->id, $x); }
+              if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), "image", $tableInfo["table"], $row->id, $x); }
+              if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), "file", $tableInfo["table"], $row->id, $x); }
               if ($y["type"]=="password")   $item[$x] = "";
               if ($y["type"]=="date")       $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], false);
               if ($y["type"]=="dateTime")   $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
@@ -234,34 +234,43 @@ class TableHandler
 
     //******************* GET FILES *******************************************************
     public function getUploadedFiles($files_array, $type, $table_name="", $row_id=0, $field_name=""){
-       $files = [];
+       $files = []; 
        if (!is_array($files_array)) return $files;
        if (count($files_array)==0)  return $files;
 
        foreach ($files_array as $y) {
-         $fname = $y;
-         $fpath = $this->APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$y;
-         array_push($files, ["name"=>$fname, "url"=>$fpath]);
+         if ($y["type"]==1) {
+            $fname = $y["name"];
+            $fpath = $this->APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
+            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$y["caption"], "src"=>$fpath]);
+         } else {
+            array_push($files, $y);
+         }
        }
-       return $files;
+       return $files; //[type:1, name:'filename', caption:'description', src:'http:// or base64']
     }
     //******************* GET FILES *******************************************************
 
 
+
+
     public function prepareFileUploads($files_array, $table_name="", $row_id=0, $field_name="", $field_params=[]){
-              if (!is_array($files_array)) return false;
+        if (gettype($files_array)=="string") $files_array = json_decode($files_array,true);
+        if (!is_array($files_array)) return false;
 
-              $files=[];
-              for($i=0; $i<count($files_array); $i++) {
-                if (!isset($files_array[$i]["name"])) continue;
-                if (!isset($files_array[$i]["src"]))  continue;
+        $files=[];
+        for($i=0; $i<count($files_array); $i++) {
+            if (!isset($files_array[$i]["type"])) continue;
+            if (!isset($files_array[$i]["src"]))  continue;
 
+            if ($files_array[$i]["type"]==1) {
+                //is file
+                $fileInfo = [];
                 $fname = \MapDapRest\Utils::getSlug($files_array[$i]["name"], true);
                 $fsrc = $files_array[$i]["src"];
                 if (strlen($fname)<2) continue;
                 if (strlen($fsrc)<8)  continue;
                 $fsrc = substr($fsrc, strpos($fsrc, 'base64,')+7 );
-                array_push($files, $fname );
 
                 if ($row_id>0) {
                    $folder_path = $this->APP->ROOT_PATH."uploads/".$table_name;
@@ -280,8 +289,22 @@ class TableHandler
                       $image->saveToFile($file_name);
                    }
                 }
-              }//for
-              if (count($files)>0) return json_encode($files);
+                $fileInfo["type"] = 1;
+                $fileInfo["name"] = $fname;
+                $fileInfo["caption"] = (isset($files_array[$i]["caption"]) ? $files_array[$i]["caption"] : '');
+                $fileInfo["src"] = $this->APP->ROOT_URL."uploads/".$table_name."/".$row_id."_".$field_name."_".$fname;
+                array_push($files, $fileInfo );
+            } else {
+                //is url
+                $fileInfo = [];
+                $fileInfo["type"] = 2;
+                $fileInfo["name"] = "";
+                $fileInfo["caption"] = (isset($files_array[$i]["caption"]) ? $files_array[$i]["caption"] : '');
+                $fileInfo["src"] = $files_array[$i]["src"];
+                array_push($files, $fileInfo );
+            }
+        }//for
+        if (count($files)>0) return json_encode($files); //[type:1, name:'filename', caption:'description', src:'http:// or base64']
 
         return false;
     }

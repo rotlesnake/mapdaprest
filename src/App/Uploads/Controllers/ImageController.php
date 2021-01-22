@@ -6,6 +6,7 @@ namespace MapDapRest\App\Uploads\Controllers;
 class ImageController  extends \MapDapRest\Controller
 {
 
+    public $requireAuth = false;
     public $APP;
 
 
