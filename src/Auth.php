@@ -112,7 +112,7 @@ class Auth
 
         //***************************************************************************************************************************
         //***************************************************************************************************************************
-        public function register($login, $password, $role_id, $status) {
+        public function register($login, $password, $status, $role_id) {
             $APP = App::getInstance();
             if ($APP->auth->isGuest()) { 
                $this->setUser(1);
