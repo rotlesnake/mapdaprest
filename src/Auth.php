@@ -114,6 +114,9 @@ class Auth
         //***************************************************************************************************************************
         public function register($login, $password, $role_id, $status) {
             $ModelUsers = $this->ModelUsers;
+            $tmpuser = $ModelUsers::where('login', $login)->first();
+            if ($tmpuser) return false;
+
             $user = new $ModelUsers();
             $user->login = $login;
             $user->password = password_hash($password, PASSWORD_DEFAULT);
@@ -159,12 +162,19 @@ class Auth
 
         //Поля таблицы пользователя
         public function getAllFields() {
-          $fields = $this->user->attributesToArray();
-          return $fields;
+            $fields = $this->user->attributesToArray();
+            return $fields;
         }
 
         public function hasRoles($checkList=[]) {
-            return $this->user->hasRoles($checkList);
+            if (gettype($checkList)!="array") $checkList = explode(",", $checkList);
+            if (count($checkList)==0) return false;
+
+            $rolesList = array_map('intval', explode(',', $this->user->role_id));
+            foreach ($checkList as $v) {
+                if (in_array($v, $rolesList)) return true;
+            }
+            return false;
         }
 
         public function __get($property)
