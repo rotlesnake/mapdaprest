@@ -113,6 +113,11 @@ class Auth
         //***************************************************************************************************************************
         //***************************************************************************************************************************
         public function register($login, $password, $role_id, $status) {
+            $APP = App::getInstance();
+            if ($APP->auth->isGuest()) { 
+               $this->setUser(1);
+            }
+
             $ModelUsers = $this->ModelUsers;
             $tmpuser = $ModelUsers::where('login', $login)->first();
             if ($tmpuser) return false;

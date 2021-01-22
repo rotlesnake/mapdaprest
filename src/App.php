@@ -53,6 +53,11 @@ class App
 
     public function initDB($settings) {
         $this->db_settings = $settings;
+
+        if ($this->db_settings['driver']=='sqlite') { 
+           if (!file_exists($this->db_settings['database'])) file_put_contents($this->db_settings['database'], '');
+        }
+
         $this->DB = new \Illuminate\Database\Capsule\Manager();
         $this->DB->addConnection($settings);
         $this->DB->setEventDispatcher(new \Illuminate\Events\Dispatcher(new \Illuminate\Container\Container));
