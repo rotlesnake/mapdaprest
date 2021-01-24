@@ -35,7 +35,7 @@ class AnyController  extends \MapDapRest\Controller
 
          if ($action=="get")    {  //table/users/get/1    {fields:['id','name'], filter:[ {field:name, oper:'like', value:'asd'} ], sort:['-name'], itemsPerPage:100, page:1, parent_table:[name:users , id:999] }
             $rows = $tableHandler->get($tablename, $id, $request);
-            if (!isset($args[1])) { $rows = $rows["rows"]; }
+            //if (!isset($args[1])) { $rows = $rows["rows"]; }
          }
          
          return $rows;

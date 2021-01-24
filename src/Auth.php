@@ -167,7 +167,7 @@ class Auth
 
         //Поля таблицы пользователя
         public function getAllFields() {
-            $fields = $this->user->attributesToArray();
+            $fields = $this->user->getConvertedRow();
             return $fields;
         }
 
