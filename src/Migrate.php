@@ -79,7 +79,7 @@ class Migrate {
                  $table->integer('created_by_user')->unsigned()->nullable()->default(0);
                  $table->timestamps();
                  
-                 if ($APP->db_settings) $table->engine = $APP->db_settings['engine'];
+                 if ($APP->db_settings && isset($APP->db_settings['engine'])) $table->engine = $APP->db_settings['engine'];
                });
             }//---hasTable---
 
@@ -112,7 +112,7 @@ class Migrate {
                          $fld = $table->text($x)->nullable();
                       } else {
                          $fld = $table->integer($x)->unsigned()->index()->nullable();
-                         if (!$isSqlite) $table->foreign($x)->references('id')->on($y["table"]);
+                         $table->foreign($x)->references('id')->on($y["table"]);
                       }
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }
