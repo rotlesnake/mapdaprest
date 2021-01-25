@@ -147,6 +147,7 @@ class Model extends EloquentModel
 
 
     
+
     //******************* CONVERT FOR OUT*******************************************************
     public function getConvertedRow($fastMode=false){
         $APP = App::getInstance();
@@ -154,9 +155,9 @@ class Model extends EloquentModel
         $item = [];
         $item["id"] = $this->id;
  
-        //Каждую строку разбираем на поля, проверяем уровни доступа, заполняем и отдаем
+        //РљР°Р¶РґСѓСЋ СЃС‚СЂРѕРєСѓ СЂР°Р·Р±РёСЂР°РµРј РЅР° РїРѕР»СЏ, РїСЂРѕРІРµСЂСЏРµРј СѓСЂРѕРІРЅРё РґРѕСЃС‚СѓРїР°, Р·Р°РїРѕР»РЅСЏРµРј Рё РѕС‚РґР°РµРј
         foreach ($this->modelInfo()["columns"] as $x=>$y) {
-            if (!$APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
+            if (!$APP->auth->hasRoles($y["read"])) continue; //Р§С‚РµРЅРёРµ РїРѕР»СЏ Р·Р°РїСЂРµС‰РµРЅРѕ
             $item[$x] = $this->{$x};
 
             if ($y["type"]=="linkTable") { 
@@ -172,7 +173,7 @@ class Model extends EloquentModel
               if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
               if ($y["type"]=="float")    { $item[$x] = (float)$this->{$x}; }
               if ($y["type"]=="double")   { $item[$x] = (double)$this->{$x}; }
-              if ($y["type"]=="checkBox") { $item[$x."_text"] = ((int)$this->{$x}==1?"Да":"Нет"); } 
+              if ($y["type"]=="checkBox") { $item[$x."_text"] = ((int)$this->{$x}==1?"Р”Р°":"РќРµС‚"); } 
               if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
               if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file", $tablename, $this->id, $x); }
               if ($y["type"]=="password")   $item[$x] = "";
@@ -214,24 +215,24 @@ class Model extends EloquentModel
 
         $i=0;
         foreach ($this->modelInfo()["columns"] as $x=>$y) {
-          if (isset($y["is_virtual"]) && $y["is_virtual"]) continue;      //Поле виртуальное
-          if (!isset($params[$x]))  continue;                             //Поле отсутствует
-          if (!$APP->auth->hasRoles($y[$action])) continue;               //Нет прав не заполняем поле
-          if ($y["type"]=="password" && strlen($params[$x])<4) continue;  //Пароль пустой не заполняем
+          if (isset($y["is_virtual"]) && $y["is_virtual"]) continue;      //РџРѕР»Рµ РІРёСЂС‚СѓР°Р»СЊРЅРѕРµ
+          if (!isset($params[$x]))  continue;                             //РџРѕР»Рµ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚
+          if (!$APP->auth->hasRoles($y[$action])) continue;               //РќРµС‚ РїСЂР°РІ РЅРµ Р·Р°РїРѕР»РЅСЏРµРј РїРѕР»Рµ
+          if ($y["type"]=="password" && strlen($params[$x])<4) continue;  //РџР°СЂРѕР»СЊ РїСѓСЃС‚РѕР№ РЅРµ Р·Р°РїРѕР»РЅСЏРµРј
  
-          //Если картики или фалы то подготавливаем массив в специальном формате
+          //Р•СЃР»Рё РєР°СЂС‚РёРєРё РёР»Рё С„Р°Р»С‹ С‚Рѕ РїРѕРґРіРѕС‚Р°РІР»РёРІР°РµРј РјР°СЃСЃРёРІ РІ СЃРїРµС†РёР°Р»СЊРЅРѕРј С„РѕСЂРјР°С‚Рµ
           if ($y["type"]=="images" || $y["type"]=="files") {
               $files = $this->prepareFileUploads($params[$x], $tablename, $this->id, $x, $y);
               if ($files) { $this->{$x} = $files; }
           } else {
               $this->{$x} = $params[$x];
-              if (is_array($params[$x])) {  $this->{$x} = \MapDapRest\Utils::arrayToString($params[$x]);  } //массив преобразуем в строку [12,32,34] -> 12,32,34
+              if (is_array($params[$x])) {  $this->{$x} = \MapDapRest\Utils::arrayToString($params[$x]);  } //РјР°СЃСЃРёРІ РїСЂРµРѕР±СЂР°Р·СѓРµРј РІ СЃС‚СЂРѕРєСѓ [12,32,34] -> 12,32,34
           }
 
           
-          if ($y["type"]=="password") { $this->{$x} = password_hash($params[$x], PASSWORD_DEFAULT); } //пароль хешируем
-          if (!empty($y["default"]) && $action=="add" && strlen($params[$x])==0) { $this->{$x} = $y["default"]; } //при добавлении поля если оно пустое то заполняем его значение по умолчанию
-          //Меняем даты в формат SQL
+          if ($y["type"]=="password") { $this->{$x} = password_hash($params[$x], PASSWORD_DEFAULT); } //РїР°СЂРѕР»СЊ С…РµС€РёСЂСѓРµРј
+          if (!empty($y["default"]) && $action=="add" && strlen($params[$x])==0) { $this->{$x} = $y["default"]; } //РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё РїРѕР»СЏ РµСЃР»Рё РѕРЅРѕ РїСѓСЃС‚РѕРµ С‚Рѕ Р·Р°РїРѕР»РЅСЏРµРј РµРіРѕ Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+          //РњРµРЅСЏРµРј РґР°С‚С‹ РІ С„РѕСЂРјР°С‚ SQL
           if ($y["type"]=="date")       { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, false); }
           if ($y["type"]=="dateTime")   { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, true);  }
           if ($y["type"]=="timestamp")  { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, true);  }
