@@ -13,7 +13,6 @@ class ImageController  extends \MapDapRest\Controller
     public function __construct($app, $request, $response, $args)
     {
         $this->APP = $app;
-        //$this->APP->auth->setUser(1);
     }
 
 
