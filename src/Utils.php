@@ -133,6 +133,7 @@ class Utils {
         $arr[] = ["value"=>"bigInteger", "text"=>"Целое число большое"];
         $arr[] = ["value"=>"float", "text"=>"Сумма"];
         $arr[] = ["value"=>"double", "text"=>"Число с плавающей точкой"];
+
         $arr[] = ["value"=>"color", "text"=>"Выбор цвета"];
 
         $arr[] = ["value"=>"checkBox", "text"=>"Да/Нет"];
