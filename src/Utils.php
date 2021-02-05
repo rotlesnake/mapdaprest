@@ -22,7 +22,7 @@ class Utils {
             "ц"=>"ts","ч"=>"ch","ш"=>"sh","щ"=>"sch","ъ"=>"y",
             "ы"=>"yi","ь"=>"","э"=>"e","ю"=>"yu","я"=>"ya", 
             " "=>"_", "."=>"_", ","=>"_", "/"=>"_", "\\"=>"_", 
-            "'"=>"", "\""=>"", ":"=>"_"
+            "'"=>"", "\""=>"", ":"=>"_", ";"=>"_"
         );
         if ($asFile) {
           $tr["."]=".";
@@ -94,7 +94,8 @@ class Utils {
         return $out;
     }
 
-    public static function convertURL($url) {
+    public static function convUrlToModel($url) {
+        $url = self::getSlug($url, false, true); 
         $urls = explode("-", $url); 
         $out = ""; 
         foreach ($urls as $x=>$y) {
@@ -102,18 +103,30 @@ class Utils {
         }
         return $out;
     }
+    public static function convUrlToMethod($url) {
+        $url = self::convUrlToModel($url); 
+        return lcfirst($url);
+    }
+    public static function convUrlToTable($url) {
+        $url = self::convUrlToMethod($url); 
+        $url = preg_replace_callback('|([A-Z]+)|', function($word) { return "_".strtolower($word[0]); }, $url);
+        return $url;
+    }
+    public static function convNameToUrl($name) {
+        $name = lcfirst($name);
+        $name = preg_replace_callback('|([A-Z]+)|', function($word) { return "-".strtolower($word[0]); }, $name);
+        return $name;
+    }
 
     //Получить список всех ролей
     public static function getAllRoles($ids=true) {
         if (!file_exists(__DIR__."/cache/models.json") ) return [];
 
 	$APP = \MapDapRest\App::getInstance();
-	//$roles = $APP->DB::table("roles")->get();
 	$roles = \App\Auth\Models\Roles::get();
 
         $arr = [];
         foreach ($roles as $row) {
-            //$row->id = (int)$row->id;
             array_push($arr, $row->id);
         }
 
