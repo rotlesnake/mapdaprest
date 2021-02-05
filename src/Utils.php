@@ -108,14 +108,16 @@ class Utils {
         if (!file_exists(__DIR__."/cache/models.json") ) return [];
 
 	$APP = \MapDapRest\App::getInstance();
-	$roles = $APP->DB::table("roles")->get();
-	if (!$ids) return $roles;
+	//$roles = $APP->DB::table("roles")->get();
+	$roles = \App\Auth\Models\Roles::get();
 
         $arr = [];
         foreach ($roles as $row) {
+            //$row->id = (int)$row->id;
             array_push($arr, $row->id);
         }
 
+	if (!$ids) return $roles;
         return $arr;
     }
 
