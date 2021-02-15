@@ -19,7 +19,7 @@ class Request
         $postRaw = file_get_contents('php://input');
         parse_str($postRaw, $postPara);
         $postJson = json_decode($postRaw, true);
-        $this->params = array_merge( $_REQUEST, $postPara, $postJson );
+        $this->params = array_merge( $_REQUEST, (array)$postPara, (array)$postJson );
         $this->files = $_FILES;
         $this->cookies = $_COOKIE;
     }
