@@ -16,8 +16,10 @@ class Request
     {
         $this->method = $_SERVER['REQUEST_METHOD'];
         $this->headers = array_change_key_case( apache_request_headers(), CASE_LOWER );
-        $post = json_decode(file_get_contents('php://input'), true);
-        $this->params = array_merge( $_REQUEST, (array)$post );
+        $postRaw = file_get_contents('php://input');
+        parse_str($postRaw, $postPara);
+        $postJson = json_decode($postRaw, true);
+        $this->params = array_merge( $_REQUEST, $postPara, $postJson );
         $this->files = $_FILES;
         $this->cookies = $_COOKIE;
     }
