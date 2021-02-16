@@ -134,7 +134,7 @@ class Model extends EloquentModel
           $response=[];
           foreach ($field_values as $key=>$val) {
               if (!isset($selects[ $val ])) continue;
-              array_push($response, ["value"=>$val, "text"=>$selects[ $val ]]);
+              array_push($response, ["value"=>(int)$val, "text"=>$selects[ $val ]]);
           }
 
           return $response;
