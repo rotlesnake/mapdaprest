@@ -133,8 +133,8 @@ class Model extends EloquentModel
           $selects = $this->modelInfo()["columns"][$field]["items"];
           $response=[];
           foreach ($field_values as $key=>$val) {
-              if (!isset($selects[ $key ])) continue;
-              array_push($response, ["value"=>$key, "text"=>$val]);
+              if (!isset($selects[ $val ])) continue;
+              array_push($response, ["value"=>$val, "text"=>$selects[ $val ]]);
           }
 
           return $response;
@@ -162,12 +162,12 @@ class Model extends EloquentModel
 
             if ($y["type"]=="linkTable") { 
                 $item[$x."_text"] = "";
-                if (gettype($item[$x])!=="array") { $item[$x] = explode(',', $item[$x]); }
+                if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
                 if (!$fastMode) { $item[$x."_text"] = $this->getFieldLinks($x, true); }
                 if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $this->getFieldLinks($x, false);
             } 
             if ($y["type"]=="select") { 
-                 if (gettype($item[$x])!=="array") { $item[$x] = explode(',', $item[$x]); }
+                 if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
                  $item[$x."_text"] = $this->getFieldLinks($x, true);
             }
               if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
