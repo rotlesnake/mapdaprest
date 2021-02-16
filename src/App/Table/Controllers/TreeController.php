@@ -1,18 +1,17 @@
 <?php
+namespace MapDapRest\App\Table\Controllers;
 
-namespace App\Table\Controllers;
 
-
-class TreeHandler
+class TreeController extends \MapDapRest\Controller
 {
 
 
-    public function anyAction($request, $response, $tablename, $args)
+    public function anyAction($request, $response, $controller, $tablename, $args)
     {
        $json_response = [];
  
         if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
-        if (!$this->APP->hasModel($tablename)) return ["error"=>6, "message"=>"table $tablename not found"];
+        if (!$this->APP->hasModel($tablename)) return ["error"=>6, "message"=>"treetable $tablename not found"];
         
         $modelClass = $this->APP->getModel($tablename);
 
@@ -23,8 +22,8 @@ class TreeHandler
         }
 
         if ($request->method=="POST") {
-           $this->setTreeTable($modelClass, $args);
-           $json_response = $this->getTreeTable($model, 0);
+           $this->setTreeTable($modelClass, $request->params);
+           $json_response = $this->getTreeTable($modelClass, 0);
            return $json_response;
         }
     }
@@ -34,13 +33,9 @@ class TreeHandler
         $json_response = [];
         $items = $model::where("parent_id", $parent_id)->orderBy("sort")->get();
         foreach ($items as $item) {
-             $item_tree = [];
+             $item_tree = $item->toArray();
              $item_tree["server_id"] = $item->id;
-             $item_tree["id"] = $item->id;
-             $item_tree["pid"] = (int)$item->parent_id;
-             $item_tree["open"] = true;
-             $item_tree["name"] = $item->name;
-             $item_tree["childrens"] = $this->getTreeTable($model, $item->id);
+             $item_tree["children"] = $this->getTreeTable($model, $item->id);
 
              array_push($json_response, $item_tree);
         }
@@ -56,16 +51,13 @@ class TreeHandler
              if (isset($item["server_id"])) $id = (int)$item["server_id"];
 
              $row = $model::findOrNew($id);
+             $row->fill($item);
              $row->parent_id = $parent_id;
-             $row->name = $item["name"];
-             if ($row->id == 0) {
-               //default values
-             }
              $row->sort = $sort;
              $row->save();
 
-             if (isset($item["childrens"]) && count($item["childrens"])>0 ) {
-                 $sort = $this->setTreeTable($model, $item["childrens"], $row->id, $sort);
+             if (isset($item["children"]) && count($item["children"])>0 ) {
+                 $sort = $this->setTreeTable($model, $item["children"], $row->id, $sort);
              }
         }
         return $sort;
