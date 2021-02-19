@@ -126,13 +126,11 @@ class Model extends EloquentModel
               }
           }//foreach
 
-          if ($asType=="text") {
-              $response_text="";
-              foreach ($response_array["values"] as $item) {
-                  $response_text .= "|".$item["text"];
-              }
-              $response_array["text"] = substr($response_text,1);
+          $response_text="";
+          foreach ($response_array["values"] as $item) {
+              $response_text .= "|".$item["text"];
           }
+          $response_array["text"] = substr($response_text,1);
 
           return $response_array;
       }//linkTable
@@ -146,13 +144,11 @@ class Model extends EloquentModel
               array_push($response_array["values"], ["value"=>(int)$val, "text"=>$selects[ $val ]]);
           }
 
-          if ($asType=="text") {
-              $response_text="";
-              foreach ($response_array["values"] as $item) {
-                  $response_text .= "|".$item["text"];
-              }
-              $response_array["text"] = substr($response_text,1);
+          $response_text="";
+          foreach ($response_array["values"] as $item) {
+              $response_text .= "|".$item["text"];
           }
+          $response_array["text"] = substr($response_text,1);
 
           return $response_array;
       }
