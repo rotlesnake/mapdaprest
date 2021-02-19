@@ -174,20 +174,20 @@ class Model extends EloquentModel
             $item[$x] = $this->{$x};
 
             if ($y["type"]=="linkTable") {
-                if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
+                if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
                     $FieldLinks = $this->getFieldLinks($x);
                     $item[$x."_text"] = $FieldLinks["text"];
-                    $item[$x."_values"] = $FieldLinks["values"];
-                    $item[$x."_rows"] = $FieldLinks["rows"];
+                    if (isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
+                    if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $FieldLinks["rows"];
                 }
             } 
             if ($y["type"]=="select") {
-                if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
+                if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
                     $FieldLinks = $this->getFieldLinks($x);
                     $item[$x."_text"] = $FieldLinks["text"];
-                    $item[$x."_values"] = $FieldLinks["values"];
+                    if (isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                 }
             }
             if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
