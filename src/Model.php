@@ -92,55 +92,72 @@ class Model extends EloquentModel
 
 
 
-    public function getFieldLinks($field, $asString=false) {
+    public function getFieldLinks($field) {
+      $response_array = ["rows"=>[], "values"=>[], "text"=>""];
       $APP = App::getInstance();
       $field_values = $this->{$field};
       if (gettype($field_values)!=="array") {
-        $field_values = explode(',', $field_values);
+        $field_values = array_map('intval', explode(',', $field_values));
       }
 
       if ($this->modelInfo()["columns"][$field]["type"]=="linkTable") {
-        $link_table = $this->modelInfo()["columns"][$field]["table"];
-        $link_field = $this->modelInfo()["columns"][$field]["field"];
-        $link_field_max = 250;
-        if (isset($this->modelInfo()["columns"][$field]["field_max"])) $link_field_max = $this->modelInfo()["columns"][$field]["field_max"];
+          $link_table = $this->modelInfo()["columns"][$field]["table"];
+          $link_field = $this->modelInfo()["columns"][$field]["field"];
+          $link_field_max = 250;
+          if (isset($this->modelInfo()["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo()["columns"][$field]["field_maxlen"];
  
-        $rows = $APP->DB->table($link_table)->whereIn('id', $field_values )->get();
-        if (!$asString) return $rows;
+          $rows = $APP->DB->table($link_table)->whereIn('id', $field_values )->get();
+          $response_array["rows"] = $rows;
 
-        $response=[];
-        foreach ($rows as $item) {
-            if (strpos($link_field,"<%")===false) {
-                $str = $item->{$link_field};
-                if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
-                array_push($response, ["value"=>$item->id, "text"=>$str]);
-            } else {
-                $str = preg_replace_callback('|<%(.*)%>|isU', function($prms) use($item, $link_field_max) {
+          foreach ($rows as $item) {
+              if (strpos($link_field,"<%")===false) {
+                  $str = $item->{$link_field};
+                  if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
+                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+              } else {
+                  $str = preg_replace_callback('|<%(.*)%>|isU', function($prms) use($item, $link_field_max) {
                                  if (isset($item->{$prms[1]})) {
                                     $str = $item->{$prms[1]};
                                     if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                                     return $str; 
                                  } else { return ""; }
                         }, $link_field);
-                array_push($response, ["value"=>$item->id, "text"=>$str]);
-            }
-        }//foreach
-        return $response;
+                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+              }
+          }//foreach
+
+          if ($asType=="text") {
+              $response_text="";
+              foreach ($response_array["values"] as $item) {
+                  $response_text .= "|".$item["text"];
+              }
+              $response_array["text"] = substr($response_text,1);
+          }
+
+          return $response_array;
       }//linkTable
 
 
       if ($this->modelInfo()["columns"][$field]["type"]=="select") {
           $selects = $this->modelInfo()["columns"][$field]["items"];
-          $response=[];
+
           foreach ($field_values as $key=>$val) {
               if (!isset($selects[ $val ])) continue;
-              array_push($response, ["value"=>(int)$val, "text"=>$selects[ $val ]]);
+              array_push($response_array["values"], ["value"=>(int)$val, "text"=>$selects[ $val ]]);
           }
 
-          return $response;
+          if ($asType=="text") {
+              $response_text="";
+              foreach ($response_array["values"] as $item) {
+                  $response_text .= "|".$item["text"];
+              }
+              $response_array["text"] = substr($response_text,1);
+          }
+
+          return $response_array;
       }
 
-      return [];
+      return $response_array;
     }//getFieldLinks
 
 
@@ -160,27 +177,34 @@ class Model extends EloquentModel
             if (!$APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
             $item[$x] = $this->{$x};
 
-            if ($y["type"]=="linkTable") { 
-                $item[$x."_text"] = "";
+            if ($y["type"]=="linkTable") {
                 if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
-                if (!$fastMode) { $item[$x."_text"] = $this->getFieldLinks($x, true); }
-                if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $this->getFieldLinks($x, false);
+                if (!$fastMode) {
+                    $FieldLinks = $this->getFieldLinks($x);
+                    $item[$x."_text"] = $FieldLinks["text"];
+                    $item[$x."_values"] = $FieldLinks["values"];
+                    $item[$x."_rows"] = $FieldLinks["rows"];
+                }
             } 
-            if ($y["type"]=="select") { 
-                 if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
-                 $item[$x."_text"] = $this->getFieldLinks($x, true);
+            if ($y["type"]=="select") {
+                if (gettype($item[$x])!=="array") { $item[$x] = array_map('intval', explode(',', $item[$x])); }
+                if (!$fastMode) {
+                    $FieldLinks = $this->getFieldLinks($x);
+                    $item[$x."_text"] = $FieldLinks["text"];
+                    $item[$x."_values"] = $FieldLinks["values"];
+                }
             }
-              if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
-              if ($y["type"]=="float")    { $item[$x] = (float)$this->{$x}; }
-              if ($y["type"]=="double")   { $item[$x] = (double)$this->{$x}; }
-              if ($y["type"]=="checkBox") { $item[$x."_text"] = ((int)$this->{$x}==1?"Да":"Нет"); } 
-              if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
-              if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file", $tablename, $this->id, $x); }
-              if ($y["type"]=="password")   $item[$x] = "";
-              if ($y["type"]=="date")       $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], false);
-              if ($y["type"]=="dateTime")   $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
-              if ($y["type"]=="timestamp")  $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
-            }
+            if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
+            if ($y["type"]=="float")    { $item[$x] = (float)$this->{$x}; }
+            if ($y["type"]=="double")   { $item[$x] = (double)$this->{$x}; }
+            if ($y["type"]=="checkBox") { $item[$x] = (int)$this->{$x}; $item[$x."_text"] = ($item[$x]==1?"Да":"Нет"); }
+            if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
+            if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file", $tablename, $this->id, $x); }
+            if ($y["type"]=="password")   $item[$x] = "";
+            if ($y["type"]=="date")       $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], false);
+            if ($y["type"]=="dateTime")   $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
+            if ($y["type"]=="timestamp")  $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
+        }
         return $item;
     }
     //******************* CONVERT FOR OUT *******************************************************

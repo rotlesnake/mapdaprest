@@ -33,8 +33,8 @@ class TreeController extends \MapDapRest\Controller
         $json_response = [];
         $items = $model::where("parent_id", $parent_id)->orderBy("sort")->get();
         foreach ($items as $item) {
-             $item_tree = $item->toArray();
-             $item_tree["server_id"] = $item->id;
+             $item_tree = $item->getConvertedRow();
+             $item_tree["server_id"] = (int)$item->id;
              $item_tree["children"] = $this->getTreeTable($model, $item->id);
 
              array_push($json_response, $item_tree);
