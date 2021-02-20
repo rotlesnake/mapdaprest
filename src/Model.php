@@ -197,9 +197,9 @@ class Model extends EloquentModel
             if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
             if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file", $tablename, $this->id, $x); }
             if ($y["type"]=="password")   $item[$x] = "";
-            if ($y["type"]=="date")       $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], false);
-            if ($y["type"]=="dateTime")   $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
-            if ($y["type"]=="timestamp")  $item[$x] = \MapDapRest\Utils::convDateToDate($item[$x], true);
+            if ($y["type"]=="date")      { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], false); }
+            if ($y["type"]=="dateTime")  { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], true);  }
+            if ($y["type"]=="timestamp") { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], true);  }
         }
         return $item;
     }
