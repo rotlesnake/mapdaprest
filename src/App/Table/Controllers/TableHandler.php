@@ -1,13 +1,15 @@
 <?php
 namespace MapDapRest\App\Table\Controllers;
-//namespace App\Table\Controllers;
+
 
 
 class TableHandler
 {
 
     public $APP;
-
+    public $lastError = [];
+    public $modelClass;
+    public $tableInfo;
 
 
     public function __construct($app)
@@ -16,31 +18,44 @@ class TableHandler
     }
 
 
+    public function loadModelInfo($tablename, $access) {
+        if ($tablename=="") {
+           $this->$lastError = ["error"=>6, "message"=>"table name is empty"];
+           return false;
+        }
+        if (!isset($this->APP->models[$tablename])) {
+           $this->$lastError = ["error"=>6, "message"=>"table ($tablename) not found"];
+           return false;
+        }
+
+        $modelClass = $this->APP->models[$tablename];
+        $this->modelClass = $modelClass;
+        $this->$tableInfo = $modelClass::modelInfo();
+        unset($this->tableInfo["seeds"]);
+
+        if (!$this->APP->auth->hasRoles($this->$tableInfo[$access])) {
+           $this->$lastError = ["error"=>4, "message"=>"access to table ($tablename) denied"];
+           return false;
+        }
+
+        return true;
+    }
+
+
 
     //******************* GET *******************************************************
     public function get($tablename, $id, $request)
     {
-        $user = $this->APP->auth->getFields();
+        if (!$this->loadModelInfo($tablename, "read")) return $this->$lastError;
 
-        $json_response = ["error"=>0];
-        $json_response["info"] = [];
-        $json_response["rows"] = [];
-        $json_response["pagination"] = [];
-
-        if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
-        if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
-
-        $modelClass = $this->APP->models[$tablename];
-        $tableInfo = $modelClass::modelInfo();
-        unset($tableInfo["seeds"]);
+        $modelClass = $this->modelClass;
+        $tableInfo = $this->$tableInfo;
 
         if (trim($id)=="modelInfo()") {
            return $tableInfo;
         }
 
-        //если доступ на чтение отсутствует то выдаем сообщение
-        if (!$this->APP->auth->hasRoles($tableInfo["read"])) return ["error"=>4, "message"=>"table $tablename access denied"];
-
+        $json_response = ["error"=>0, "info"=>[], "rows"=>[], "pagination"=>[]];
 
         //оставляем только поля разрешенные для чтения  или запрашиваемые клиентом $reqFields
         $fields = [];
@@ -213,22 +228,16 @@ class TableHandler
 
     //********************* ADD **************************************************************************************************
     public function add($tablename, $request) {
-        $user = $this->APP->auth->getFields();
+        if (!$this->loadModelInfo($tablename, "add")) return $this->$lastError;
+
+        $modelClass = $this->modelClass;
+        $tableInfo = $this->$tableInfo;
         $json_response = ["error"=>0];
  
-        if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
-        if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
-
-        $modelClass = $this->APP->models[$tablename];
-        $tableInfo = $modelClass::modelInfo();
-
-        //если доступ на добавление отсутствует то выдаем сообщение
-        if (!$this->APP->auth->hasRoles($tableInfo["add"])) return ["error"=>4, "message"=>"table $tablename access denied"];
-       
         //Создаем запись
         $row = new $modelClass();
         try { 
-           $row->created_by_user = $user["id"]; 
+           $row->created_by_user = $this->APP->auth->user->id; 
         } catch(Exception $e) {
         }
 
@@ -271,17 +280,11 @@ class TableHandler
 
     //********************* EDIT **************************************************************************************************
     public function edit($tablename, $id, $request) {
-        $user = $this->APP->auth->getFields();
+        if (!$this->loadModelInfo($tablename, "edit")) return $this->$lastError;
+
+        $modelClass = $this->modelClass;
+        $tableInfo = $this->$tableInfo;
         $json_response = ["error"=>0];
- 
-        if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
-        if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
-
-        $modelClass = $this->APP->models[$tablename];
-        $tableInfo = $modelClass::modelInfo();
-
-        //если доступ на изменение отсутствует то выдаем сообщение
-        if (!$this->APP->auth->hasRoles($tableInfo["edit"])) return ["error"=>4, "message"=>"table $tablename access denied"];
        
         //Читаем запись
         $row = $modelClass::filterRead()->filterEdit()->where("id", $id)->first();
@@ -298,7 +301,6 @@ class TableHandler
         
         //Событие
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $request->params);  }
-
         
         $id = $row->id;
         $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
@@ -314,24 +316,17 @@ class TableHandler
     
     //********************* DELETE **************************************************************************************************
     public function delete($tablename, $id) {
-        $user = $this->APP->auth->getFields();
+        if (!$this->loadModelInfo($tablename, "delete")) return $this->$lastError;
+
+        $modelClass = $this->modelClass;
+        $tableInfo = $this->$tableInfo;
         $json_response = ["error"=>0];
- 
-        if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
-        if (!isset($this->APP->models[$tablename])) return ["error"=>6, "message"=>"table $tablename not found"];
-
-        $modelClass = $this->APP->models[$tablename];
-        $tableInfo = $modelClass::modelInfo();
-
-        //если доступ на добавление отсутствует то выдаем сообщение
-        if (!$this->APP->auth->hasRoles($tableInfo["delete"])) return ["error"=>4, "message"=>"table $tablename access denied"];
        
         //Читаем запись
         $row = $modelClass::filterRead()->filterEdit()->filterDelete()->where("id",$id)->first();
         if (!$row) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
         if ($row->id != $id) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
 
-        
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("delete", $row, [])===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
