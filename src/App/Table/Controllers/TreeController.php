@@ -15,16 +15,29 @@ class TreeController extends \MapDapRest\Controller
         
         $modelClass = $this->APP->getModel($tablename);
 
-
+        //Получить всё дерево
         if ($request->method=="GET") {
            $json_response = $this->getTreeTable($modelClass, 0);
            return $json_response;
         }
-
+        //Перезаписать всё дерево
         if ($request->method=="POST") {
            $this->setTreeTable($modelClass, $request->params);
            $json_response = $this->getTreeTable($modelClass, 0);
            return $json_response;
+        }
+        //Перезаписать один элемент
+        if ($request->method=="PUT") {
+           $row = $modelClass::find($request->params['id']);
+           $row->fill($request->params);
+           $row->save();
+           return $row;
+        }
+        //Удалить один элемент
+        if ($request->method=="DELETE") {
+           $row = $modelClass::find($args[0]);
+           $row->delete();
+           return $row;
         }
     }
 
