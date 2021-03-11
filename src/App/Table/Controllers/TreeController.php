@@ -57,12 +57,11 @@ class TreeController extends \MapDapRest\Controller
 
 
     public function setTreeTable($model, $items, $parent_id=0, $sort=0) {
-        
         foreach ($items as $item) {
+             if (!isset($item["id"])) continue;
              $sort++;
              $id = 0;
              if (isset($item["server_id"])) $id = (int)$item["server_id"];
-
              $row = $model::findOrNew($id);
              $row->fill($item);
              $row->parent_id = $parent_id;

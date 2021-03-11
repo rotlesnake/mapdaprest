@@ -52,6 +52,11 @@ class Auth
                 $ModelUsers = $this->ModelUsers;
                 $tmpuser = $ModelUsers::where('login', $credentials['login'])->where('status', 1)->first();
                 if ($tmpuser && password_verify($credentials['password'], $tmpuser->password)) {
+                    if ($tmpuser && strtotime("now") < strtotime($tmpuser->token_expire) ) {
+                        $this->user = $tmpuser;
+                        setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
+                        return true;
+                    }
                     $this->user = $tmpuser;
                     $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_token." hours"));
                     $this->user->token = sha1($credentials['login'].$this->user->password.$this->user->token_expire);
