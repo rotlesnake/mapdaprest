@@ -112,7 +112,6 @@ class Migrate {
                          $fld = $table->text($x)->nullable();
                       } else {
                          $fld = $table->integer($x)->unsigned()->index()->nullable();
-                         $table->foreign($x)->references('id')->on($y["table"]);
                       }
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }
@@ -135,9 +134,10 @@ class Migrate {
             });
 
             $rez .= " ---------------------------- <br>\r\n";
-            if ($table_created && isset($tableInfo["seeds"])) { 
+            //if ($table_created && isset($tableInfo["seeds"])) { 
+            if ($class::count() == 0 && isset($tableInfo["seeds"]) && count($tableInfo["seeds"]) > 0) {
                $class::insert( $tableInfo["seeds"] ); 
-               $rez .= "Таблица (<b>".$tableInfo["table"]."</b>) создается впервые, засееваем её семенами...<br>\r\n"; 
+               $rez .= "Таблица (<b>".$tableInfo["table"]."</b>) пустая, засееваем её семенами...<br>\r\n"; 
             }
             $rez .= "<hr>\r\n\r\n";
 
@@ -146,6 +146,23 @@ class Migrate {
  
         }//foreach models
 
+        //Создаем foreign ключи
+        foreach ($models as $tableName=>$class) {
+            $tableInfo = $class::modelInfo();
+            $APP->DB->schema()->table($tableInfo["table"], function($table) use($APP, $tableInfo, &$rez) {
+                foreach ($tableInfo["columns"] as $x=>$y) {
+                    try {
+                        if (in_array($y["type"], ["linkTable"])) {
+                             if (!isset($y["multiple"]))  { $y["multiple"] = false; }
+                             if ($y["multiple"]) {
+                             } else {
+                                $table->foreign($x)->references('id')->on($y["table"]);
+                             }
+                        }//linkTable
+                    } catch (Exception $e) { echo "Ошибка миграции -> ".$class."<br>\r\n";  echo "<font color=red>".$e->getMessage()."</font><hr>\r\n\r\n"; }
+                }//foreach
+            });
+        }//foreach models
 
         return $rez;
     }//migrate()
