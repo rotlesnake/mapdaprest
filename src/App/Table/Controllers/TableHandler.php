@@ -20,21 +20,21 @@ class TableHandler
 
     public function loadModelInfo($tablename, $access) {
         if ($tablename=="") {
-           $this->$lastError = ["error"=>6, "message"=>"table name is empty"];
+           $this->lastError = ["error"=>6, "message"=>"table name is empty"];
            return false;
         }
         if (!isset($this->APP->models[$tablename])) {
-           $this->$lastError = ["error"=>6, "message"=>"table ($tablename) not found"];
+           $this->lastError = ["error"=>6, "message"=>"table ($tablename) not found"];
            return false;
         }
 
         $modelClass = $this->APP->models[$tablename];
         $this->modelClass = $modelClass;
-        $this->$tableInfo = $modelClass::modelInfo();
+        $this->tableInfo = $modelClass::modelInfo();
         unset($this->tableInfo["seeds"]);
 
-        if (!$this->APP->auth->hasRoles($this->$tableInfo[$access])) {
-           $this->$lastError = ["error"=>4, "message"=>"access to table ($tablename) denied"];
+        if (!$this->APP->auth->hasRoles($this->tableInfo[$access])) {
+           $this->lastError = ["error"=>4, "message"=>"access to table ($tablename) denied"];
            return false;
         }
 
@@ -46,10 +46,10 @@ class TableHandler
     //******************* GET *******************************************************
     public function get($tablename, $id, $request)
     {
-        if (!$this->loadModelInfo($tablename, "read")) return $this->$lastError;
+        if (!$this->loadModelInfo($tablename, "read")) return $this->lastError;
 
         $modelClass = $this->modelClass;
-        $tableInfo = $this->$tableInfo;
+        $tableInfo = $this->tableInfo;
 
         if (trim($id)=="modelInfo()") {
            return $tableInfo;
@@ -228,10 +228,10 @@ class TableHandler
 
     //********************* ADD **************************************************************************************************
     public function add($tablename, $request) {
-        if (!$this->loadModelInfo($tablename, "add")) return $this->$lastError;
+        if (!$this->loadModelInfo($tablename, "add")) return $this->lastError;
 
         $modelClass = $this->modelClass;
-        $tableInfo = $this->$tableInfo;
+        $tableInfo = $this->tableInfo;
         $json_response = ["error"=>0];
  
         //Создаем запись
@@ -280,10 +280,10 @@ class TableHandler
 
     //********************* EDIT **************************************************************************************************
     public function edit($tablename, $id, $request) {
-        if (!$this->loadModelInfo($tablename, "edit")) return $this->$lastError;
+        if (!$this->loadModelInfo($tablename, "edit")) return $this->lastError;
 
         $modelClass = $this->modelClass;
-        $tableInfo = $this->$tableInfo;
+        $tableInfo = $this->tableInfo;
         $json_response = ["error"=>0];
        
         //Читаем запись
@@ -316,10 +316,10 @@ class TableHandler
     
     //********************* DELETE **************************************************************************************************
     public function delete($tablename, $id) {
-        if (!$this->loadModelInfo($tablename, "delete")) return $this->$lastError;
+        if (!$this->loadModelInfo($tablename, "delete")) return $this->lastError;
 
         $modelClass = $this->modelClass;
-        $tableInfo = $this->$tableInfo;
+        $tableInfo = $this->tableInfo;
         $json_response = ["error"=>0];
        
         //Читаем запись
