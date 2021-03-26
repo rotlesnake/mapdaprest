@@ -108,6 +108,7 @@ class Auth
 
         //Забываем данные авторизации, становимся гостем
         public function logout() {
+            if (!$this->user) return;
             $this->user->token = "";
             $this->user->token_expire = date("Y-m-d H:i:s");
             $this->user->save();
