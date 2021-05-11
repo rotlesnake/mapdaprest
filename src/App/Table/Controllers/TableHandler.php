@@ -52,7 +52,8 @@ class TableHandler
         $tableInfo = $this->tableInfo;
 
         if (trim($id)=="modelInfo()") {
-           return $tableInfo;
+           $json_response = ["error"=>0, "info"=>$tableInfo, "rows"=>[], "pagination"=>[]];
+           return $json_response;
         }
 
         $json_response = ["error"=>0, "info"=>[], "rows"=>[], "pagination"=>[]];
