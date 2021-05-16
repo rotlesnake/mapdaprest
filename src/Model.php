@@ -284,8 +284,9 @@ class Model extends EloquentModel
                 $fname = \MapDapRest\Utils::getSlug($files_array[$i]["name"], true);
                 $fsrc = $files_array[$i]["src"];
                 if (strlen($fname)<2) continue;
-                if (strlen($fsrc)<8)  continue;
-                $fsrc = substr($fsrc, strpos($fsrc, 'base64,')+7 );
+                $base64_pos = strpos($fsrc, 'base64,');
+                if ($base64_pos===false || $base64_pos>30) continue;
+                $fsrc = substr($fsrc, $base64_pos+7 );
 
                 if ($row_id>0) {
                    $folder_path = $APP->ROOT_PATH."uploads/".$table_name;
