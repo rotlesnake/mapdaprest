@@ -285,7 +285,7 @@ class Model extends EloquentModel
                 $fsrc = $files_array[$i]["src"];
                 if (strlen($fname)<2) continue;
                 $base64_pos = strpos($fsrc, 'base64,');
-                if ($base64_pos===false || $base64_pos>30) continue;
+                if (substr($fsrc,0,5)!="data:" || $base64_pos===false) continue;
                 $fsrc = substr($fsrc, $base64_pos+7 );
 
                 if ($row_id>0) {
