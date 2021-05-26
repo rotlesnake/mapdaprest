@@ -5,55 +5,6 @@ composer install rotlesnake/mapdaprest
 ```
 
 
-# Init micro app
-### database sqllite
-### application folder structure
-```
-+App
- |----Auth
- |    |------Controllers
- |    |      |--------------LoginController.php
- |    |------Models
- |           |--------------Users.php
- |----ModuleOne
- |    |------Controllers
- |    |      |--------------IndexController.php
- |    |------Models
- |           |--------------Items.php
- |
- |----database.json
- |----database.db
-+www
- |--------index.html
-+vendor
-
-.htaccess
-index.php
-```
-
-/.htaccess
-```
-RewriteEngine On
-RedirectMatch 404 /App/
-
-RewriteCond %{REQUEST_URI} /www/
-RewriteRule ^(.*)$ $1 [L,QSA]
-
-RewriteCond %{REQUEST_FILENAME} !-l
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [L,QSA]
-```
-
-/index.php
-```
-require("vendor/autoload.php");
-$APP = new \MapDapRest\AppMicro(__DIR__);
-$APP->run();
-```
-
-
-
 
 # 
 # 
@@ -108,10 +59,10 @@ RewriteRule ^(.*)$ index.php [L,QSA]
 
 /index.php
 ```
-require("vendor/autoload.php");
 define("ROOT_PATH",   str_replace("/", DIRECTORY_SEPARATOR, realpath(__DIR__)."/") );
 define("APP_PATH",    str_replace("/", DIRECTORY_SEPARATOR, realpath(__DIR__)."/backend/") );
 define("VENDOR_PATH", str_replace("/", DIRECTORY_SEPARATOR, realpath(__DIR__)."/vendor/") );
+require(VENDOR_PATH."autoload.php");
 
 $ROOT_URL = str_replace("//", "/", dirname($_SERVER["SCRIPT_NAME"])."/");
 if (!isset($_SERVER["REQUEST_SCHEME"])) $_SERVER["REQUEST_SCHEME"]="http";
@@ -121,7 +72,30 @@ define("FULL_URL", $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"].ROOT
 
 
 $APP = new MapDapRest\App(ROOT_PATH, ROOT_URL, "App", "App", "www");
-$settings = require(ROOT_PATH.'settings.php');
+$settings = [
+        'debug'         => true,
+        'timezone'      => 'Etc/GMT-3',
+
+        'database' => [
+            'driver'    => 'sqlite',
+            'database'  => ROOT_PATH."App/database.db",
+            'prefix'    => '',
+        ],
+//      --- or ---
+        'database' => [
+            'driver'    => 'mysql',
+            'host'      => 'localhost',
+            'port'      => '3306',
+            'database'  => 'learn',
+            'username'  => 'root',
+            'password'  => '',
+            'charset'   => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix'    => 'prj_',
+            'engine'    => 'InnoDB', //'InnoDB' 'MyISAM'
+        ],
+
+];
 $APP->initDB($settings['database']);
 $APP->setAuth( new \App\Auth\Auth() );
 
