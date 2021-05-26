@@ -118,9 +118,25 @@ class Utils {
         return $name;
     }
 
+
+    public static function getFilenameModels() {
+        $APP = App::getInstance();
+        $root_path = ($APP ? $APP->ROOT_PATH : ROOT_PATH);
+        $root_path = str_replace(["/","\\",":"],["_","_","_"], $root_path);
+        $root_path = substr($root_path,1);
+        $root_path = substr($root_path,0,-1);
+        $filename = __DIR__."/cache/".$root_path.".json";
+        return $filename;
+    }
+    public static function loadModels() {
+        $filename = Utils::getFilenameModels();
+        if (!file_exists($filename)) return false;
+        return json_decode(file_get_contents($filename), true);
+    }
+
     //Получить список всех ролей
     public static function getAllRoles($ids=true) {
-        if (!file_exists(__DIR__."/cache/models.json") ) return [];
+        if (Utils::loadModels()===false) return [];
 
 	$APP = \MapDapRest\App::getInstance();
 	$roles = \App\Auth\Models\Roles::get();

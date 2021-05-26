@@ -35,18 +35,14 @@ class App
         $this->app_class = $app_class;
         $this->site_folder = $site_folder;
  
-        if (file_exists(__DIR__."/cache/models.json")) {
-          $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
-        } else {
-          $this->models = false;
-        }
+        $this->models = Utils::loadModels();
 
         static::$instance = $this;
     }
    
  
     public static function getInstance() {
-        if (!static::$instance){ return AppMicro::getInstance(); }
+        if (!static::$instance) { return null; }
         return static::$instance;
     }
 
@@ -69,7 +65,7 @@ class App
 
            if (!$this->models) {
                $this->models = Migrate::migrate();
-               $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
+               $this->models = Utils::loadModels();
            }
 
         } catch (\Exception $e) {

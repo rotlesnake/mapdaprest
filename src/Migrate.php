@@ -51,7 +51,7 @@ class Migrate {
 
 
         if (!file_exists(__DIR__."/cache")) { mkdir(__DIR__."/cache", 0777); };
-        file_put_contents(__DIR__."/cache/models.json", json_encode($all_models));
+        file_put_contents(Utils::getFilenameModels(), json_encode($all_models));
 
         return $rez;
     }

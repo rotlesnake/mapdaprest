@@ -34,12 +34,7 @@ class AppMicro
         $this->app_folder = $app_folder;
         $this->app_class = $app_class;
         $this->site_folder = $site_folder;
- 
-        if (file_exists(__DIR__."/cache/models.json")) {
-          $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
-        } else {
-          $this->models = false;
-        }
+        $this->models = Utils::loadModels();
 
         static::$instance = $this;
 
@@ -79,8 +74,7 @@ class AppMicro
               if (!$this->models || $hash1!=$hash2) {
                   $this->generateModels();
                   $this->models = Migrate::migrate();
-                  echo $this->models;
-                  $this->models = json_decode(file_get_contents(__DIR__."/cache/models.json"), true);
+                  $this->models = Utils::loadModels();
               }
            }
         } catch (\Exception $e) {
