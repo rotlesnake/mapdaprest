@@ -88,9 +88,10 @@ class TableHandler
                     if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
                     
                     if ($s_oper=="in") {
-                       if (gettype($s_value)=="string") { $s_value=explode(",", $s_value); }
+                       if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
                        $MODEL = $MODEL->whereIn($s_field, $s_value);
                     } else {
+                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); }
                        $MODEL = $MODEL->where($s_field, $s_oper, $s_value);
                     }
                 }
