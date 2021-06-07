@@ -76,7 +76,7 @@ class Utils {
     //Дату в формат SQL yyyy-mm-dd
     public static function convDateToSQL($dt, $withtime=true) {
         if (strlen($dt)<9) return '';
-        if (strpos(substr($dt,0,10),'-')===true) { return $dt; }
+        if (strpos(substr($dt,0,10),'-')!==false) { return $dt; }
 
         $out=substr($dt,6,4)."-".substr($dt,3,2)."-".substr($dt,0,2); 
         if ($withtime) $out.=substr($dt,10,9);
@@ -86,7 +86,7 @@ class Utils {
     //Дату в формат даты dd.mm.yyyy
     public static function convDateToDate($dt, $withtime=true) {
         if (strlen($dt)<9) return '';
-        if (strpos(substr($dt,0,10),'.')===true) { return $dt; }
+        if (strpos(substr($dt,0,10),'.')!==false) { return $dt; }
         if (substr($dt,0,1)=="-") { $dt=substr($dt,1); }
 
         $out=substr($dt,8,2).".".substr($dt,5,2).".".substr($dt,0,4); 
