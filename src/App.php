@@ -254,7 +254,12 @@ class App
             $classes = $php_parser->extractPhpClasses($listeningFile);
             $className = $classes[0];
             if (method_exists($className, $eventName)) {
-                $className::$eventName($sendData);
+                try {
+                    $className::$eventName($sendData);
+                } catch (Exception $e) { 
+                    echo "<hr>Error emit(".$eventName.") \r\n";  
+                    echo $e->getMessage()."<hr>\r\n"; 
+                }
             }
         }
     }//emit()
