@@ -1,0 +1,14 @@
+<?php
+namespace App\<%MODULE%>\Events;
+
+
+class Listening 
+{
+
+    public static function userRegistered($user) 
+    {
+
+    }
+
+
+}

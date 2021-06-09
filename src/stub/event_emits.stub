@@ -1,0 +1,16 @@
+<?php
+namespace App\<%MODULE%>\Events;
+
+
+class Emits
+{
+
+    public static function someEvent($eventData) 
+    {
+        $APP = \MapDapRest\App::getInstance();
+        $APP->emit("someEvent", $eventData);
+    }
+
+
+
+}

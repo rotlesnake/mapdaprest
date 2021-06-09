@@ -1,5 +1,4 @@
 <?php
-
 namespace MapDapRest;
 
 
@@ -55,11 +54,12 @@ class PhpParser
 
 
 
-    public function getMethods($class, $method)
+    public function getMethods($class)
     {
         $reflector = new \ReflectionClass($class);
         return $reflector->getMethods();
     }
+
     public function getComments($class, $method)
     {
         $reflector = new \ReflectionClass($class);

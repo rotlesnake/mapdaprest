@@ -1,6 +1,6 @@
 <?php
-
 namespace MapDapRest;
+
 
 class Response
 {

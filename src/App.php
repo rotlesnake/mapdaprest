@@ -1,6 +1,7 @@
 <?php
 namespace MapDapRest;
 
+
 class App
 {
 
@@ -227,4 +228,37 @@ class App
         return $this->models[$tablename];
     }
 
-}
+
+    public function getModulesList()
+    {
+      $rez=[];
+        if ($dh = opendir($this->APP_PATH)) {
+            while (($file = readdir($dh)) !== false) {
+               if ($file != "." && $file != ".." && is_dir($this->APP_PATH."/".$file)) {
+                  array_push($rez, $file);
+               }
+            }
+        closedir($dh);
+        }
+      return $rez;
+    }
+
+    public function emit($eventName, $sendData)
+    {
+        $php_parser = new \MapDapRest\PhpParser();
+        $modules = $this->getModulesList();
+        foreach ($modules as $module) {
+            $listeningFile = $this->APP_PATH.$module."/Events/Listening.php";
+            if (!file_exists($listeningFile)) continue;
+
+            $classes = $php_parser->extractPhpClasses($listeningFile);
+            $className = $classes[0];
+            if (method_exists($className, $eventName)) {
+                $className::$eventName($sendData);
+            }
+        }
+    }//emit()
+
+
+
+}//class

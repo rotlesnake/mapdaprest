@@ -20,7 +20,9 @@ class LoginController extends \MapDapRest\Controller
 
 
     public function indexAction($request, $response, $params) {
-       return ["user"=>$this->APP->auth->getFields()];
+       $user = $this->APP->auth->getFields();
+       \MapDapRest\App\Auth\Events\Emits::userLogin($this->APP->auth);
+       return ["user"=>$user];
     }
 
 }
