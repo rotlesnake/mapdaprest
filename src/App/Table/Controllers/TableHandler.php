@@ -100,11 +100,13 @@ class TableHandler
 
 
 
-        //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] ---------------------------------------
+        //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] || order[] ---------------------------------------
         $sort = [];
         if ($request->hasParam("sort")) $sort = $request->getParam("sort");
-        if (gettype($sort)=="string") { $sort = explode(",", $request->getParam("sort")); }
+        if ($request->hasParam("order")) $sort = $request->getParam("order");
+        if (gettype($sort)=="string") { $sort = explode(",", $sort); }
         if (count($sort)==0 && isset($tableInfo["sortBy"])) { $sort = $tableInfo["sortBy"]; }
+        if (count($sort)==0 && isset($tableInfo["orderBy"])) { $sort = $tableInfo["orderBy"]; }
         foreach ($sort as $fld) { //перебираем поля 
             $ord = "asc";
             if (substr($fld,0,1) == "-") {
