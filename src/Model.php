@@ -218,6 +218,8 @@ class Model extends EloquentModel
             $fpath = $APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
             array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$y["caption"], "src"=>$fpath]);
          } else {
+            $y["name"] = urldecode($y["src"]);
+            $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );
             array_push($files, $y);
          }
        }
