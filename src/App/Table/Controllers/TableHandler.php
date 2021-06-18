@@ -98,6 +98,16 @@ class TableHandler
             }
         }//----------------------------------------------------------------------------------
 
+        //Это дочерняя таблица - тогда фильтруем записи по родителю  -
+        //parent : [table:'users', field:'user_id', value:999]
+        if (isset($request->hasParam("parent"))) {
+             foreach ($tableInfo["parentTables"] as $x=>$y) {
+                 if ($y["table"]==$request->getParam("parent")["table"]) {
+                     $MODEL = $MODEL->where($y["field"], (int)$request->getParam("parent")["value"] );
+                 }
+             }
+        }//----------------------------------------------------------------------------------
+
 
 
         //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] || order[] ---------------------------------------
@@ -132,17 +142,6 @@ class TableHandler
         $MODEL = $MODEL->offset( ($page-1)*$limit )->limit($limit);
 
 
-/*
-        //Это дочерняя таблица - тогда фильтруем записи по родителю  -
-        //parent_table : [name:users , id:999]
-        if (isset($args["parent_table"]) && (int)$args["parent_table"]["id"]>0) {
-             $parent_field = "";
-             foreach ($tableInfo["parent_tables"] as $x=>$y) {
-                 if ($y["table"]==$args["parent_table"]) $parent_field = $y["id"];
-             }
-             $MODEL = $modelClass::select($allowFields)->filterRead()->where($parent_field, (int)$args["parent_table"]["id"] );
-        }//----------------------------------------------------------------------------------
-*/
 
         $rows = [];
         //GET
@@ -248,15 +247,17 @@ class TableHandler
         $fill_count=0;
         $row = $row->fillRow("add", $request->params, $fill_count);  //Заполняем строку данными из формы
         if ($fill_count==0) return ["error"=>7, "message"=>"fields not filled"];
-/*
-        //Это дочерняя таблица - тогда устанавливаем родителя
-        //&parentTables=["users"=>12, "posts"=>33]
-        if (isset($tableInfo["parentTables"]) && count($tableInfo["parentTables"])>0 && isset($args["parentTables"])) {
+
+        //Это дочерняя таблица - тогда устанавливаем поля родителя
+        if (isset($tableInfo["parentTables"])) {
              foreach ($tableInfo["parentTables"] as $x=>$y) {
-                $row->{$y["id"]} = (int)$args["parentTables"][$y["table"]];
+                 if ($request->hasParam($y["field"])) {
+                     $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                 }
              }
-        }
-*/ 
+        }//----------------------------------------------------------------------------------
+
+ 
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("add", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 

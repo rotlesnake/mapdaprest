@@ -85,10 +85,8 @@ class TableHandler
             if ($cnd=="begins") { $cnd="like"; $val = $val."%"; }
 
             if ($cnd=="in") {
-                if (gettype($val)=="string" || gettype($val)=="integer") { $s_value=explode(",", $val); }
                 $MODEL = $MODEL->whereIn($fld, $val);
             } else {
-                if (gettype($val)=="array") { $val = \MapDapRest\Utils::arrayToString($val); }
                 $MODEL = $MODEL->where($fld, $cnd, $val);
             }
         }
@@ -98,11 +96,8 @@ class TableHandler
 
         //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] ---------------------------------------
         $sort = [];
-        if ($request->hasParam("sort")) $sort = $request->getParam("sort");
-        if ($request->hasParam("order")) $sort = $request->getParam("order");
-        if (gettype($sort)=="string") { $sort = explode(",", $sort); }
+        if ($request->hasParam("sort")) $sort = explode(",", $request->getParam("sort"));
         if (count($sort)==0 && isset($tableInfo["sortBy"])) { $sort = $tableInfo["sortBy"]; }
-        if (count($sort)==0 && isset($tableInfo["orderBy"])) { $sort = $tableInfo["orderBy"]; }
         foreach ($sort as $fld) { //перебираем поля 
             $ord = "asc";
             if (substr($fld,0,1) == "-") {
@@ -201,6 +196,15 @@ class TableHandler
         $fill_count=0;
         $row = $row->fillRow("add", $request->params, $fill_count);  //Заполняем строку данными из формы
         if ($fill_count==0) return [];
+
+        //Это дочерняя таблица - тогда устанавливаем поля родителя
+        if (isset($tableInfo["parentTables"])) {
+             foreach ($tableInfo["parentTables"] as $x=>$y) {
+                 if ($request->hasParam($y["field"])) {
+                     $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                 }
+             }
+        }//----------------------------------------------------------------------------------
         
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("add", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
