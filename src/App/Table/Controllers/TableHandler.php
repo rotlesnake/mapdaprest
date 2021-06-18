@@ -100,11 +100,13 @@ class TableHandler
 
         //Это дочерняя таблица - тогда фильтруем записи по родителю  -
         //parent : [table:'users', field:'user_id', value:999]
-        if (isset($request->hasParam("parent"))) {
-             foreach ($tableInfo["parentTables"] as $x=>$y) {
-                 if ($y["table"]==$request->getParam("parent")["table"]) {
-                     $MODEL = $MODEL->where($y["field"], (int)$request->getParam("parent")["value"] );
+        if ($request->hasParam("parent")) {
+             foreach ($request->getParam("parent") as $x) {
+               foreach ($tableInfo["parentTables"] as $y) {
+                 if ($y["table"]==$x["table"]) {
+                     $MODEL = $MODEL->where($y["field"], (int)$x["value"] );
                  }
+               }
              }
         }//----------------------------------------------------------------------------------
 
