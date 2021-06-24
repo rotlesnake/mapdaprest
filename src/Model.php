@@ -106,18 +106,19 @@ class Model extends EloquentModel
           $link_field_max = 250;
           if (isset($this->modelInfo()["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo()["columns"][$field]["field_maxlen"];
  
-          $rows = $APP->DB->table($link_table)->whereIn('id', $field_values )->get();
-          $response_array["rows"] = $rows;
+          $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
+          $response_array["rows"] = $rows->toArray();
 
           foreach ($rows as $item) {
-              if (strpos($link_field,"<%")===false) {
+              if (strpos($link_field,"[")===false) {
                   $str = $item->{$link_field};
                   if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                   array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
               } else {
-                  $str = preg_replace_callback('|<%(.*)%>|isU', function($prms) use($item, $link_field_max) {
-                                 if (isset($item->{$prms[1]})) {
-                                    $str = $item->{$prms[1]};
+                  $crow = $item->getConvertedRow();
+                  $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
+                                 if (isset($crow[$prms[1]])) {
+                                    $str = $crow[$prms[1]];
                                     if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                                     return $str; 
                                  } else { return ""; }

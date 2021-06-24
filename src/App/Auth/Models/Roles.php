@@ -92,7 +92,7 @@ class Roles extends \MapDapRest\Model
  			"type"=>"linkTable",
  			"label"=>"Создано пользователем",
  			"table"=>"users",
- 			"field"=>"<%login%>",
+ 			"field"=>"[login]",
  			"multiple"=>false,
  			"typeSelect"=>"table",
  			"object"=>false,
