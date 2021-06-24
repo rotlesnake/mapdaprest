@@ -107,13 +107,14 @@ class Model extends EloquentModel
           if (isset($this->modelInfo()["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo()["columns"][$field]["field_maxlen"];
  
           $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
-          $response_array["rows"] = $rows->toArray();
+          $response_array["rows"] = [];
 
           foreach ($rows as $item) {
               if (strpos($link_field,"[")===false) {
                   $str = $item->{$link_field};
                   if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                   array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+                  array_push($response_array["rows"], $item->toArray());
               } else {
                   $crow = $item->getConvertedRow();
                   $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
@@ -124,6 +125,7 @@ class Model extends EloquentModel
                                  } else { return ""; }
                         }, $link_field);
                   array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+                  array_push($response_array["rows"], $crow);
               }
           }//foreach
 
