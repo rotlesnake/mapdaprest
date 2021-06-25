@@ -21,8 +21,11 @@ class Model extends EloquentModel
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
              $model->created_by_user = $app->auth->getFields()['id'];
           }
-
-          return $model->beforeAdd($model);
+          try {
+              return $model->beforeAdd($model);
+          } catch(Exception $e) {
+              throw new Exception($e->getMessage());
+          }
         });
         static::created(function($model) {
 	  $app = \MapDapRest\App::getInstance();

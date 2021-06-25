@@ -263,8 +263,12 @@ class TableHandler
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("add", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
-        $result = $row->save(); //Сохраняем запись
-        if (!$result) { return ["error"=>4, "message"=>"save error"];  }  //Если ошибка сохранения то сообщаем и выходим
+        try {
+            $result = $row->save(); //Сохраняем запись
+            if (!$result) { return ["error"=>4, "message"=>"save error"];  }  //Если ошибка сохранения то сообщаем и выходим
+        } catch(Exception $e) {
+            return ["error"=>4, "message"=>$e->getMessage()];
+        }
         
         //Событие
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("add", $row, $request->params);  }
@@ -303,8 +307,12 @@ class TableHandler
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
-        $result = $row->save(); //Сохраняем запись
-        if (!$result) { return ["error"=>4, "message"=>"save error"]; }  //Если ошибка сохранения то сообщаем и выходим
+        try {
+            $result = $row->save(); //Сохраняем запись
+            if (!$result) { return ["error"=>4, "message"=>"save error"];  }  //Если ошибка сохранения то сообщаем и выходим
+        } catch(Exception $e) {
+            return ["error"=>4, "message"=>$e->getMessage()];
+        }
         
         //Событие
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $request->params);  }
