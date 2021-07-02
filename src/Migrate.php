@@ -87,6 +87,7 @@ class Migrate {
 
                foreach ($tableInfo["columns"] as $x=>$y) {
                  //колонка уже есть тогда ничего не делаем
+                 if (in_array($x, ["id","created_at","updated_at","created_by_user"])) { continue; }
                  if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { continue; }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
                  //Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
@@ -102,7 +103,7 @@ class Migrate {
                       if ($y["multiple"]) {
                          $fld = $table->text($x)->nullable();
                       } else {
-                         $fld = $table->integer($x)->unsigned()->nullable();
+                         $fld = $table->integer($x)->nullable();
                       }
                  }
                  if (in_array($y["type"], ["linkTable"])) { 
@@ -129,6 +130,7 @@ class Migrate {
                    if ($y["index"]=="unique") { $fld->unique(); }
                  }
 
+                 if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { $fld->change(); }
                }//foreach
             });
 
@@ -155,7 +157,7 @@ class Migrate {
                              if (!isset($y["multiple"]))  { $y["multiple"] = false; }
                              if ($y["multiple"]) {
                              } else {
-                                $table->foreign($x)->references('id')->on($y["table"]);
+                                //$table->foreign($x)->references('id')->on($y["table"]);
                              }
                         }//linkTable
                     } catch (Exception $e) { echo "Ошибка миграции -> ".$class."<br>\r\n";  echo "<font color=red>".$e->getMessage()."</font><hr>\r\n\r\n"; }
