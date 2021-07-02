@@ -95,7 +95,7 @@ class Model extends EloquentModel
 
 
 
-    public function getFieldLinks($field) {
+    public function getFieldLinks($field, $full_links=false) {
       $response_array = ["rows"=>[], "values"=>[], "text"=>""];
       $APP = App::getInstance();
       $field_values = $this->{$field};
@@ -117,7 +117,13 @@ class Model extends EloquentModel
                   $str = $item->{$link_field};
                   if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                   array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
-                  array_push($response_array["rows"], $item->toArray());
+
+                  if ($full_links) {
+                      $crow = $item->getConvertedRow();
+                      array_push($response_array["rows"], $crow);
+                  } else {
+                      array_push($response_array["rows"], $item->toArray());
+                  }
               } else {
                   $crow = $item->getConvertedRow();
                   $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
@@ -168,7 +174,7 @@ class Model extends EloquentModel
     
 
     //******************* CONVERT FOR OUT*******************************************************
-    public function getConvertedRow($fastMode=false){
+    public function getConvertedRow($fastMode=false, $full_links=false){
         $APP = App::getInstance();
         $tablename = $this->modelInfo()["table"];
         $item = [];
@@ -182,18 +188,18 @@ class Model extends EloquentModel
             if ($y["type"]=="linkTable") {
                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
-                    $FieldLinks = $this->getFieldLinks($x);
+                    $FieldLinks = $this->getFieldLinks($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
                     if (isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
-                    if (isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $FieldLinks["rows"];
+                    if ($full_links || isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $FieldLinks["rows"];
                 }
             } 
             if ($y["type"]=="select") {
                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
-                    $FieldLinks = $this->getFieldLinks($x);
+                    $FieldLinks = $this->getFieldLinks($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
-                    if (isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
+                    if ($full_links || isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                 }
             }
             if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
