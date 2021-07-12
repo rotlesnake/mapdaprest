@@ -172,7 +172,10 @@ class Auth
         //Поля таблицы пользователя
         public function getAllFields() {
             $fields = $this->user->getConvertedRow();
-            $fields["token"] = $this->user->token();
+            $fields["token"] = $this->user->token;
+            $fields["token_expire"] = $this->user->token_expire;
+            $fields["refresh_token"] = $this->user->refresh_token;
+            $fields["refresh_token_expire"] = $this->user->refresh_token_expire;
             return $fields;
         }
 
