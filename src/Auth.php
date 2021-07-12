@@ -172,6 +172,7 @@ class Auth
         //Поля таблицы пользователя
         public function getAllFields() {
             $fields = $this->user->getConvertedRow();
+            $fields["token"] = $this->user->token();
             return $fields;
         }
 
