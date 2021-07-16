@@ -95,6 +95,15 @@ class Model extends EloquentModel
 
 
 
+
+    public function scopeFindInSet($query, $field, $values)
+    {
+        return $query->whereRaw("FIND_IN_SET(?, ".$field.") > 0", [$values]);
+    }
+
+
+
+
     public function getFieldLinks($field, $full_links=false) {
       $response_array = ["rows"=>[], "values"=>[], "text"=>""];
       $APP = App::getInstance();
