@@ -130,7 +130,7 @@ class Migrate {
                    if ($y["index"]=="unique") { $fld->unique(); }
                  }
 
-                 if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { $fld->change(); }
+                 if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { $fld->change(); $rez .= " - Модифицируем поле (".$x.") <br>\r\n"; }
                }//foreach
             });
 
