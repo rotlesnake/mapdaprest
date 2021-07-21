@@ -86,9 +86,25 @@ class Migrate {
             $APP->DB->schema()->table($tableInfo["table"], function($table) use($APP, $tableInfo, &$rez) {
 
                foreach ($tableInfo["columns"] as $x=>$y) {
-                 //колонка уже есть тогда ничего не делаем
+                 //колонка системная тогда ничего не делаем
                  if (in_array($x, ["id","created_at","updated_at","created_by_user"])) { continue; }
-                 if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { continue; }
+                 //колонка уже есть тогда проверяем тип, если тип не поменялся тогда ничего не делаем
+                 $columnExists = false;
+                 if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { 
+                     $columnExists = true;
+                     $fldType = $APP->DB::getSchemaBuilder()->getColumnType($tableInfo["table"], $x);
+                     $fldType = strtolower($fldType);
+                     if ($fldType == strtolower($y["type"])) continue; 
+                     if (!isset($y["multiple"]))  { $y["multiple"] = false; }
+                     if ($y["type"]=="select" && !$y["multiple"] && $fldType=="integer") continue; 
+                     if ($y["type"]=="select" && $y["multiple"] && $fldType=="text") continue; 
+                     if ($y["type"]=="linkTable" && !$y["multiple"] && $fldType=="integer") continue; 
+                     if ($y["type"]=="linkTable" && $y["multiple"] && $fldType=="text") continue; 
+                     if (in_array($y["type"], ["text", "images", "files", "html"]) && $fldType=="text") continue; 
+                     if (in_array($y["type"], ["string", "password", "masked", "color"]) && $fldType=="string") continue; 
+                     if (in_array($y["type"], ["integer", "checkBox"]) && $fldType=="integer") continue; 
+                     if ($y["type"]=="float" && $fldType=="decimal") continue; 
+                 }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
                  //Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
                  if ($y["type"]=="linkTable" && !$APP->DB->schema()->hasTable($y["table"])) { $rez .= " - Поле не создано требуется повторная миграция (<font color=red>".$x."</font>) <br>\r\n";  continue; }
@@ -130,7 +146,7 @@ class Migrate {
                    if ($y["index"]=="unique") { $fld->unique(); }
                  }
 
-                 if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { $fld->change(); $rez .= " - Модифицируем поле (".$x.") <br>\r\n"; }
+                 if ($columnExists) { $fld->change(); $rez .= " - Модифицируем поле (".$x.") <br>\r\n"; }
                }//foreach
             });
 
