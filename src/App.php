@@ -265,5 +265,43 @@ class App
     }//emit()
 
 
+    public function callREST($module, $controller, $action, $params=[], $request_params=[])
+    {
+        $module = Utils::convUrlToModel($module);
+        $controller = Utils::convUrlToModel($controller)."Controller";
+        $action = Utils::convUrlToMethod($action)."Action";
+
+        $className = "\\".$this->app_class."\\".$module."\\Controllers\\".$controller;
+        if (!class_exists($className)) { 
+            $anyClassName = "\\".$this->app_class."\\".$module."\\Controllers\\AnyController";
+            if (class_exists($anyClassName)) { $className = $anyClassName; }
+        }
+
+        if (!class_exists($className)) { 
+            $localClassName = "\\MapDapRest\\App\\".$module."\\Controllers\\".$controller;
+            if (class_exists($localClassName)) { 
+                $className = $localClassName; 
+            } else {
+                $anyClassName = "\\MapDapRest\\App\\".$module."\\Controllers\\AnyController";
+                if (class_exists($anyClassName)) { $className = $anyClassName; }
+            }
+        }
+          
+        if (!class_exists($className)) { return null; }
+ 
+        $request = new Request($this);
+        $request->params = $request_params;
+        $response = new Response($this);
+        $controllerClass = new $className($this, $request, $response, $params);
+        $body = [];
+
+        if (method_exists($controllerClass, $action)) {
+            $body = $controllerClass->$action($request, $response, $params);
+        } else {
+            $body = $controllerClass->anyAction($request, $response, $controller, $action, $params);
+        }
+ 
+        return $body;
+    }//callREST()
 
 }//class
