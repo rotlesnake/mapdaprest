@@ -28,19 +28,24 @@ class TableHandler
            return false;
         }
 
-        $modelClass = $this->APP->models[$tablename];
-        $this->modelClass = $modelClass;
-        $this->tableInfo = $modelClass::modelInfo();
-        unset($this->tableInfo["seeds"]);
-
         if (!$this->APP->auth->hasRoles($this->tableInfo[$access])) {
            $this->lastError = ["error"=>4, "message"=>"access to table ($tablename) denied"];
            return false;
         }
 
+        $modelClass = $this->APP->models[$tablename];
+        $this->modelClass = $modelClass;
+        $this->tableInfo = $modelClass::modelInfo();
+        unset($this->tableInfo["seeds"]);
+        //Оставляем разрешенные поля
+        foreach ($this->tableInfo["columns"] as $x=>$y) {
+            if (!$this->APP->auth->hasRoles($y["read"])) { unset($this->tableInfo["columns"][$x]); continue; }
+            if (!$this->APP->auth->hasRoles($y["edit"])) { $this->tableInfo["columns"][$x]["protected"]=true; }
+            $this->tableInfo["columns"][$x]["name"]=$x;
+        }
+
         return true;
     }
-
 
 
     //******************* GET *******************************************************
