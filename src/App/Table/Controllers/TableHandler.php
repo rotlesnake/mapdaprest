@@ -28,14 +28,14 @@ class TableHandler
            return false;
         }
 
+        $modelClass = $this->APP->models[$tablename];
+        $this->tableInfo = $modelClass::modelInfo();
         if (!$this->APP->auth->hasRoles($this->tableInfo[$access])) {
            $this->lastError = ["error"=>4, "message"=>"access to table ($tablename) denied"];
            return false;
         }
 
-        $modelClass = $this->APP->models[$tablename];
         $this->modelClass = $modelClass;
-        $this->tableInfo = $modelClass::modelInfo();
         unset($this->tableInfo["seeds"]);
         //Оставляем разрешенные поля
         foreach ($this->tableInfo["columns"] as $x=>$y) {
