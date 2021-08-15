@@ -56,13 +56,12 @@ class TableHandler
 
         $modelClass = $this->modelClass;
         $tableInfo = $this->tableInfo;
+        $json_response = ["error"=>0, "info"=>[], "rows"=>[], "pagination"=>[]];
 
         if (trim($id)=="modelInfo()") {
-           $json_response = ["error"=>0, "info"=>$tableInfo, "rows"=>[], "pagination"=>[]];
+           $json_response["info"] = $tableInfo;
            return $json_response;
         }
-
-        $json_response = ["error"=>0, "info"=>[], "rows"=>[], "pagination"=>[]];
 
         //оставляем только поля разрешенные для чтения  или запрашиваемые клиентом $reqFields
         $fields = [];
