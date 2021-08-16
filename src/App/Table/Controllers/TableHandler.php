@@ -120,16 +120,18 @@ class TableHandler
         //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] || order[] ---------------------------------------
         $sort = [];
         if ($request->hasParam("sort")) $sort = $request->getParam("sort");
-        if ($request->hasParam("order")) $sort = $request->getParam("order");
+        if ($request->hasParam("sortBy")) $sort = $request->getParam("sortBy");
         if (gettype($sort)=="string") { $sort = explode(",", $sort); }
         if (count($sort)==0 && isset($tableInfo["sortBy"])) { $sort = $tableInfo["sortBy"]; }
         if (count($sort)==0 && isset($tableInfo["orderBy"])) { $sort = $tableInfo["orderBy"]; }
-        foreach ($sort as $fld) { //перебираем поля 
+        foreach ($sort as $ndx=>$fld) { //перебираем поля 
             $ord = "asc";
+            if ($request->hasParam("sortDesc") && isset($request->params["sortDesc"][$ndx]) && $request->params["sortDesc"][$ndx]) $ord = "desc";
             if (substr($fld,0,1) == "-") {
                $fld = substr($fld,1);
                $ord = "desc";
             }
+            $sort[$ndx] = ($ord=="desc" ? "-".$fld : $fld);
             $MODEL = $MODEL->orderBy($fld, $ord);
         }
 
@@ -178,6 +180,7 @@ class TableHandler
         $json_response['pagination'] = [
                                 "key"=> "id",
                                 "page"=> $page,
+                                "sortBy"=>$sort,
                                 "totalItems"=> (($rows_count <= $limit)? -1 : $rows_count),
                                 "itemsPerPage"=> $limit,
                                 ];
