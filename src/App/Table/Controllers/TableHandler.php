@@ -358,6 +358,7 @@ class TableHandler
         //Событие
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("delete", $row, []);  }
 
+        $json_response["rows"] = [ $row ];
         return $json_response;
     }
     //*****************************************************************************************************************************
