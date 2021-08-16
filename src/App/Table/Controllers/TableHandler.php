@@ -145,7 +145,7 @@ class TableHandler
         //PAGE
         $page = 1;
         if ($request->hasParam("page")) $page = $request->getParam("page");
-
+        $rows_count = $MODEL->count();
         $MODEL = $MODEL->offset( ($page-1)*$limit )->limit($limit);
 
 
@@ -178,7 +178,7 @@ class TableHandler
         $json_response['pagination'] = [
                                 "key"=> "id",
                                 "page"=> $page,
-                                "totalItems"=> ((count($rows) <= $limit)? -1 : count($rows)),
+                                "totalItems"=> (($rows_count <= $limit)? -1 : $rows_count),
                                 "itemsPerPage"=> $limit,
                                 ];
 
