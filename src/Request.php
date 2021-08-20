@@ -95,6 +95,11 @@ class Request
         return $this->params[$name];
     }
 
+    public function setParam($name, $value)
+    {
+        $this->params[$name] = $value;
+    }
+
 
     public function getFiles()
     {
