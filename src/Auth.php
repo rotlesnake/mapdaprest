@@ -43,7 +43,7 @@ class Auth
         //Авторизуемся в системе входные параметры [login, password, refresh_token, token]
         public function login($credentials) {
             $APP = App::getInstance();
-            $hours_token = 4;
+            $hours_token = 6;
             $hours_refresh_token = 25;
 
             if (isset($credentials['login'])) {

@@ -311,6 +311,15 @@ class TableHandler
         if ($row->id != $id) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
         
         $row = $row->fillRow("edit", $request->params);  //Заполняем строку данными из формы
+
+        //Это дочерняя таблица - тогда устанавливаем поля родителя
+        if (isset($tableInfo["parentTables"])) {
+             foreach ($tableInfo["parentTables"] as $x=>$y) {
+                 if ($request->hasParam($y["field"])) {
+                     $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                 }
+             }
+        }//----------------------------------------------------------------------------------
         
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }

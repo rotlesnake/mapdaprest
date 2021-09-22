@@ -4,40 +4,68 @@ namespace MapDapRest\App\Table\Controllers;
 
 class TreeController extends \MapDapRest\Controller
 {
+    public $lastError = [];
+    public $modelClass;
+    public $tableInfo;
 
+    public function loadModelInfo($tablename, $access) {
+        if ($tablename=="") {
+           $this->lastError = ["error"=>6, "message"=>"table name is empty"];
+           return false;
+        }
+        if (!isset($this->APP->models[$tablename])) {
+           $this->lastError = ["error"=>6, "message"=>"table ($tablename) not found"];
+           return false;
+        }
+
+        $modelClass = $this->APP->models[$tablename];
+        $this->tableInfo = $modelClass::modelInfo();
+        if (!$this->APP->auth->hasRoles($this->tableInfo[$access])) {
+           $this->lastError = ["error"=>4, "message"=>"access to table ($tablename) denied"];
+           return false;
+        }
+
+        $this->modelClass = $modelClass;
+        unset($this->tableInfo["seeds"]);
+        //Оставляем разрешенные поля
+        foreach ($this->tableInfo["columns"] as $x=>$y) {
+            if (!$this->APP->auth->hasRoles($y["read"])) { unset($this->tableInfo["columns"][$x]); continue; }
+            if (!$this->APP->auth->hasRoles($y["edit"])) { $this->tableInfo["columns"][$x]["protected"]=true; }
+            $this->tableInfo["columns"][$x]["name"]=$x;
+        }
+
+        return true;
+    }
 
     public function anyAction($request, $response, $controller, $tablename, $args)
     {
-       $json_response = [];
  
-        if ($tablename=="") return ["error"=>6, "message"=>"tablename empty"];
-        if (!$this->APP->hasModel($tablename)) return ["error"=>6, "message"=>"treetable $tablename not found"];
-        
-        $modelClass = $this->APP->getModel($tablename);
+        if (!$this->loadModelInfo($tablename, "read")) return $this->lastError;
+        $modelClass = $this->modelClass;
+        $tableInfo = $this->tableInfo;
+        $json_response = [];
+        $json_response = ["error"=>0, "info"=>[], "rows"=>[]];
 
         //Получить всё дерево
         if ($request->method=="GET") {
-           $json_response = $this->getTreeTable($modelClass, 0);
+           $json_response["info"] = $tableInfo;
+           $json_response["rows"] = $this->getTreeTable($modelClass, 0);
            return $json_response;
         }
-        //Перезаписать всё дерево
+
+        //Добавление / Изменение элемента
         if ($request->method=="POST") {
-           $this->setTreeTable($modelClass, $request->params);
-           $json_response = $this->getTreeTable($modelClass, 0);
-           return $json_response;
-        }
-        //Перезаписать один элемент
-        if ($request->method=="PUT") {
-           $row = $modelClass::find($request->params['id']);
-           $row->fill($request->params);
-           $row->save();
-           return $row;
-        }
-        //Удалить один элемент
-        if ($request->method=="DELETE") {
-           $row = $modelClass::find($args[0]);
-           $row->delete();
-           return $row;
+           $tableHandler = new TableHandler($this->APP);
+           $action = trim($args[0]);
+           $id = (isset($args[1])? (int)$args[1] : 0);
+           $rows = [];
+           if ($action=="add")             $rows = $tableHandler->add($tablename, $request);
+           if ($action=="edit" && $id>0)   $rows = $tableHandler->edit($tablename, $id, $request);
+           if ($action=="delete")          $rows = $tableHandler->delete($tablename, $id);
+
+           //$this->setTreeTable($modelClass, $request->params);
+           //$json_response = $this->getTreeTable($modelClass, 0);
+           return $rows;
         }
     }
 

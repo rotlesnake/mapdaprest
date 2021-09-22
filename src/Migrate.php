@@ -104,6 +104,7 @@ class Migrate {
                      if (in_array($y["type"], ["string", "password", "masked", "color"]) && $fldType=="string") continue; 
                      if (in_array($y["type"], ["integer", "checkBox"]) && $fldType=="integer") continue; 
                      if ($y["type"]=="float" && $fldType=="decimal") continue; 
+                     if ($y["type"]=="double" && $fldType=="float") continue; 
                  }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
                  //Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
