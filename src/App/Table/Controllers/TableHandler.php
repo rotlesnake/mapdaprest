@@ -218,7 +218,7 @@ class TableHandler
             if (isset($json_response['info']["columns"][$x]["edit"])) { unset($json_response['info']["columns"][$x]["edit"]); }
         }
 
-        if ($request->hasParam("mini")) {
+        if ($request->hasParam("mini") || $isFast) {
            unset($json_response['info']);
            unset($json_response['pagination']);
         }

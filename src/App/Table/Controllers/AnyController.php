@@ -24,6 +24,7 @@ class AnyController  extends \MapDapRest\Controller
       //table/users/get/1   //table/users/add  //table/users/edit/1   //table/users/delete/1
       if ($request->method=="POST") {
          $action = $action_or_id;
+         if (strlen($action) == 0) $action = "add";
          $id = (isset($args[0])? (int)$args[0] : 0);
          $rows = ["error"=>9, "message"=>"action not found"];
 
@@ -41,6 +42,13 @@ class AnyController  extends \MapDapRest\Controller
          return $rows;
       }//---POST-----------------------------------
 
+      if ($request->method=="PUT") {
+          $rows = $tableHandler->edit($tablename, $action_or_id, $request);
+      }
+
+      if ($request->method=="DELETE") {
+          $rows = $tableHandler->delete($tablename, $action_or_id);
+      }
 
     }//Action
 
