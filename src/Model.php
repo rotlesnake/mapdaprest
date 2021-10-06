@@ -192,6 +192,8 @@ class Model extends EloquentModel
         //Каждую строку разбираем на поля, проверяем уровни доступа, заполняем и отдаем
         foreach ($this->modelInfo()["columns"] as $x=>$y) {
             if (!$APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
+            if (!isset($this->{$x})) continue; //Поле отсутствует
+
             $item[$x] = $this->{$x};
 
             if ($y["type"]=="linkTable") {

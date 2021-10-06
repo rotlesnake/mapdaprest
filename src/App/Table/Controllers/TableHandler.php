@@ -192,7 +192,6 @@ class TableHandler
         $footer_row = [];
         $isFast = $request->hasParam("fast");
         foreach ($rows as $row) {
-            //$item = $this->rowConvert($json_response['info'], $row, $isFast ); //Форматируем поля для вывода клиенту
             $item = $row->getConvertedRow( $isFast ); //Форматируем поля для вывода клиенту
 
             array_push($json_response['rows'], $item);
