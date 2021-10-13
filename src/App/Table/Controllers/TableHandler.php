@@ -78,8 +78,10 @@ class TableHandler
 
 
         //Запрашивают фильтр записей по полям
-        //filter:[ {field:name, oper:'like', value:'asd'} ]
+        //filter_type:"or", filter:[ {field:'name', oper:'like', value:'asd'} ]
         $filter = [];
+        $filter_type = "and";
+        if ($request->hasParam("filter_type")) $filter_type = $request->getParam("filter_type");
         if ($request->hasParam("filter")) $filter = $request->getParam("filter");
         if (count($filter)>0) {
 
@@ -97,7 +99,11 @@ class TableHandler
                        $MODEL = $MODEL->whereIn($s_field, $s_value);
                     } else {
                        if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); }
-                       $MODEL = $MODEL->where($s_field, $s_oper, $s_value);
+                       if (strtoupper($filter_type) == "OR") { 
+                          $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
+                       } else { 
+                          $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
+                       }
                     }
                 }
             }
