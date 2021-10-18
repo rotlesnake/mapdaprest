@@ -115,7 +115,10 @@ class TableHandler
              foreach ($request->getParam("parent") as $x) {
                foreach ($tableInfo["parentTables"] as $y) {
                  if ($y["table"]==$x["table"]) {
-                     $MODEL = $MODEL->where($y["field"], (int)$x["value"] );
+                    if (is_array($x["value"])) {  
+                       $x["value"] = \MapDapRest\Utils::arrayToString($x["value"]);  
+                    }
+                    $MODEL = $MODEL->where($y["field"], (int)$x["value"] );
                  }
                }
              }
@@ -267,7 +270,11 @@ class TableHandler
         if (isset($tableInfo["parentTables"])) {
              foreach ($tableInfo["parentTables"] as $x=>$y) {
                  if ($request->hasParam($y["field"])) {
-                     $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    if (is_array($request->getParam($y["field"]))) {  
+                       $row->{$y["field"]} = \MapDapRest\Utils::arrayToString($request->getParam($y["field"]));  
+                    } else {
+                       $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    }
                  }
              }
         }//----------------------------------------------------------------------------------
@@ -321,7 +328,11 @@ class TableHandler
         if (isset($tableInfo["parentTables"])) {
              foreach ($tableInfo["parentTables"] as $x=>$y) {
                  if ($request->hasParam($y["field"])) {
-                     $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    if (is_array($request->getParam($y["field"]))) {  
+                       $row->{$y["field"]} = \MapDapRest\Utils::arrayToString($request->getParam($y["field"]));  
+                    } else {
+                       $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    }
                  }
              }
         }//----------------------------------------------------------------------------------

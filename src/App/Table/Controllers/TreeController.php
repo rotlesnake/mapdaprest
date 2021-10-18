@@ -7,6 +7,7 @@ class TreeController extends \MapDapRest\Controller
     public $lastError = [];
     public $modelClass;
     public $tableInfo;
+    public $treeFilter = null;
 
     public function loadModelInfo($tablename, $access) {
         if ($tablename=="") {
@@ -58,7 +59,11 @@ class TreeController extends \MapDapRest\Controller
            $tableHandler = new TableHandler($this->APP);
            $action = trim($args[0]);
            $id = (isset($args[1])? (int)$args[1] : 0);
+           $parent_id = ($request->hasParam("parent_id") ? $request->getParam("parent_id") : 0 );
+           if ($request->hasParam("filter")) $this->treeFilter = $request->getParam("filter");
+
            $rows = [];
+           if ($action=="get")             { $rows["info"] = $tableInfo; $rows["rows"] = $this->getTreeTable($modelClass, $parent_id); }
            if ($action=="add")             $rows = $tableHandler->add($tablename, $request);
            if ($action=="edit" && $id>0)   $rows = $tableHandler->edit($tablename, $id, $request);
            if ($action=="delete")          $rows = $tableHandler->delete($tablename, $id);
@@ -74,7 +79,30 @@ class TreeController extends \MapDapRest\Controller
         $json_response = [];
 
         $modelRequest = $model::filterRead()->where("parent_id", $parent_id)->orderBy("sort");
-        if ($parent_id == 0) $modelRequest->orWhereNull('parent_id');
+        //фильтр записей по полям
+        $filter = [];
+        if (count($this->treeFilter)>0) {
+            foreach ($this->treeFilter as $x=>$y) { //перебираем поля 
+                if (isset($this->treeFilter[$x]["value"])) {  //поле есть - формируем фильтр
+                    $s_field=$this->treeFilter[$x]["field"]; $s_oper=$this->treeFilter[$x]["oper"]; $s_value=$this->treeFilter[$x]["value"];
+
+                    if ($this->tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
+                    if ($this->tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
+                    if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
+                    if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
+                    
+                    if ($s_oper=="in") {
+                       if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
+                       $modelRequest = $modelRequest->whereIn($s_field, $s_value);
+                    } else {
+                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); }
+                          $modelRequest = $modelRequest->where($s_field, $s_oper, $s_value); 
+                    }
+                }
+            }
+        } else {
+            if ($parent_id == 0) $modelRequest->orWhereNull('parent_id');
+        }//----------------------------------------------------------------------------------
 
         $items = $modelRequest->get();
         foreach ($items as $item) {
