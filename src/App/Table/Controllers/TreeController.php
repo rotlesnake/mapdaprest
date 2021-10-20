@@ -7,7 +7,7 @@ class TreeController extends \MapDapRest\Controller
     public $lastError = [];
     public $modelClass;
     public $tableInfo;
-    public $treeFilter = null;
+    public $treeFilter = [];
 
     public function loadModelInfo($tablename, $access) {
         if ($tablename=="") {
@@ -59,11 +59,11 @@ class TreeController extends \MapDapRest\Controller
            $tableHandler = new TableHandler($this->APP);
            $action = trim($args[0]);
            $id = (isset($args[1])? (int)$args[1] : 0);
-           $parent_id = ($request->hasParam("parent_id") ? $request->getParam("parent_id") : 0 );
            if ($request->hasParam("filter")) $this->treeFilter = $request->getParam("filter");
+           if (!$request->hasParam("parent_id")) $request->params["parent_id"] = 0;
 
            $rows = [];
-           if ($action=="get")             { $rows["info"] = $tableInfo; $rows["rows"] = $this->getTreeTable($modelClass, $parent_id); }
+           if ($action=="get")             { $rows["info"] = $tableInfo; $rows["rows"] = $this->getTreeTable($modelClass, 0); }
            if ($action=="add")             $rows = $tableHandler->add($tablename, $request);
            if ($action=="edit" && $id>0)   $rows = $tableHandler->edit($tablename, $id, $request);
            if ($action=="delete")          $rows = $tableHandler->delete($tablename, $id);
@@ -107,7 +107,10 @@ class TreeController extends \MapDapRest\Controller
         $items = $modelRequest->get();
         foreach ($items as $item) {
              $item_tree = $item->getConvertedRow();
+             $item_tree["parent_id"] = (int)$item_tree["parent_id"];
+             $item_tree["sort"] = (int)$item_tree["sort"];
              $item_tree["children"] = $this->getTreeTable($model, $item->id);
+             if (count($item_tree["children"]) == 0) unset($item_tree["children"]);
 
              array_push($json_response, $item_tree);
         }
