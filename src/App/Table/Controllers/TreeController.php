@@ -8,6 +8,7 @@ class TreeController extends \MapDapRest\Controller
     public $modelClass;
     public $tableInfo;
     public $treeFilter = [];
+    public $sortField = "sort";
 
     public function loadModelInfo($tablename, $access) {
         if ($tablename=="") {
@@ -47,6 +48,8 @@ class TreeController extends \MapDapRest\Controller
         $json_response = [];
         $json_response = ["error"=>0, "info"=>[], "rows"=>[]];
 
+        if ($request->hasParam("sort")) $this->sortField = $request->getParam("sort");
+
         //Получить всё дерево
         if ($request->method=="GET") {
            $json_response["info"] = $tableInfo;
@@ -78,7 +81,7 @@ class TreeController extends \MapDapRest\Controller
     public function getTreeTable($model, $parent_id=0) {
         $json_response = [];
 
-        $modelRequest = $model::filterRead()->where("parent_id", $parent_id)->orderBy("sort");
+        $modelRequest = $model::filterRead()->where("parent_id", $parent_id)->orderBy($this->sortField);
         //фильтр записей по полям
         $filter = [];
         if (count($this->treeFilter)>0) {
