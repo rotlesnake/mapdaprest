@@ -14,7 +14,7 @@
     }
   },
   "require": {
-    "php": "*",
+    "php": "^8.0",
     "doctrine/dbal": "*",
     "illuminate/database": "*",
     "illuminate/events": "*"
