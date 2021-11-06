@@ -24,20 +24,20 @@ class PhpParser
         {
             if ($tokens[$i][0]===T_NAMESPACE)
             {
-                for ($j=$i+1;$j<$count;++$j)
+                for ($j=$i+1; $j<$count; $j++)
                 {
-                    if ($tokens[$j][0]===T_STRING)
-                        $namespace.="\\".$tokens[$j][1];
-                    elseif ($tokens[$j]==='{' or $tokens[$j]===';')
+                    if ($tokens[$j][0]==314) {
+                        $namespace = "\\".$tokens[$j][1];
                         break;
+                    }
                 }
             }
             if ($tokens[$i][0]===T_CLASS)
             {
-                for ($j=$i+1;$j<$count;++$j)
-                    if ($tokens[$j]==='{')
-                    {
-                        $classes[]=$namespace."\\".$tokens[$i+2][1];
+                for ($j=$i+1; $j<$count; $j++)
+                    if ($tokens[$j][0]==311) {
+                        $classes[] = $namespace."\\".$tokens[$i+2][1];
+                        break;
                     }
             }
         }
