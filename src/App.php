@@ -27,7 +27,7 @@ class App
     
     public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder=null)
     {
-        $this->SERVER = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"];
+        $this->SERVER = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"].(in_array($_SERVER["SERVER_PORT"], [80,443]) ? "" : ":".$_SERVER["SERVER_PORT"]);
         $this->ROOT_PATH = str_replace("/", DIRECTORY_SEPARATOR, realpath($ROOT_PATH)."/");
         $this->APP_PATH = $ROOT_PATH.$app_folder."/";
         $this->ROOT_URL = $ROOT_URL;

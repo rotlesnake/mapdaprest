@@ -71,6 +71,11 @@ class Utils {
         $list = str_replace(",,",",",$list);
         return $list;
     }
+    //массив объект json в строку
+    public static function objectToString($obj) {
+        if (gettype($obj) == "string") return $obj;
+        return json_encode($obj);
+    }
 
     //Дату в формат SQL yyyy-mm-dd
     public static function convDateToSQL($dt, $withtime=true) {
