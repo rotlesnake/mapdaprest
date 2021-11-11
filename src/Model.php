@@ -213,14 +213,14 @@ class Model extends EloquentModel
                     if ($full_links || isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                 }
             }
-            if ($y["type"]=="integer")  { $item[$x] = (int)$this->{$x}; }
-            if ($y["type"]=="float")    { $item[$x] = (float)$this->{$x}; }
-            if ($y["type"]=="double")   { $item[$x] = (double)$this->{$x}; }
-            if ($y["type"]=="checkBox") { $item[$x] = (int)$this->{$x}; $item[$x."_text"] = ($item[$x]==1?"Да":"Нет"); }
-            if ($y["type"]=="images")   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
-            if ($y["type"]=="files" )   { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file", $tablename, $this->id, $x); }
-            if ($y["type"]=="json")     { $item[$x] = json_decode($this->{$x}, true); }
-            if ($y["type"]=="password")   $item[$x] = "";
+            if ($y["type"]=="integer")   { $item[$x] = (int)$this->{$x}; }
+            if ($y["type"]=="float")     { $item[$x] = (float)$this->{$x}; }
+            if ($y["type"]=="double")    { $item[$x] = (double)$this->{$x}; }
+            if ($y["type"]=="checkBox")  { $item[$x] = (int)$this->{$x}; $item[$x."_text"] = ($item[$x]==1?"Да":"Нет"); }
+            if ($y["type"]=="images")    { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
+            if ($y["type"]=="files" )    { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file",  $tablename, $this->id, $x); }
+            if ($y["type"]=="json")      { $item[$x] = json_decode($this->{$x}, true); }
+            if ($y["type"]=="password")  { $item[$x] = ""; }
             if ($y["type"]=="date")      { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], false); }
             if ($y["type"]=="dateTime")  { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], true);  }
             if ($y["type"]=="timestamp") { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], true);  }

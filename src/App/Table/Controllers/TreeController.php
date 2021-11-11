@@ -111,7 +111,7 @@ class TreeController extends \MapDapRest\Controller
         foreach ($items as $item) {
              $item_tree = $item->getConvertedRow();
              $item_tree["parent_id"] = (int)$item_tree["parent_id"];
-             $item_tree["sort"] = (int)$item_tree["sort"];
+             $item_tree["sort"] = isset($item_tree["sort"]) ? (int)$item_tree["sort"] : 0;
              $item_tree["children"] = $this->getTreeTable($model, $item->id);
              if (count($item_tree["children"]) == 0) unset($item_tree["children"]);
 
