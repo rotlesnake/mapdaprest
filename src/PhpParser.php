@@ -11,8 +11,50 @@ class PhpParser
     const STATE_CLASS_HEAD = 100001;
     const STATE_FUNCTION_HEAD = 100002;
 
-
     public function extractPhpClasses($path)
+    {
+        $ver = explode(".",PHP_VERSION);
+        if ((int)$ver[0] == 7) {
+            return extractPhpClasses7($path);
+        } else {
+            return extractPhpClasses8($path);
+        }
+    }
+
+    public function extractPhpClasses7($path)
+    {
+        $code = file_get_contents($path);
+        $tokens = token_get_all($code);
+        $namespace = $class = $classLevel = $level = NULL;
+        $classes = [];
+        $count = count($tokens);
+
+        for($i = 0; $i < $count; $i ++)
+        {
+            if ($tokens[$i][0]===T_NAMESPACE)
+            {
+                for ($j=$i+1;$j<$count;++$j)
+                {
+                    if ($tokens[$j][0]===T_STRING)
+                        $namespace.="\\".$tokens[$j][1];
+                    elseif ($tokens[$j]==='{' or $tokens[$j]===';')
+                        break;
+                }
+            }
+            if ($tokens[$i][0]===T_CLASS)
+            {
+                for ($j=$i+1;$j<$count;++$j)
+                    if ($tokens[$j]==='{')
+                    {
+                        $classes[]=$namespace."\\".$tokens[$i+2][1];
+                    }
+            }
+        }
+
+        return $classes;
+    }
+
+    public function extractPhpClasses8($path)
     {
         $code = file_get_contents($path);
         $tokens = token_get_all($code);
