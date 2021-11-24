@@ -98,7 +98,8 @@ class TableHandler
                        if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
                        $MODEL = $MODEL->whereIn($s_field, $s_value);
                     } else {
-                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); }
+                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
+
                        if (strtoupper($filter_type) == "OR") { 
                           $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
                        } else { 
