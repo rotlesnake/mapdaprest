@@ -152,7 +152,7 @@ class TableHandler
 
         //LIMIT
         $limit = $tableInfo["itemsPerPage"];
-        if ($request->hasParam("limit")) $limit = $request->getParam("limit");
+        if ($request->hasParam("limit") && (int)$request->getParam("limit")>0) $limit = $request->getParam("limit");
 
         //PAGE
         $page = 1;
