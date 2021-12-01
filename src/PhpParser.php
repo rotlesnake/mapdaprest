@@ -15,9 +15,9 @@ class PhpParser
     {
         $ver = explode(".",PHP_VERSION);
         if ((int)$ver[0] == 7) {
-            return extractPhpClasses7($path);
+            return $this->extractPhpClasses7($path);
         } else {
-            return extractPhpClasses8($path);
+            return $this->extractPhpClasses8($path);
         }
     }
 
