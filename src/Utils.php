@@ -173,7 +173,7 @@ class Utils {
 
         $arr[] = ["value"=>"checkBox", "text"=>"Да/Нет"];
         $arr[] = ["value"=>"select", "text"=>"Выбор из списка"];
-        $arr[] = ["value"=>"linkTable", "text"=>"Ссыка на таблицу"];
+        $arr[] = ["value"=>"linkTable", "text"=>"Ссылка на таблицу"];
 
         $arr[] = ["value"=>"json", "text"=>"JSON данные"];
         $arr[] = ["value"=>"images", "text"=>"Картинки"];
