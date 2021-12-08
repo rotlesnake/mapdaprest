@@ -96,18 +96,34 @@ class TableHandler
                     
                     if ($s_oper=="in") {
                        if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
-                       $MODEL = $MODEL->whereIn($s_field, $s_value);
+                       foreach($s_value as $key=>$val) { if (!$val) unset($s_value[$key]); }
+                       if (count($s_value) == 0) continue;
+                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
+                           $findinset = "";
+                           foreach($s_value as $value){
+                               $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0";
+                           }
+                           $findinset = "(".substr($findinset, 3).")";
+                           $MODEL = $MODEL->whereRaw($findinset, [$s_value]);
+                       } else {
+                           $MODEL = $MODEL->whereIn($s_field, $s_value);
+                       }
                     } else {
                        if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
 
-                       if (strtoupper($filter_type) == "OR") { 
-                          $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
-                       } else { 
-                          $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
+                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
+                           $MODEL = $MODEL->findInSet($s_field, $s_value); 
+                       } else {
+                           if (strtoupper($filter_type) == "OR") { 
+                              $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
+                           } else { 
+                              $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
+                           }
                        }
                     }
                 }
             }
+
         }//----------------------------------------------------------------------------------
 
         //Это дочерняя таблица - тогда фильтруем записи по родителю  -
@@ -141,6 +157,7 @@ class TableHandler
                $fld = substr($fld,1);
                $ord = "desc";
             }
+            if (substr($fld,-5)=="_text") $fld=substr($fld,0,-5);
             $sort[$ndx] = ($ord=="desc" ? "-".$fld : $fld);
             $MODEL = $MODEL->orderBy($fld, $ord);
         }
