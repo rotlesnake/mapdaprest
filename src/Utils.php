@@ -40,6 +40,18 @@ class Utils {
     public static function getStrBefore($before, $string){ return substr($string, 0, strpos($string, $before)); } 
     public static function numberFormat($number, $delim=""){ return number_format((float)$number, 2, ".", $delim); } 
    
+    public static function sendMail($to, $from_user, $from_email, $subject = '(No subject)', $message = '') {
+      $from_user = "=?UTF-8?B?".base64_encode($from_user)."?=";
+      $subject = "=?UTF-8?B?".base64_encode($subject)."?=";
+
+      $headers = "From: $from_user <$from_email>\r\n".
+               "MIME-Version: 1.0" . "\r\n" .
+               "Content-type: text/html; charset=UTF-8" . "\r\n";
+
+      $message = str_replace(["\n","\r\n"], ["<br>", "<br>"], $message);
+
+     return mail($to, $subject, $message, $headers);
+    }
 
     public static function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
     {
@@ -122,6 +134,65 @@ class Utils {
         return $name;
     }
 
+
+    public function makeWordDocument($inFile, $outFile, $fields=[]) {
+        if (file_exists($outFile)) unlink($outFile);
+        copy($inFile, $outFile);
+
+        $params = [];
+        foreach($fields as $key=>$val) {
+             $params["{{".$key."}}"] = $val;
+        }
+
+        $zip = new \ZipArchive();
+        if (!$zip->open($docxFile)) { return ["error"=>1, "message"=>"File not open."]; }
+        $documentXml = $zip->getFromName('word/document.xml');
+        $documentXml = str_replace(array_keys($params), array_values($params), $documentXml);
+        $documentXml = preg_replace('|{{(.*)}}|isU', '', $documentXml);
+        $zip->deleteName('word/document.xml');
+        $zip->addFromString('word/document.xml', $documentXml);
+        $zip->close();
+
+        return ["error"=>0, "file"=>$outFile];
+    }
+
+
+    public function makeExcelDocument($inFile, $outFile, $fields=[]) {
+        if (file_exists($outFile)) unlink($outFile);
+        copy($inFile, $outFile);
+
+        $params = [];
+        foreach($fields as $key=>$val) {
+             $params["{{".$key."}}"] = $val;
+        }
+
+        $zip = new \ZipArchive();
+        if (!$zip->open($outFile)) { return ["error"=>1, "message"=>"File not open."]; }
+
+        $documentXml = $zip->getFromName('xl/sharedStrings.xml');
+        $documentXml = str_replace(array_keys($params), array_values($params), $documentXml);
+        $documentXml = preg_replace('|{{(.*)}}|isU', '', $documentXml);
+        $zip->deleteName('xl/sharedStrings.xml');
+        $zip->addFromString('xl/sharedStrings.xml', $documentXml);
+        $zip->close();
+
+        return ["error"=>0, "file"=>$outFile];
+    }
+
+    public function sendFile($file, $contentType="application/octet-stream") {
+        header('Content-Description: File Transfer');
+        header('Content-Type: '.$contentType);
+        header('Content-Disposition: attachment; filename="'.basename($file).'"');
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('x-MD5: '.md5_file($file), true);
+        header('Content-Length: ' . filesize($file));
+        ob_clean();
+        flush();
+        readfile($file);
+    }
 
     public static function getFilenameModels() {
         $APP = App::getInstance();

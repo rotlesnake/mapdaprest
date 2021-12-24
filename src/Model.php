@@ -276,6 +276,7 @@ class Model extends EloquentModel
           }
 
           
+          if ($y["type"]=="time")       { $this->{$x} = strlen($params[$x])==0 ? null : $params[$x]; }
           if ($y["type"]=="json")       { $this->{$x} = \MapDapRest\Utils::objectToString($params[$x]); }
           if ($y["type"]=="password")   { $this->{$x} = password_hash($params[$x], PASSWORD_DEFAULT); } //пароль хешируем
           if (!empty($y["default"]) && $action=="add" && strlen($params[$x])==0) { $this->{$x} = $y["default"]; } //при добавлении поля если оно пустое то заполняем его значение по умолчанию
