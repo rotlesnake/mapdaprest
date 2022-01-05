@@ -176,7 +176,7 @@ class App
 
            //Контроллер создан. перед вызовом методов проверяем состояние авторизации
            if ((method_exists($this->auth, "isGuest") && $this->auth->isGuest()===false) || $controllerClass->requireAuth===false) {
-              //Пользователь авторизован тогда идем дальше
+              //Пользователь авторизован или доступ к понтроллеру разрешен без авторизации тогда идем дальше
            } else {
               //Если авторизации нет то выдаем ошибку 401
               $this->response->setResponseCode(401);
@@ -242,6 +242,7 @@ class App
         }
       return $rez;
     }
+
 
     public function emit($eventName, $sendData)
     {

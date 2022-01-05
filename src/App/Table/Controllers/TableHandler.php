@@ -84,7 +84,9 @@ class TableHandler
         if ($request->hasParam("filter_type")) $filter_type = $request->getParam("filter_type");
         if ($request->hasParam("filter")) $filter = $request->getParam("filter");
         if (count($filter)>0) {
-
+            if (gettype($filter[0])=="string" && $filter[0][0]=="{") {
+                foreach ($filter as $x=>$y) $filter[$x] = json_decode($filter[$x], true);
+            }
             foreach ($filter as $x=>$y) { //перебираем поля 
                 if (isset($filter[$x]["value"])) {  //поле есть - формируем фильтр
                     $s_field=$filter[$x]["field"]; $s_oper=$filter[$x]["oper"]; $s_value=$filter[$x]["value"];
@@ -124,7 +126,7 @@ class TableHandler
                 }
             }
 
-        }//----------------------------------------------------------------------------------
+        }//filter----------------------------------------------------------------------------------
 
         //Это дочерняя таблица - тогда фильтруем записи по родителю  -
         //parent : [table:'users', field:'user_id', value:999]
@@ -187,10 +189,6 @@ class TableHandler
         } else {
             $rows = $MODEL->get();
         }
-
-
-//Отладка для просмотра SQL запроса
-//die($MODEL->toSql());
 
 
         //Выдаем информацию о таблице
@@ -257,14 +255,6 @@ class TableHandler
     
 
 
-
-    
-
-
-
-
-    
-
     //********************* ADD **************************************************************************************************
     public function add($tablename, $request) {
         if (!$this->loadModelInfo($tablename, "add")) return $this->lastError;
@@ -316,7 +306,7 @@ class TableHandler
         $row = $row->fillRow("add", $request->params);  //Заполняем строку данными из формы
 
         $id = $row->id;
-        $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
+        $row = $modelClass::find($id); //Считываем данные из базы и отдаем клиенту
         
         $json_response["rows"] = [ $row->getConvertedRow() ];
         
@@ -369,7 +359,7 @@ class TableHandler
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $request->params);  }
         
         $id = $row->id;
-        $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
+        $row = $modelClass::find($id); //Считываем данные из базы и отдаем клиенту
         
         $json_response["rows"] = [ $row->getConvertedRow() ];
 

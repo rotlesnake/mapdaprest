@@ -5,6 +5,7 @@ namespace MapDapRest\App\Auth\Controllers;
 class LoginController extends \MapDapRest\Controller
 {
 
+    public $requireAuth = false;
     public $APP;
 
 
@@ -20,6 +21,15 @@ class LoginController extends \MapDapRest\Controller
 
 
     public function indexAction($request, $response, $params) {
+       if ($this->APP->auth->isGuest()) {
+           $response->setResponseCode(401);
+           $response->setError(1, "Пользователь не найден");
+           if ($request->hasHeader('token')) { 
+               $response->setError(3, "Токен просрочен либо не действителен");
+           }
+           return [];
+       }
+
        $user = $this->APP->auth->getFields();
        \MapDapRest\App\Auth\Events\Emits::userLogin($this->APP->auth);
        return ["user"=>$user];

@@ -11,7 +11,6 @@ class TableHandler
     public $tableInfo;
 
 
-
     public function __construct($app)
     {
         $this->APP = $app;
@@ -56,18 +55,19 @@ class TableHandler
         $modelClass = $this->modelClass;
         $tableInfo = $this->tableInfo;
 
-        if (trim($id)=="modelInfo()") {
+        if (trim($id)=="info" || trim($id)=="modelInfo") {
            return $tableInfo;
         }
 
         //оставляем только поля разрешенные для чтения  или запрашиваемые клиентом fields[] ------------------------------------------
         $fields = [];
-        if ($request->hasParam("fields")) $fields = explode(",", $request->getParam("fields")[$tablename] );
+        if ($request->hasParam("fields")) $fields = $request->getParam("fields");
+        if (isset($fields[$tablename])) $fields = explode(",", $fields[$tablename] );
+        if (gettype($fields)=="string") $fields = explode(",", $fields );
         $allowFields=["id"];
         foreach ($tableInfo["columns"] as $x=>$y) {
            if (count($fields)>0 && !in_array($x, $fields)) continue;
            if (isset($y["is_virtual"])) continue;
-
            if ($this->APP->auth->hasRoles($y["read"])) array_push($allowFields, $x);
         }//---------------------------------------------------------------------------------------------------------------------------
         
@@ -75,62 +75,114 @@ class TableHandler
         $MODEL = $modelClass::select($allowFields)->filterRead();
         
 
-        //FILTER
+        //Запрашивают фильтр записей по полям
+        //filter_type:"or", filter:[ {field:'name', oper:'like', value:'asd'} ]
         $filter = [];
+        $filter_type = "and";
+        if ($request->hasParam("filter_type")) $filter_type = $request->getParam("filter_type");
         if ($request->hasParam("filter")) $filter = $request->getParam("filter");
-        foreach ($filter as $fld=>$val) { //перебираем поля 
-            $cnd = "="; 
-            if (isset($request->params["filter_oper"][$fld])) $cnd = $request->params["filter_oper"][$fld];
-            if (strpos($val,",") !== false) { $cnd="in"; $val=explode(",", $val); }
-            
-            if ($tableInfo["columns"][$fld]["type"]=="date")     { $val = \MapDapRest\Utils::convDateToSQL($val, false); }
-            if ($tableInfo["columns"][$fld]["type"]=="dateTime") { $val = \MapDapRest\Utils::convDateToSQL($val, true);  }
-
-            if ($cnd=="like")   { $val = "%".$val."%"; }
-            if ($cnd=="begins") { $cnd="like"; $val = $val."%"; }
-
-            if ($cnd=="in") {
-                $MODEL = $MODEL->whereIn($fld, $val);
-            } else {
-                $MODEL = $MODEL->where($fld, $cnd, $val);
+        if (count($filter)>0) {
+            if (gettype($filter[0])=="string" && $filter[0][0]=="{") {
+                foreach ($filter as $x=>$y) $filter[$x] = json_decode($filter[$x], true);
             }
-        }
-        //filter----------------------------------------------------------------------------------
+            foreach ($filter as $x=>$y) { //перебираем поля 
+                if (isset($filter[$x]["value"])) {  //поле есть - формируем фильтр
+                    $s_field=$filter[$x]["field"]; $s_oper=$filter[$x]["oper"]; $s_value=$filter[$x]["value"];
+
+                    if ($tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
+                    if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
+                    if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
+                    if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
+                    
+                    if ($s_oper=="in") {
+                       if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
+                       foreach($s_value as $key=>$val) { if (!$val) unset($s_value[$key]); }
+                       if (count($s_value) == 0) continue;
+                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
+                           $findinset = "";
+                           foreach($s_value as $value){
+                               $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0";
+                           }
+                           $findinset = "(".substr($findinset, 3).")";
+                           $MODEL = $MODEL->whereRaw($findinset, [$s_value]);
+                       } else {
+                           $MODEL = $MODEL->whereIn($s_field, $s_value);
+                       }
+                    } else {
+                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
+
+                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
+                           $MODEL = $MODEL->findInSet($s_field, $s_value); 
+                       } else {
+                           if (strtoupper($filter_type) == "OR") { 
+                              $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
+                           } else { 
+                              $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
+                           }
+                       }
+                    }
+                }
+            }
+
+        }//filter----------------------------------------------------------------------------------
 
 
+        //Это дочерняя таблица - тогда фильтруем записи по родителю  -
+        //parent : [table:'users', field:'user_id', value:999]
+        if ($request->hasParam("parent")) {
+             foreach ($request->getParam("parent") as $x) {
+               foreach ($tableInfo["parentTables"] as $y) {
+                 if ($y["table"]==$x["table"]) {
+                    if (is_array($x["value"])) {  
+                       $x["value"] = \MapDapRest\Utils::arrayToString($x["value"]);  
+                    }
+                    $MODEL = $MODEL->where($y["field"], (int)$x["value"] );
+                 }
+               }
+             }
+        }//----------------------------------------------------------------------------------
 
-        //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] ---------------------------------------
+
+        //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] || order[] ---------------------------------------
         $sort = [];
-        if ($request->hasParam("sort")) $sort = explode(",", $request->getParam("sort"));
+        if ($request->hasParam("sort")) $sort = $request->getParam("sort");
+        if ($request->hasParam("sortBy")) $sort = $request->getParam("sortBy");
+        if (gettype($sort)=="string") { $sort = explode(",", $sort); }
         if (count($sort)==0 && isset($tableInfo["sortBy"])) { $sort = $tableInfo["sortBy"]; }
-        foreach ($sort as $fld) { //перебираем поля 
+        if (count($sort)==0 && isset($tableInfo["orderBy"])) { $sort = $tableInfo["orderBy"]; }
+        foreach ($sort as $ndx=>$fld) { //перебираем поля 
             $ord = "asc";
+            if ($request->hasParam("sortDesc") && isset($request->params["sortDesc"][$ndx]) && $request->params["sortDesc"][$ndx]) $ord = "desc";
             if (substr($fld,0,1) == "-") {
                $fld = substr($fld,1);
                $ord = "desc";
             }
+            if (substr($fld,-5)=="_text") $fld=substr($fld,0,-5);
+            $sort[$ndx] = ($ord=="desc" ? "-".$fld : $fld);
             $MODEL = $MODEL->orderBy($fld, $ord);
-        }
+        }//sort-----------------------------------------------------------------------------------------------------------------------
 
 
  
+        //Значения по умолянию в описании модели
+        if (!isset($tableInfo["itemsPerPage"])) $tableInfo["itemsPerPage"] = 100;
+        if (!isset($tableInfo["itemsPerPageVariants"])) $tableInfo["itemsPerPageVariants"] = [50,100,200,300,500,1000];
         //LIMIT
-        $limit = 100;
-        if (isset($tableInfo["itemsPerPage"])) $limit = $tableInfo["itemsPerPage"];
-        if ($request->hasParam("limit")) $limit = $request->getParam("limit");
+        $limit = $tableInfo["itemsPerPage"];
+        if ($request->hasParam("limit") && (int)$request->getParam("limit")>0) $limit = $request->getParam("limit");
 
         //PAGE
         $page = 1;
         if ($request->hasParam("page")) $page = $request->getParam("page");
-        
+        $rows_count = $MODEL->count();
         $MODEL = $MODEL->offset( ($page-1)*$limit )->limit($limit);
 
         $is_single = false;
 
         //FIND
         if ((int)$id > 0) {
-            $MODEL = $MODEL->where("id", $id);
-            $rows = $MODEL->first();
+            $rows = $MODEL->find($id);
+            if (!$rows) $rows = [];
             $is_single = true;
         } else {
             if ($request->hasParam("first")) {
@@ -140,11 +192,6 @@ class TableHandler
                $rows = $MODEL->get();
             }
         }
-
-
-        //Отладка для просмотра SQL запроса
-        //die($MODEL->toSql());
-
 
 
         //Проходим по колонкам, убираем лишние поля
@@ -173,15 +220,6 @@ class TableHandler
     //******************* GET *******************************************************
 
 
-    
- 
-
-    
-
-
-
-
-
 
     //********************* ADD **************************************************************************************************
     public function add($tablename, $request) {
@@ -206,7 +244,11 @@ class TableHandler
         if (isset($tableInfo["parentTables"])) {
              foreach ($tableInfo["parentTables"] as $x=>$y) {
                  if ($request->hasParam($y["field"])) {
-                     $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    if (is_array($request->getParam($y["field"]))) {  
+                       $row->{$y["field"]} = \MapDapRest\Utils::arrayToString($request->getParam($y["field"]));  
+                    } else {
+                       $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    }
                  }
              }
         }//----------------------------------------------------------------------------------
@@ -222,10 +264,9 @@ class TableHandler
 
         //Повторное заполнение необходимо для сохранения файла
         $row = $row->fillRow("add", $request->params);  //Заполняем строку данными из формы
-
         
         $id = $row->id;
-        $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
+        $row = $modelClass::find($id); //Считываем данные из базы и отдаем клиенту
         
         $item = $row->getConvertedRow();
         return $item;
@@ -243,11 +284,24 @@ class TableHandler
        
         //Читаем запись
         $row = $modelClass::filterRead()->filterEdit()->where("id", $id)->first();
-        if (!$row) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
-        if ($row->id != $id) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
+        if (!$row) { return []; } //если не нашли строку то выходим
+        if ($row->id != $id) { return []; } //если не нашли строку то выходим
         
         $row = $row->fillRow("edit", $request->params);  //Заполняем строку данными из формы
         
+        //Это дочерняя таблица - тогда устанавливаем поля родителя
+        if (isset($tableInfo["parentTables"])) {
+             foreach ($tableInfo["parentTables"] as $x=>$y) {
+                 if ($request->hasParam($y["field"])) {
+                    if (is_array($request->getParam($y["field"]))) {  
+                       $row->{$y["field"]} = \MapDapRest\Utils::arrayToString($request->getParam($y["field"]));  
+                    } else {
+                       $row->{$y["field"]} = (int)$request->getParam($y["field"]);
+                    }
+                 }
+             }
+        }//----------------------------------------------------------------------------------
+
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("edit", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
 
@@ -257,14 +311,12 @@ class TableHandler
         //Событие
         if (method_exists($modelClass, "afterPost")) {  $modelClass::afterPost("edit", $row, $request->params);  }
         
-        
         $id = $row->id;
-        $row = $modelClass::filterRead()->where("id",$id)->first(); //Считываем данные из базы и отдаем клиенту
+        $row = $modelClass::find($id); //Считываем данные из базы и отдаем клиенту
         
         $item = $row->getConvertedRow();
 
         return $item;
-
     }
     //*****************************************************************************************************************************
  
@@ -280,9 +332,8 @@ class TableHandler
        
         //Читаем запись
         $row = $modelClass::filterRead()->filterEdit()->filterDelete()->where("id",$id)->first();
-        if (!$row) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
-        if ($row->id != $id) { return ["error"=>4, "message"=>"id $id not found"]; } //если не нашли строку то выходим
-
+        if (!$row) { return []; } //если не нашли строку то выходим
+        if ($row->id != $id) { return []; } //если не нашли строку то выходим
         
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("delete", $row, [])===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }

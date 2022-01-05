@@ -17,7 +17,6 @@ class Emits
         $APP->emit("userLogout", $user);
     }
 
-
     public static function userRegistered($user) 
     {
         $APP = \MapDapRest\App::getInstance();
