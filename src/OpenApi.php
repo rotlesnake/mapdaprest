@@ -24,7 +24,7 @@ class OpenApi {
             if (!isset($oajson["components"])) $oajson["components"] = [];
             $oajson["components"]["securitySchemes"] = ["bearerAuth"=>["type"=>"http", "scheme"=>"bearer"]];
         }
-        //PATHS
+        //paths
         if (!isset($oajson["paths"]["/auth/login"])) {
             if (!isset($oajson["paths"])) $oajson["paths"] = [];
             $oajson["paths"]["/auth/login"]["post"] = ["tags"=>["Auth"], "summary"=>"Выход в систему", "description"=>"Авторизация пользователя в системе", 
@@ -41,10 +41,24 @@ class OpenApi {
             $oajson["components"]["schemas"] = [];
         }
         //components/parameters
+        $oajson["components"]["schemas"]["tableField"] = ["title"=>"Описание поля", "type"=>"object", "properties"=>[
+                                                                                                                      "type"=>["type"=>"string", "description"=>"Тип поля"],
+                                                                                                                      "label"=>["type"=>"string","description"=>"Название поля"],
+                                                                                                                      "read"=>["type"=>"array", "items"=>["type"=>"integer"] ],
+                                                                                                                      "edit"=>["type"=>"array", "items"=>["type"=>"integer"] ],
+                                                                                                                   ] ];
         $oajson["components"]["schemas"]["filterRows"] = ["title"=>"Фильтр записей в таблице", "type"=>"object", "properties"=>[
                                                                                                                                 "field"=>["type"=>"string", "description"=>"Поле для фильтрации"],
                                                                                                                                 "oper"=>["type"=>"string","description"=>"Операция сравнения  =, >, <, in, like"],
                                                                                                                                 "value"=>["type"=>"string","description"=>"Значение поля"],
+                                                                                                                               ] ];
+        $oajson["components"]["schemas"]["tableInfo"] = ["title"=>"Подробная информация о таблице", "type"=>"object", "properties"=>[
+                                                                                                                                "table"=>["type"=>"string", "label"=>"Имя таблицы", "description"=>"-"],
+                                                                                                                                "name"=>["type"=>"string", "label"=>"Описание таблицы", "description"=>"-"],
+                                                                                                                                "read"=>["type"=>"array", "items"=>["type"=>"integer"] ],
+                                                                                                                                "edit"=>["type"=>"array", "items"=>["type"=>"integer"] ],
+                                                                                                                                "delete"=>["type"=>"array", "items"=>["type"=>"integer"] ],
+                                                                                                                                "columns"=>["type"=>"object", "properties"=>["fieldname"=>["\$ref"=>"#/components/schemas/tableField"]] ],
                                                                                                                                ] ];
         $oajson["components"]["parameters"] = [];
         $oajson["components"]["parameters"]["tableId"] = ["in"=>"path", "name"=>"id", "description"=>"id записи", "required"=>true, "schema"=>["type"=>"integer", "default"=>"1"] ];
@@ -73,6 +87,10 @@ class OpenApi {
                 if ($y["type"]=="select") $oajson["components"]["schemas"][$tableName]["properties"][$x]["items"] = $y["items"];
             }
 
+            $oajson["paths"]["/db-query/".$tableName."/info"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Информация о таблице", "description"=>"Получить подробную информацию о таблице", "security"=>[["bearerAuth"=>[]]], 
+                                                       "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/tableInfo"]]] ], 
+                                                                      "401"=>["description"=>"Ошибка авторизации"] ],
+                                                      ];
             $oajson["paths"]["/db-query/".$tableName.""]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить список записей", "description"=>"Получить список всех записей в таблице, с пагинацией", "security"=>[["bearerAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tablePage"],["\$ref"=>"#/components/parameters/tableLimit"],["\$ref"=>"#/components/parameters/tableSort"],["\$ref"=>"#/components/parameters/tableFieldsGet"],["\$ref"=>"#/components/parameters/tableFilterGet"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["type"=>"array", "items"=>["\$ref"=>"#/components/schemas/".$tableName]]]] ], 
@@ -80,7 +98,7 @@ class OpenApi {
                                                       ];
             $oajson["paths"]["/db-query/".$tableName."/{id}"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить запись по id", "description"=>"Получить одну запись по id", "security"=>[["bearerAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"],["\$ref"=>"#/components/parameters/tableFieldsGet"] ],
-                                                       "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["type"=>"array", "items"=>["\$ref"=>"#/components/schemas/".$tableName]]]] ], 
+                                                       "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
             $oajson["paths"]["/db-query/".$tableName.""]["post"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Добавить новую запись", "description"=>"Добавить в таблицу новую запись", "security"=>[["bearerAuth"=>[]]], 
@@ -102,6 +120,8 @@ class OpenApi {
 
 
         }//foreach models
+        $oajson["components"]["schemas"]["tableColumns"] = $oajson["components"]["schemas"]["roles"];
+        $oajson["components"]["schemas"]["tableColumns"]["title"] = "Описание полей таблицы";
 
         return $oajson;
     }//generate()
