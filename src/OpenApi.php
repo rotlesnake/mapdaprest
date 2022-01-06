@@ -9,10 +9,10 @@ class OpenApi {
         $APP = App::getInstance();
         $AppDir = $APP->APP_PATH;
 
-//        error_reporting(0);
+        error_reporting(0);
         $openapi = \OpenApi\Generator::scan([__DIR__."/App/", $AppDir]);
         $oajson = json_decode($openapi->toJson(), true);
-//        error_reporting(E_ALL);
+        error_reporting(E_ALL);
         $oajson["openapi"] = "3.0.3";
         if (!isset($oajson["info"])) {
             $oajson["info"] = ["title"=>"empty app", "summary"=>"empty app", "description"=>"empty app", "version"=>"1.0.0"];
@@ -22,7 +22,7 @@ class OpenApi {
         }
         if (!isset($oajson["components"]["securitySchemes"])) {
             if (!isset($oajson["components"])) $oajson["components"] = [];
-            $oajson["components"]["securitySchemes"] = ["bearerAuth"=>["type"=>"http", "scheme"=>"bearer"]];
+            $oajson["components"]["securitySchemes"] = ["bearerAuth"=>["type"=>"http", "scheme"=>"bearer"], "tokenAuth"=>["type"=>"apiKey", "name"=>"token", "in"=>"header"] ];
         }
         //paths
         if (!isset($oajson["paths"]["/auth/login"])) {
@@ -31,8 +31,8 @@ class OpenApi {
                                                        "parameters"=>[ ["in"=>"query", "name"=>"login", "required"=>true, "description"=>"Логин пользователя"], ["in"=>"query", "name"=>"password", "required"=>true, "description"=>"Пароль пользователя"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешная авторизация"], "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/auth/logout"]["get"] = ["tags"=>["Auth"], "summary"=>"Выход из системы", "security"=>[["bearerAuth"=>[]]], "responses"=>[ "200"=>["description"=>"Успешный ответ"],]  ];
-            $oajson["paths"]["/auth/me"]["get"] = ["tags"=>["Auth"], "summary"=>"Текущий пользователь", "description"=>"Получить данные текущего пользователя", "security"=>[["bearerAuth"=>[]]], "responses"=>[ "200"=>["description"=>"Успешный ответ"],]];
+            $oajson["paths"]["/auth/logout"]["get"] = ["tags"=>["Auth"], "summary"=>"Выход из системы", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], "responses"=>[ "200"=>["description"=>"Успешный ответ"],]  ];
+            $oajson["paths"]["/auth/me"]["get"] = ["tags"=>["Auth"], "summary"=>"Текущий пользователь", "description"=>"Получить данные текущего пользователя", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], "responses"=>[ "200"=>["description"=>"Успешный ответ"],]];
         }
 
         //components/schemas
@@ -87,32 +87,32 @@ class OpenApi {
                 if ($y["type"]=="select") $oajson["components"]["schemas"][$tableName]["properties"][$x]["items"] = $y["items"];
             }
 
-            $oajson["paths"]["/db-query/".$tableName."/info"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Информация о таблице", "description"=>"Получить подробную информацию о таблице", "security"=>[["bearerAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/info"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Информация о таблице", "description"=>"Получить подробную информацию о таблице", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/tableInfo"]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName.""]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить список записей", "description"=>"Получить список всех записей в таблице, с пагинацией", "security"=>[["bearerAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName.""]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить список записей", "description"=>"Получить список всех записей в таблице, с пагинацией", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tablePage"],["\$ref"=>"#/components/parameters/tableLimit"],["\$ref"=>"#/components/parameters/tableSort"],["\$ref"=>"#/components/parameters/tableFieldsGet"],["\$ref"=>"#/components/parameters/tableFilterGet"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["type"=>"array", "items"=>["\$ref"=>"#/components/schemas/".$tableName]]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName."/{id}"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить запись по id", "description"=>"Получить одну запись по id", "security"=>[["bearerAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/{id}"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить запись по id", "description"=>"Получить одну запись по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"],["\$ref"=>"#/components/parameters/tableFieldsGet"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName.""]["post"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Добавить новую запись", "description"=>"Добавить в таблицу новую запись", "security"=>[["bearerAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName.""]["post"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Добавить новую запись", "description"=>"Добавить в таблицу новую запись", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "requestBody"=>["required"=>true, "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ],
                                                        "responses"=>[ "200"=>["description"=>"Данные новой записи", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName."/{id}"]["put"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Изменить запись по id", "description"=>"Изменить запись в таблице по id", "security"=>[["bearerAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/{id}"]["put"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Изменить запись по id", "description"=>"Изменить запись в таблице по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"] ],
                                                        "requestBody"=>["required"=>true, "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ],
                                                        "responses"=>[ "200"=>["description"=>"Данные измененной записи", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName."/{id}"]["delete"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Удалить запись по id", "description"=>"Удалить запись в таблице по id", "security"=>[["bearerAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/{id}"]["delete"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Удалить запись по id", "description"=>"Удалить запись в таблице по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"] ],
                                                        "responses"=>[ "200"=>["description"=>"Данные удаленной записи", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
