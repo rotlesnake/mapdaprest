@@ -24,7 +24,11 @@ class Auth
         public function autoLogin($request) {
            if ($this->isGuest() && $request->hasHeader('Authorization')) {
                $token = $request->getHeader('Authorization');
-               $this->login(["token"=>$token]);
+               $this->login(["token"=>str_replace("Bearer ","", $token)]);
+           }
+           if ($this->isGuest() && $request->hasHeader('authorization')) {
+               $token = $request->getHeader('authorization');
+               $this->login(["token"=>str_replace("Bearer ","", $token)]);
            }
            if ($this->isGuest() && $request->hasHeader('token')) {
                $token = $request->getHeader('token');
