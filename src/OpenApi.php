@@ -15,7 +15,7 @@ class OpenApi {
         error_reporting(E_ALL);
         $oajson["openapi"] = "3.0.3";
         if (!isset($oajson["info"])) {
-            $oajson["info"] = ["title"=>"empty app", "summary"=>"empty app", "description"=>"empty app", "version"=>"1.0.0"];
+            $oajson["info"] = ["title"=>"empty app", "description"=>"empty app", "version"=>"1.0.0"];
         }
         if (!isset($oajson["servers"])) {
             $oajson["servers"][] = ["url"=>$APP->ROOT_URL, "description"=>"app"];
@@ -53,8 +53,8 @@ class OpenApi {
                                                                                                                                 "value"=>["type"=>"string","description"=>"Значение поля"],
                                                                                                                                ] ];
         $oajson["components"]["schemas"]["tableInfo"] = ["title"=>"Подробная информация о таблице", "type"=>"object", "properties"=>[
-                                                                                                                                "table"=>["type"=>"string", "label"=>"Имя таблицы", "description"=>"-"],
-                                                                                                                                "name"=>["type"=>"string", "label"=>"Описание таблицы", "description"=>"-"],
+                                                                                                                                "table"=>["type"=>"string", "description"=>"Имя таблицы"],
+                                                                                                                                "name"=>["type"=>"string", "description"=>"Описание таблицы"],
                                                                                                                                 "read"=>["type"=>"array", "items"=>["type"=>"integer"] ],
                                                                                                                                 "edit"=>["type"=>"array", "items"=>["type"=>"integer"] ],
                                                                                                                                 "delete"=>["type"=>"array", "items"=>["type"=>"integer"] ],
@@ -65,9 +65,9 @@ class OpenApi {
         $oajson["components"]["parameters"]["tablePage"] = ["in"=>"query", "name"=>"page", "description"=>"Номер страницы", "required"=>false, "schema"=>["type"=>"integer", "default"=>"1"] ];
         $oajson["components"]["parameters"]["tableLimit"] = ["in"=>"query", "name"=>"limit", "description"=>"Количество записей на странице", "required"=>false, "schema"=>["type"=>"integer","default"=>"100"]];
         $oajson["components"]["parameters"]["tableSort"] = ["in"=>"query", "name"=>"sort", "description"=>"Сортировка по полю (name, -name)", "required"=>false, "schema"=>["type"=>"string","default"=>"id"]];
-        $oajson["components"]["parameters"]["tableFieldsGet"] = ["in"=>"query", "name"=>"fields[]", "description"=>"Список полей (иначе выдаст все поля)", "required"=>false, "schema"=>["type"=>"array", "default"=>""]];
+        $oajson["components"]["parameters"]["tableFieldsGet"] = ["in"=>"query", "name"=>"fields[]", "description"=>"Список полей (иначе выдаст все поля)", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["type"=>"string","default"=>"name"] ]];
         $oajson["components"]["parameters"]["tableFilterGet"] = ["in"=>"query", "name"=>"filter[]", "description"=>"Фильтрация записей", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["\$ref"=>"#/components/schemas/filterRows"]] ];
-        $oajson["components"]["parameters"]["tableFieldsPost"] = ["in"=>"query", "name"=>"fields", "description"=>"Список полей (иначе выдаст все поля)", "required"=>false, "schema"=>["type"=>"array", "default"=>""]];
+        $oajson["components"]["parameters"]["tableFieldsPost"] = ["in"=>"query", "name"=>"fields", "description"=>"Список полей (иначе выдаст все поля)", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["type"=>"string","default"=>"name"] ]];
         $oajson["components"]["parameters"]["tableFilterPost"] = ["in"=>"query", "name"=>"filter", "description"=>"Фильтрация записей", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["\$ref"=>"#/components/schemas/filterRows"]] ];
 
         $models = static::receiveAllModels($AppDir);
@@ -82,7 +82,7 @@ class OpenApi {
                 if ($y["type"]=="select" && isset($y["multiple"]) && $y["multiple"]) $type = "integer";
                 $format = $y["type"];
 
-                $oajson["components"]["schemas"][$tableName]["properties"][$x] = ["type"=>$type, "format"=>$format, "label"=>$y["label"], "description"=>"-",];
+                $oajson["components"]["schemas"][$tableName]["properties"][$x] = ["type"=>$type, "format"=>$format, "description"=>$y["label"] ];
                 if (count($y["edit"])==0) $oajson["components"]["schemas"][$tableName]["properties"][$x]["readOnly"] = true;
                 if ($y["type"]=="select") $oajson["components"]["schemas"][$tableName]["properties"][$x]["items"] = $y["items"];
             }
