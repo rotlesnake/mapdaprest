@@ -272,12 +272,11 @@ class Model extends EloquentModel
               if ($files) { $this->{$x} = $files; }
           } else {
               $this->{$x} = $params[$x];
-              if (is_array($params[$x])) {  $this->{$x} = \MapDapRest\Utils::arrayToString($params[$x]);  } //массив преобразуем в строку [12,32,34] -> 12,32,34
+              if (is_array($params[$x]) && !in_array($y["type"],["json"])) {  $this->{$x} = \MapDapRest\Utils::arrayToString($params[$x]);  } //массив преобразуем в строку [12,32,34] -> 12,32,34
           }
 
-          
-          if ($y["type"]=="time")       { $this->{$x} = strlen($params[$x])==0 ? null : $params[$x]; }
           if ($y["type"]=="json")       { $this->{$x} = \MapDapRest\Utils::objectToString($params[$x]); }
+          if ($y["type"]=="time")       { $this->{$x} = strlen($params[$x])==0 ? null : $params[$x]; }
           if ($y["type"]=="password")   { $this->{$x} = password_hash($params[$x], PASSWORD_DEFAULT); } //пароль хешируем
           if (!empty($y["default"]) && $action=="add" && strlen($params[$x])==0) { $this->{$x} = $y["default"]; } //при добавлении поля если оно пустое то заполняем его значение по умолчанию
           //Меняем даты в формат SQL

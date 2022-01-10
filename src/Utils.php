@@ -77,7 +77,8 @@ class Utils {
     //массив преобразуем в строку
     public static function arrayToString($arr) {
         if (!is_array($arr)) return $arr;
-        $list=trim( implode(",", $arr) );
+        if (count($arr)==0) return "";
+        $list = implode(",", $arr);
         if (substr($list,0,1)==',') $list = substr($list,1);
         if (substr($list,-1,1)==',') $list = substr($list,0,-1);
         $list = str_replace(",,",",",$list);
