@@ -27,7 +27,7 @@ class OpenApi {
         //paths
         if (!isset($oajson["paths"]["/auth/login"])) {
             if (!isset($oajson["paths"])) $oajson["paths"] = [];
-            $oajson["paths"]["/auth/login"]["post"] = ["tags"=>["Auth"], "summary"=>"Выход в систему", "description"=>"Авторизация пользователя в системе", 
+            $oajson["paths"]["/auth/login"]["post"] = ["tags"=>["Auth"], "summary"=>"Вход в систему", "description"=>"Авторизация пользователя в системе", 
                                                        "parameters"=>[ ["in"=>"query", "name"=>"login", "required"=>true, "description"=>"Логин пользователя"], ["in"=>"query", "name"=>"password", "required"=>true, "description"=>"Пароль пользователя"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешная авторизация"], "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];

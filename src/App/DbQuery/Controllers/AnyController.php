@@ -1,6 +1,5 @@
 <?php
-namespace MapDapRest\App\DBQuery\Controllers;
-//namespace App\Table\Controllers;
+namespace MapDapRest\App\DbQuery\Controllers;
 
 
 class AnyController  extends \MapDapRest\Controller

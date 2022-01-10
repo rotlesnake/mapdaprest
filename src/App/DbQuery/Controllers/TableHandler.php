@@ -1,5 +1,5 @@
 <?php
-namespace MapDapRest\App\DBQuery\Controllers;
+namespace MapDapRest\App\DbQuery\Controllers;
 
 
 class TableHandler
