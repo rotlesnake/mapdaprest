@@ -237,7 +237,7 @@ class Model extends EloquentModel
        if (count($files_array)==0)  return $files;
 
        foreach ($files_array as $y) {
-         if ($y["type"]==1) {
+         if (isset($y["type"]) && $y["type"]==1) {
             $fname = $y["name"];
             $fpath = $APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
             array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$y["caption"], "src"=>$fpath]);
