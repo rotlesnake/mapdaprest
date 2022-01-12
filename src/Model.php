@@ -240,7 +240,8 @@ class Model extends EloquentModel
          if (isset($y["type"]) && $y["type"]==1) {
             $fname = $y["name"];
             $fpath = $APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
-            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$y["caption"], "src"=>$fpath]);
+            $caption = isset($y["caption"]) ? $y["caption"] : "";
+            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath]);
          } else {
             $y["name"] = urldecode($y["src"]);
             $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );
@@ -312,8 +313,16 @@ class Model extends EloquentModel
                 $fsrc = $files_array[$i]["src"];
                 if (strlen($fname)<2) continue;
                 $base64_pos = strpos($fsrc, 'base64,');
-                if (substr($fsrc,0,5)!="data:" || $base64_pos===false) continue;
-                $fsrc = substr($fsrc, $base64_pos+7 );
+                if (substr($fsrc,0,5)=="data:" || $base64_pos!==false) {
+                    $fsrc = substr($fsrc, $base64_pos+7 );
+                } else {
+                    $fileInfo["type"] = 1;
+                    $fileInfo["name"] = $fname;
+                    $fileInfo["caption"] = (isset($files_array[$i]["caption"]) ? $files_array[$i]["caption"] : '');
+                    $fileInfo["src"] = $fsrc;
+                    array_push($files, $fileInfo );
+                    continue;
+                }
 
                 if ($row_id>0) {
                    $folder_path = $APP->ROOT_PATH."uploads/".$table_name;
@@ -342,7 +351,7 @@ class Model extends EloquentModel
                 $fileInfo = [];
                 $fileInfo["type"] = 2;
                 $fileInfo["name"] = "";
-                $fileInfo["caption"] = (isset($files_array[$i]["caption"]) ? $files_array[$i]["caption"] : '');
+                $fileInfo["caption"] = (isset($files_array[$i]["caption"]) ? $files_array[$i]["caption"] : "");
                 $fileInfo["src"] = $files_array[$i]["src"];
                 array_push($files, $fileInfo );
             }
