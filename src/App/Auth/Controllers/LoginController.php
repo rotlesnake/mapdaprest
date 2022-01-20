@@ -32,7 +32,7 @@ class LoginController extends \MapDapRest\Controller
 
        $user = $this->APP->auth->getFields();
        \MapDapRest\App\Auth\Events\Emits::userLogin($this->APP->auth);
-       return ["user"=>$user];
+       return ["status"=>1, "token"=>$user["token"], "user"=>$user];
     }
 
 }
