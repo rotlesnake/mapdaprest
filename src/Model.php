@@ -239,12 +239,15 @@ class Model extends EloquentModel
        foreach ($files_array as $y) {
          if (isset($y["type"]) && $y["type"]==1) {
             $fname = $y["name"];
+            $fext = substr($fname, -4,4);
             $fpath = $APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
             $caption = isset($y["caption"]) ? $y["caption"] : "";
-            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath]);
+            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath, "icon"=\MapDapRest\Utils::extToIcon($fext)]);
          } else {
             $y["name"] = urldecode($y["src"]);
             $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );
+            $fext = substr($y["name"], -4,4);
+            $y["icon"] = \MapDapRest\Utils::extToIcon($fext);
             array_push($files, $y);
          }
        }
