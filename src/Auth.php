@@ -49,6 +49,7 @@ class Auth
             $APP = App::getInstance();
             $hours_token = 6;
             $hours_refresh_token = 25;
+            $this->user = null;
 
             if (isset($credentials['login'])) {
                 $ModelUsers = $this->ModelUsers;
