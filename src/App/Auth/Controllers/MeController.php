@@ -17,7 +17,7 @@ class MeController extends \MapDapRest\Controller
 
     public function indexAction($request, $response, $params) {
  
-       return $this->APP->auth->getFields();
+       return ["status"=>1, "user"=>$this->APP->auth->getFields()];
     }
 
 }
