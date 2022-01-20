@@ -226,6 +226,26 @@ class Utils {
         return $arr;
     }
 
+    public static function extToIcon($ext=".png"){
+        if (in_array($ext, [".png"])) return "https://img.icons8.com/color/64/000000/png.png";
+        if (in_array($ext, [".gif"])) return "https://img.icons8.com/color/64/000000/gif.png";
+        if (in_array($ext, [".mp3"])) return "https://img.icons8.com/color/64/000000/mp3.png";
+        if (in_array($ext, [".mpg"])) return "https://img.icons8.com/color/64/000000/mpg.png";
+        if (in_array($ext, [".avi"])) return "https://img.icons8.com/color/64/000000/avi.png";
+        if (in_array($ext, [".pdf"])) return "https://img.icons8.com/color/64/000000/pdf.png";
+        if (in_array($ext, [".css"])) return "https://img.icons8.com/color/64/000000/css.png";
+        if (in_array($ext, ["html"])) return "https://img.icons8.com/color/64/000000/html.png";
+        if (in_array($ext, [".txt"])) return "https://img.icons8.com/color/64/000000/txt.png";
+        if (in_array($ext, [".zip"])) return "https://img.icons8.com/color/64/000000/zip.png";
+        if (in_array($ext, [".rar"])) return "https://img.icons8.com/color/64/000000/rar.png";
+        if (in_array($ext, [".jpg","jpeg"])) return "https://img.icons8.com/color/64/000000/jpg.png";
+        if (in_array($ext, [".doc","docx"])) return "https://img.icons8.com/color/64/000000/doc.png";
+        if (in_array($ext, [".xls","xlsx"])) return "https://img.icons8.com/color/64/000000/xls.png";
+        if (in_array($ext, [".ppt","pptx"])) return "https://img.icons8.com/color/64/000000/ppt.png";
+
+        return "https://img.icons8.com/color/64/000000/file.png";
+    }
+	
 
     //Получить список всех типов полей
     public static function getAllColumnTypes() {
