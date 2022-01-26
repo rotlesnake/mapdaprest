@@ -170,6 +170,15 @@ class App
               $this->response->send();
               return false;
            }
+
+           //Если есть класс Settings и в нем метод middleware то вызываем его перед вызовом целевого контроллера
+           if (class_exists("\\".$this->app_class."\\Settings") && method_exists("\\".$this->app_class."\\Settings", "middleware")) { 
+              $body = \App\Settings::middleware($this, $className, $action, $this->request, $this->response, $params);
+              if ($body) {
+                  $this->response->setBody($body);
+                  $this->response->send();
+              }
+           }
  
            //Создаем класс найденного контроллера, даем возможность контроллеру решить что делать дальше с этими данными и этим пользователем
            $controllerClass = new $className($this, $this->request, $this->response, $params);

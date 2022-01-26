@@ -210,7 +210,7 @@ class Utils {
         return json_decode(file_get_contents($filename), true);
     }
 
-    //Получить список всех ролей
+    //Получить массив id всех ролей
     public static function getAllRoles($ids=true) {
         if (Utils::loadModels()===false) return [];
 
@@ -225,6 +225,19 @@ class Utils {
 	if (!$ids) return $roles;
         return $arr;
     }
+
+    //Получить массив name всех ролей
+    public static function getRoleNames() {
+        if (Utils::loadModels()===false) return [];
+	$APP = \MapDapRest\App::getInstance();
+	$roles = \App\Auth\Models\Roles::get();
+        $arr = [];
+        foreach ($roles as $row) {
+            array_push($arr, $row->name);
+        }
+        return $arr;
+    }
+
 
     public static function extToIcon($ext=".png"){
         if (in_array($ext, [".png"])) return "https://img.icons8.com/color/64/000000/png.png";

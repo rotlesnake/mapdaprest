@@ -242,7 +242,7 @@ class Model extends EloquentModel
             $fext = substr($fname, -4,4);
             $fpath = $APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
             $caption = isset($y["caption"]) ? $y["caption"] : "";
-            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath, "icon"=\MapDapRest\Utils::extToIcon($fext)]);
+            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath, "icon"=>\MapDapRest\Utils::extToIcon($fext)]);
          } else {
             $y["name"] = urldecode($y["src"]);
             $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );

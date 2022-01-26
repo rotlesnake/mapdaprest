@@ -104,48 +104,13 @@ class Roles extends \MapDapRest\Model
 		],
 
 
-		"name"=>[
- 			"type"=>"string",
- 			"label"=>"Наименование",
- 			"placeholder"=>"",
- 			"width"=>200,
- 			"rules"=>"[ v => v.length>2 || 'Обязательное поле' ]",
- 			"read"=>$acc_all,
- 			"add"=>$acc_admin,
- 			"edit"=>$acc_admin,
-		],
-
+		"name"    =>     ["type"=>"string", "label"=>"Наименование", "rules"=>"[ v => v.length>2 || 'Обязательное поле' ]", "read"=>$acc_all, "add"=>$acc_admin, "edit"=>$acc_admin],
+                "description" => ["type"=>"string", "label"=>"Описание роли",  "read"=>$acc_all, "add"=>$acc_admin, "edit"=>$acc_admin], 
 
 	],
 
 
-	"seeds"=> [
-	             [
-                      'id'    => 1,
-                      'created_by_user'    => 1,
-                      'name'    => 'Администратор системы',
-                     ],
-	             [
-                      'id'    => 2,
-                      'created_by_user'    => 1,
-                      'name'    => 'Помошник администратора',
-                     ],
-	             [
-                      'id'    => 3,
-                      'created_by_user'    => 1,
-                      'name'    => 'Директор',
-                     ],
-	             [
-                      'id'    => 4,
-                      'created_by_user'    => 1,
-                      'name'    => 'Бухгалтер',
-                     ],
-	             [
-                      'id'    => 5,
-                      'created_by_user'    => 1,
-                      'name'    => 'Пользователь',
-                     ],
-                  ]
+	"seeds"=> []
       ];
     }//modelInfo
 

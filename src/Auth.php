@@ -1,6 +1,7 @@
 <?php
 namespace MapDapRest;
 
+use App\Auth\Models\Roles;
 
 class Auth
 {
@@ -48,7 +49,7 @@ class Auth
         public function login($credentials) {
             $APP = App::getInstance();
             $hours_token = 6;
-            $hours_refresh_token = 25;
+            $hours_refresh_token = 96;
             $this->user = null;
 
             if (isset($credentials['login'])) {
@@ -81,7 +82,6 @@ class Auth
                     $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_refresh_token." hours"));
                     $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
                     $this->user->save();
-
                     setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                     return true;
                 }
@@ -153,6 +153,21 @@ class Auth
 
         //***************************************************************************************************************************
         //***************************************************************************************************************************
+        //Получить список ролей [id, name]
+        public function getRoles() {
+            return Roles::whereIn("id", explode(',', $this->user->role_id));
+        }
+        //Получить список ролей [name]
+        public function getRoleNames() {
+            $roles = $this->getRoles();
+            if (!$roles) return [];
+            $arr = [];
+            foreach ($roles as $row) {
+                array_push($arr, $row->name);
+            }
+            return $arr;
+        }
+
         //Поля таблицы пользователя
         public function getFields($keys=[], $exclude=[]) {
             $fields = $this->getAllFields();
@@ -188,9 +203,11 @@ class Auth
             if (gettype($checkList)!="array") $checkList = explode(",", $checkList);
             if (count($checkList)==0) return false;
 
-            $rolesList = array_map('intval', explode(',', $this->user->role_id));
+            $roleIds = array_map('intval', explode(',', $this->user->role_id));
+            $roleNames = $this->getRoleNames();
             foreach ($checkList as $v) {
-                if (in_array($v, $rolesList)) return true;
+                if ((int)$v>0 && in_array((int)$v, $roleIds)) return true;
+                if (gettype($v)=="string" && strlen($v)>1 && in_array($v, $roleNames)) return true;
             }
             return false;
         }
