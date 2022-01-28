@@ -10,7 +10,7 @@ class OpenApi {
         $AppDir = $APP->APP_PATH;
         $controllers = static::receiveAllControllers($AppDir);
         $models = static::receiveAllModels($AppDir);
-
+//print_r($controllers); die();
         error_reporting(0);
         $openapi = \OpenApi\Generator::scan([__DIR__."/App/", $AppDir]);
         $oajson = json_decode($openapi->toJson(), true);
@@ -75,10 +75,14 @@ class OpenApi {
 
 
         //Собираем описание контроллеров
-        foreach ($controllers as $moduleName=>$module) {
+        foreach ($controllers as $module) {
+            $moduleName = $module["module"];
             foreach ($module["methods"] as $method) {
-                if (!isset($oajson["paths"][$module["path"].$method["name"]])) {
-                    $oajson["paths"][$module["path"].$method["name"]]["post"] = ["tags"=>[$moduleName], "summary"=>$method["comment"], "description"=>$method["comment"], 
+                $path = $module["path"]."/".$method["name"];
+                if ($method["name"]=="index") $path = $module["path"];
+
+                if (!isset($oajson["paths"][$path])) {
+                    $oajson["paths"][$path]["post"] = ["tags"=>[$moduleName], "summary"=>$method["comment"], "description"=>$method["comment"], 
                                                        "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "responses"=>[ "200"=>["description"=>"Успешная авторизация"], "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
@@ -164,7 +168,7 @@ class OpenApi {
                foreach ($files as $ctrl) {
                    $fn = str_replace($extDir.$dir."/Controllers/", "", $ctrl);
                    $ctrlName = str_replace("Controller.php", "", $fn);
-                   $urlpath = "/".lcfirst($dir)."/".lcfirst($ctrlName)."/";
+                   $urlpath = "/".lcfirst($dir)."/".lcfirst($ctrlName);
                    $classes = $php_parser->extractPhpClasses($ctrl);
                    $class = $classes[0];
                    $class_methods = get_class_methods($class);
@@ -176,7 +180,7 @@ class OpenApi {
                        $methods[] = ["name"=>$method_name, "comment"=>$php_parser->getComments($class, $methodName) ];
                    }
                    $path = \MapDapRest\Utils::convNameToUrl($urlpath);
-                   $all_ctrls[$dir] = ["class"=>$class, "path"=>$path, "methods"=>$methods, "module"=>$dir];
+                   $all_ctrls[] = ["class"=>$class, "path"=>$path, "methods"=>$methods, "module"=>$dir];
                }
            }
         }
