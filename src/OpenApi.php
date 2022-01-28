@@ -8,11 +8,14 @@ class OpenApi {
     public static function generate() {
         $APP = App::getInstance();
         $AppDir = $APP->APP_PATH;
+        $controllers = static::receiveAllControllers($AppDir);
+        $models = static::receiveAllModels($AppDir);
 
         error_reporting(0);
         $openapi = \OpenApi\Generator::scan([__DIR__."/App/", $AppDir]);
         $oajson = json_decode($openapi->toJson(), true);
         error_reporting(E_ALL);
+
         $oajson["openapi"] = "3.0.3";
         if (!isset($oajson["info"])) {
             $oajson["info"] = ["title"=>"empty app", "description"=>"empty app", "version"=>"1.0.0"];
@@ -70,8 +73,25 @@ class OpenApi {
         $oajson["components"]["parameters"]["tableFieldsPost"] = ["in"=>"query", "name"=>"fields", "description"=>"Список полей (иначе выдаст все поля)", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["type"=>"string","default"=>"name"] ]];
         $oajson["components"]["parameters"]["tableFilterPost"] = ["in"=>"query", "name"=>"filter", "description"=>"Фильтрация записей", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["\$ref"=>"#/components/schemas/filterRows"]] ];
 
-        $models = static::receiveAllModels($AppDir);
-        foreach ($models as $tableName=>$class) {
+
+        //Собираем описание контроллеров
+        foreach ($controllers as $moduleName=>$module) {
+            foreach ($module["methods"] as $method) {
+                if (!isset($oajson["paths"][$module["path"].$method["name"]])) {
+                    $oajson["paths"][$module["path"].$method["name"]]["post"] = ["tags"=>[$moduleName], "summary"=>$method["comment"], "description"=>$method["comment"], 
+                                                       "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+                                                       "responses"=>[ "200"=>["description"=>"Успешная авторизация"], "401"=>["description"=>"Ошибка авторизации"] ],
+                                                      ];
+                }
+            }
+        }
+        //--Конец описание контроллеров--
+
+
+        //Собираем описание моделей
+        foreach ($models as $tableName=>$row) {
+            $class = $row["class"];
+            $moduleName = $row["module"];
             $tableInfo = $class::modelInfo();
             $oajson["components"]["schemas"][$tableName] = ["title"=>$tableName." (".$tableInfo["name"].")", "type"=>"object", "properties"=>[] ];
             foreach ($tableInfo["columns"] as $x=>$y) {
@@ -87,32 +107,32 @@ class OpenApi {
                 if ($y["type"]=="select") $oajson["components"]["schemas"][$tableName]["properties"][$x]["items"] = $y["items"];
             }
 
-            $oajson["paths"]["/db-query/".$tableName."/info"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Информация о таблице", "description"=>"Получить подробную информацию о таблице", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/info"]["get"] = ["tags"=>[$moduleName." || table/".$tableName.""], "summary"=>"Информация о таблице", "description"=>"Получить подробную информацию о таблице", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/tableInfo"]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName.""]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить список записей", "description"=>"Получить список всех записей в таблице, с пагинацией", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName.""]["get"] = ["tags"=>[$moduleName." || table/".$tableName.""], "summary"=>"Получить список записей", "description"=>"Получить список всех записей в таблице, с пагинацией", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tablePage"],["\$ref"=>"#/components/parameters/tableLimit"],["\$ref"=>"#/components/parameters/tableSort"],["\$ref"=>"#/components/parameters/tableFieldsGet"],["\$ref"=>"#/components/parameters/tableFilterGet"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["type"=>"array", "items"=>["\$ref"=>"#/components/schemas/".$tableName]]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName."/{id}"]["get"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Получить запись по id", "description"=>"Получить одну запись по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/{id}"]["get"] = ["tags"=>[$moduleName." || table/".$tableName.""], "summary"=>"Получить запись по id", "description"=>"Получить одну запись по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"],["\$ref"=>"#/components/parameters/tableFieldsGet"] ],
                                                        "responses"=>[ "200"=>["description"=>"Успешный ответ", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName.""]["post"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Добавить новую запись", "description"=>"Добавить в таблицу новую запись", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName.""]["post"] = ["tags"=>[$moduleName." || table/".$tableName.""], "summary"=>"Добавить новую запись", "description"=>"Добавить в таблицу новую запись", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "requestBody"=>["required"=>true, "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ],
                                                        "responses"=>[ "200"=>["description"=>"Данные новой записи", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName."/{id}"]["put"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Изменить запись по id", "description"=>"Изменить запись в таблице по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/{id}"]["put"] = ["tags"=>[$moduleName." || table/".$tableName.""], "summary"=>"Изменить запись по id", "description"=>"Изменить запись в таблице по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"] ],
                                                        "requestBody"=>["required"=>true, "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ],
                                                        "responses"=>[ "200"=>["description"=>"Данные измененной записи", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
                                                       ];
-            $oajson["paths"]["/db-query/".$tableName."/{id}"]["delete"] = ["tags"=>["Table/".$tableName.""], "summary"=>"Удалить запись по id", "description"=>"Удалить запись в таблице по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
+            $oajson["paths"]["/db-query/".$tableName."/{id}"]["delete"] = ["tags"=>[$moduleName." || table/".$tableName.""], "summary"=>"Удалить запись по id", "description"=>"Удалить запись в таблице по id", "security"=>[["bearerAuth"=>[]], ["tokenAuth"=>[]]], 
                                                        "parameters"=>[ ["\$ref"=>"#/components/parameters/tableId"] ],
                                                        "responses"=>[ "200"=>["description"=>"Данные удаленной записи", "content"=>["application/json"=>["schema"=>["\$ref"=>"#/components/schemas/".$tableName]]] ], 
                                                                       "401"=>["description"=>"Ошибка авторизации"] ],
@@ -122,30 +142,62 @@ class OpenApi {
         }//foreach models
         $oajson["components"]["schemas"]["tableColumns"] = $oajson["components"]["schemas"]["roles"];
         $oajson["components"]["schemas"]["tableColumns"]["title"] = "Описание полей таблицы";
+        //---Конец описание моделей---
+
+
+
 
         return $oajson;
     }//generate()
 
 
-    //Сгенерировать список всех моделей в папках
+
+
+    //Сгенерировать список всех контроллеров
+    public static function receiveAllControllers($extDir) {
+        $all_ctrls=[];
+        $php_parser = new PhpParser();
+        $dirfiles = scandir($extDir);
+        foreach($dirfiles as $dir) {
+           if ($dir != "." && $dir != ".." && is_dir($extDir."/".$dir) && is_dir($extDir."/".$dir."/Controllers")) {
+               $files = glob($extDir.$dir."/Controllers/*.php");
+               foreach ($files as $ctrl) {
+                   $fn = str_replace($extDir.$dir."/Controllers/", "", $ctrl);
+                   $ctrlName = str_replace("Controller.php", "", $fn);
+                   $urlpath = "/".lcfirst($dir)."/".lcfirst($ctrlName)."/";
+                   $classes = $php_parser->extractPhpClasses($ctrl);
+                   $class = $classes[0];
+                   $class_methods = get_class_methods($class);
+                   $methods = [];
+                   foreach ($class_methods as $methodName) {
+                       if (substr($methodName,-6) != "Action") continue;
+                       $method_name = substr($methodName,0, -6);
+                       $method_name = \MapDapRest\Utils::convNameToUrl($method_name);
+                       $methods[] = ["name"=>$method_name, "comment"=>$php_parser->getComments($class, $methodName) ];
+                   }
+                   $path = \MapDapRest\Utils::convNameToUrl($urlpath);
+                   $all_ctrls[$dir] = ["class"=>$class, "path"=>$path, "methods"=>$methods, "module"=>$dir];
+               }
+           }
+        }
+        return $all_ctrls;
+    }
+
+    //Сгенерировать список всех моделей
     public static function receiveAllModels($extDir, $all_models=[]) {
         $php_parser = new PhpParser();
-        if ($dh = opendir($extDir)) {
-            while (($file = readdir($dh)) !== false) {
-               if ($file != "." && $file != ".." && is_dir($extDir."/".$file) && is_dir($extDir."/".$file."/Models")) {
-                   
-                   $files = glob($extDir.$file."/Models/*.php");
-                   foreach ($files as $model) {
-                       $classes = $php_parser->extractPhpClasses($model);
-                       $class = $classes[0];
-                       if (!method_exists($class, "modelInfo")) {continue;}
-                       $info = $class::modelInfo();
-    
-                       $all_models[$info["table"]] = $class;
-                   }
+        $dirfiles = scandir($extDir);
+        foreach($dirfiles as $dir) {
+           if ($dir != "." && $dir != ".." && is_dir($extDir."/".$dir) && is_dir($extDir."/".$dir."/Models")) {
+               $files = glob($extDir.$dir."/Models/*.php");
+               foreach ($files as $model) {
+                   $classes = $php_parser->extractPhpClasses($model);
+                   $class = $classes[0];
+                   if (!method_exists($class, "modelInfo")) {continue;}
+                   $info = $class::modelInfo();
+                   $all_models[$info["table"]] = ["class"=>$class, "module"=>$dir];
                }
-            }
-            closedir($dh);
+           }
         }
         return $all_models;
     }
