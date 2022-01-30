@@ -121,7 +121,7 @@ class Auth
 
         //***************************************************************************************************************************
         //***************************************************************************************************************************
-        public function register($login, $password, $status, $role_id) {
+        public function register($login, $password, $status, $role_id, $fields=[]) {
             $APP = App::getInstance();
             if ($APP->auth->isGuest()) { 
                $this->setUser(1);
@@ -136,10 +136,15 @@ class Auth
             $user->password = password_hash($password, PASSWORD_DEFAULT);
             $user->role_id = $role_id;
             $user->status = $status;
+            foreach($fields as $key=>$val) {
+                $user->{$key} = $val;
+            }
             if (!$user->save()) return false;
+            if ($this->user->id == 1) $this->user = null;
 
             return $user;
         }
+
 
 
         //изменить пароль
