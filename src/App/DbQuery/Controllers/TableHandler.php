@@ -180,7 +180,7 @@ class TableHandler
         $is_single = false;
 
         //FIND
-        if (strlen($id) > 0) {
+        if (strlen($id) > 0 && $id != "get") {
             $rows = $MODEL->find($id);
             if (!$rows) $rows = [];
             $is_single = true;

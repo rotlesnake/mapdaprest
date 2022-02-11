@@ -183,7 +183,7 @@ class TableHandler
 
         $rows = [];
         //GET
-        if (strlen($id) > 0) {
+        if (strlen($id) > 0 && $id != "get") {
             $rows = $MODEL->where("id", $id)->get();
             if (count($rows)>1) return ["error"=>6, "message"=>"scope filterRead error"];
         } else {
