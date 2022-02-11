@@ -32,13 +32,13 @@ class AnyController  extends \MapDapRest\Controller
       
       //PUT - is UPDATE
       if ($request->method=="PUT") {
-         $rows = $tableHandler->edit($tablename, (int)$id, $request);
+         $rows = $tableHandler->edit($tablename, $id, $request);
       }//---PUT-----------------------------------
 
 
       //DELETE - is DELETE
       if ($request->method=="DELETE") {
-         $rows = $tableHandler->delete($tablename, (int)$id);
+         $rows = $tableHandler->delete($tablename, $id);
       }//---DELETE-----------------------------------
 
       return $rows;

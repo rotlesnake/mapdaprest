@@ -58,7 +58,7 @@ class TableHandler
         $tableInfo = $this->tableInfo;
         $json_response = ["error"=>0, "info"=>[], "rows"=>[], "pagination"=>[]];
 
-        if (trim($id)=="modelInfo()" || trim($id)=="modelInfo") {
+        if (trim($id)=="modelInfo()" || trim($id)=="modelInfo" || trim($id)=="info") {
            $json_response["info"] = $tableInfo;
            return $json_response;
         }
@@ -183,7 +183,7 @@ class TableHandler
 
         $rows = [];
         //GET
-        if ((int)$id > 0) {
+        if (strlen($id) > 0) {
             $rows = $MODEL->where("id", $id)->get();
             if (count($rows)>1) return ["error"=>6, "message"=>"scope filterRead error"];
         } else {

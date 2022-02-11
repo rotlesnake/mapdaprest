@@ -21,7 +21,7 @@ class AnyController  extends \MapDapRest\Controller
       if ($request->method=="POST") {
          $action = $action_or_id;
          if (strlen($action) == 0) $action = "add";
-         $id = (isset($args[0])? (int)$args[0] : 0);
+         $id = (isset($args[0])? $args[0] : "");
          $rows = ["error"=>9, "message"=>"action not found"];
 
          if ($action=="add")    $rows = $tableHandler->add($tablename, $request);
