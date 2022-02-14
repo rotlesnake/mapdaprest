@@ -199,7 +199,7 @@ class App
 
 
            //Проверяем наличие метода в этом контроллере
-           $body = [];
+           $body = null;
            if (method_exists($controllerClass, $action)) {
              //Вызываем метод контроллера и возвращаем результат
              $body = $controllerClass->$action($this->request, $this->response, $params);

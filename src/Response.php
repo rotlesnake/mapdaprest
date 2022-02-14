@@ -7,7 +7,7 @@ class Response
 
     public $code;
     public $headers;
-    public $body = [];
+    public $body = null;
 
     public $error_message = [
                       "0"=>"success",
@@ -68,6 +68,8 @@ class Response
        foreach ($this->headers as $k=>$v) {
           header("$k: $v");
        }
+
+       if ($this->body==null) die(); 
        
        if (gettype($this->body)=="array") {
           if ($this->error) $this->body = array_merge( $this->error , $this->body );

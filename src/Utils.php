@@ -195,6 +195,15 @@ class Utils {
         readfile($file);
     }
 
+    public function get_include_contents($filename, $params) {
+        if (is_file($filename)) {
+            ob_start();
+            include($filename);
+            return ob_get_clean();
+        }
+        return false;
+    }
+
     public static function getFilenameModels() {
         $APP = App::getInstance();
         $root_path = ($APP ? $APP->ROOT_PATH : ROOT_PATH);
