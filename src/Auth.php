@@ -132,14 +132,14 @@ class Auth
             if ($tmpuser) return false;
 
             $user = new $ModelUsers();
+            $user = $user->fillRow("add", $fields);
             $user->login = $login;
             $user->password = password_hash($password, PASSWORD_DEFAULT);
             $user->role_id = $role_id;
             $user->status = $status;
-            foreach($fields as $key=>$val) {
-                $user->{$key} = $val;
-            }
             if (!$user->save()) return false;
+            $user->fillRow("add", $fields);
+
             if ($this->user->id == 1) $this->user = null;
 
             return $user;
