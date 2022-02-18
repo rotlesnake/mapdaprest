@@ -245,7 +245,7 @@ class Model extends EloquentModel
             array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath, "icon"=>\MapDapRest\Utils::extToIcon($fext)]);
          } else {
             $y["name"] = urldecode($y["src"]);
-            $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );
+            if (strrpos($y["name"], "/") !== false) $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );
             $fext = substr($y["name"], -4,4);
             $y["icon"] = \MapDapRest\Utils::extToIcon($fext);
             array_push($files, $y);
