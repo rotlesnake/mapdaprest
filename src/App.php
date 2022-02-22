@@ -23,10 +23,12 @@ class App
     public $request;
     public $response;
     public $models = [];
+    public $timeInit;
     
     
     public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder=null)
     {
+        $this->timeInit = round(microtime(true) * 1000);
         $this->SERVER = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"].(in_array($_SERVER["SERVER_PORT"], [80,443]) ? "" : ":".$_SERVER["SERVER_PORT"]);
         $this->ROOT_PATH = str_replace("/", DIRECTORY_SEPARATOR, realpath($ROOT_PATH)."/");
         $this->APP_PATH = $ROOT_PATH.$app_folder."/";
@@ -91,6 +93,7 @@ class App
 
         $this->request = new Request($this);
         $this->response = new Response($this);
+        $this->response->timeInit = $this->timeInit;
 
         if (!$this->auth) {
            $this->auth = new Auth();

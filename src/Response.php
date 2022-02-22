@@ -5,6 +5,11 @@ namespace MapDapRest;
 class Response
 {
 
+    public $timeInit;
+    public $timeStart;
+    public $timeFinish;
+    public $timeDuration;
+
     public $code;
     public $headers;
     public $body = null;
@@ -24,7 +29,8 @@ class Response
     {
         $this->code = 200;
         $this->headers = ["Content-Type"=>"application/json"];
-        $this->body = [];
+        $this->body = null;
+        $this->timeStart = round(microtime(true) * 1000);
     }
 
 
@@ -93,5 +99,37 @@ class Response
         header("Location: ".$APP->ROOT_URL.$url);
         die();
     }
+
+
+    public function sendSuccess($body=[], $response_code=200)
+    {
+        $this->sendResult($body, $response_code, 0);
+    }
+
+    public function sendError($body=[], $response_code=500)
+    {
+        $this->sendResult($body, $response_code, 1);
+    }
+
+    public function sendResult($body=[], $response_code=200, $error_code=0)
+    {
+        http_response_code($response_code);
+        foreach ($this->headers as $k=>$v) {
+            header("$k: $v");
+        }
+       
+        $this->timeFinish = round(microtime(true) * 1000);
+        $this->timeDuration = round($this->timeFinish - $this->timeStart, 3);
+        $timeDurationFull  = round($this->timeFinish - $this->$timeInit, 3);
+
+        $response = [];
+        $response["error"] = $error_code;
+        $response["result"] = $body;
+        $response["time"] = ["start"=>$this->timeStart, "finish"=>$this->timeFinish, "duration"=>$this->timeDuration, "duration_full"=>$timeDurationFull];
+
+        echo json_encode($response);
+        die();
+    }
+
 
 }
