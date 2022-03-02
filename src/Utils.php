@@ -41,16 +41,16 @@ class Utils {
     public static function numberFormat($number, $delim=""){ return number_format((float)$number, 2, ".", $delim); } 
    
     public static function sendMail($to, $from_user, $from_email, $subject = '(No subject)', $message = '') {
-      $from_user = "=?UTF-8?B?".base64_encode($from_user)."?=";
-      $subject = "=?UTF-8?B?".base64_encode($subject)."?=";
+        $from_user = "=?UTF-8?B?".base64_encode($from_user)."?=";
+        $subject = "=?UTF-8?B?".base64_encode($subject)."?=";
 
-      $headers = "From: $from_user <$from_email>\r\n".
-               "MIME-Version: 1.0" . "\r\n" .
-               "Content-type: text/html; charset=UTF-8" . "\r\n";
+        $headers = "From: $from_user <$from_email>\r\n".
+                   "MIME-Version: 1.0" . "\r\n" .
+                   "Content-type: text/html; charset=UTF-8" . "\r\n";
 
-      $message = str_replace(["\n","\r\n"], ["<br>", "<br>"], $message);
+        $message = str_replace(["\n","\r\n"], ["<br>", "<br>"], $message);
 
-     return mail($to, $subject, $message, $headers);
+        return mail($to, $subject, $message, $headers);
     }
 
     public static function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
@@ -70,6 +70,7 @@ class Utils {
     }
     //объект преобразуем в массив
     public static function objectToArray($obj) {
+        if (gettype($obj) != "object") return $obj;
         return json_decode( json_encode($obj), true );
     }
 
@@ -136,7 +137,20 @@ class Utils {
     }
 
 
-    public function makeWordDocument($inFile, $outFile, $fields=[]) {
+    public static function replaceTextLikeVue($msg, $fields) {
+        $fields = self::objectToArray($model);
+        $params = [];
+        foreach($fields as $key=>$val) {
+            $params["{{".$key."}}"] = $val;
+        }
+        $msg = str_replace(array_keys($params), array_values($params), $msg);
+        $msg = preg_replace('|{{(.*)}}|isU', '', $msg);
+
+        return $msg;
+    }
+
+
+    public static function makeWordDocument($inFile, $outFile, $fields=[]) {
         if (file_exists($outFile)) unlink($outFile);
         copy($inFile, $outFile);
 
@@ -158,7 +172,7 @@ class Utils {
     }
 
 
-    public function makeExcelDocument($inFile, $outFile, $fields=[]) {
+    public static function makeExcelDocument($inFile, $outFile, $fields=[]) {
         if (file_exists($outFile)) unlink($outFile);
         copy($inFile, $outFile);
 
@@ -180,7 +194,7 @@ class Utils {
         return ["error"=>0, "file"=>$outFile];
     }
 
-    public function sendFile($file, $contentType="application/octet-stream") {
+    public static function sendFile($file, $contentType="application/octet-stream") {
         header('Content-Description: File Transfer');
         header('Content-Type: '.$contentType);
         header('Content-Disposition: attachment; filename="'.basename($file).'"');
@@ -195,7 +209,7 @@ class Utils {
         readfile($file);
     }
 
-    public function get_include_contents($filename, $params) {
+    public static function get_include_contents($filename, $params) {
         if (is_file($filename)) {
             ob_start();
             include($filename);
