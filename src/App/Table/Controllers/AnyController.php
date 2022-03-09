@@ -1,6 +1,5 @@
 <?php
 namespace MapDapRest\App\Table\Controllers;
-//namespace App\Table\Controllers;
 
 
 class AnyController  extends \MapDapRest\Controller
