@@ -138,7 +138,7 @@ class Utils {
 
 
     public static function replaceTextLikeVue($msg, $fields) {
-        $fields = self::objectToArray($model);
+        $fields = self::objectToArray($fields);
         $params = [];
         foreach($fields as $key=>$val) {
             $params["{{".$key."}}"] = $val;
