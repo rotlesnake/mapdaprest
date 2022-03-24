@@ -64,6 +64,7 @@ class TreeController extends \MapDapRest\Controller
            $id = (isset($args[1])? (int)$args[1] : 0);
            if ($request->hasParam("filter")) $this->treeFilter = $request->getParam("filter");
            if (!$request->hasParam("parent_id")) $request->params["parent_id"] = 0;
+           if ($request->hasParam("parent_id") && $request->params["parent_id"]==$request->params["id"]) $request->params["parent_id"] = 0;
 
            $rows = [];
            if ($action=="get")             { $rows["info"] = $tableInfo; $rows["rows"] = $this->getTreeTable($modelClass, 0); }
