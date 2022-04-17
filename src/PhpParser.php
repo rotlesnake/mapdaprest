@@ -87,6 +87,31 @@ class PhpParser
         return $classes;
     }
 
+    public function extractPhpClasses81($path)
+    {
+        $code = file_get_contents($path);
+        $tokens = token_get_all($code);
+        $namespace = $class = $classLevel = $level = NULL;
+        $classes = [];
+
+        foreach($tokens as $item)
+        {
+                    if (!is_array($item)) continue;
+                    if (count($item)<2) continue;
+
+                    if ($item[0]==316) {
+                        $namespace = "\\".$item[1];
+                        continue;
+                    }
+                    if ($item[0]==313) {
+                        $classes[] = $namespace."\\".$item[1];
+                        continue;
+                    }
+        }
+
+        return $classes;
+    }
+    
 
     public function parsePhpFile($file)
     {
