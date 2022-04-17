@@ -17,7 +17,8 @@ class PhpParser
         if ((int)$ver[0] == 7) {
             return $this->extractPhpClasses7($path);
         } else {
-            return $this->extractPhpClasses8($path);
+            if ((int)$ver[1] == 0) return $this->extractPhpClasses8($path);
+            if ((int)$ver[1] > 0) return $this->extractPhpClasses81($path);
         }
     }
 
@@ -99,7 +100,7 @@ class PhpParser
                     if (!is_array($item)) continue;
                     if (count($item)<2) continue;
 
-                    if ($item[0]==316) {
+                    if ($item[0]==316 && $item[2]==2) {
                         $namespace = "\\".$item[1];
                         continue;
                     }
