@@ -92,7 +92,7 @@ class PhpParser
     {
         $code = file_get_contents($path);
         $tokens = token_get_all($code);
-        $namespace = $class = $classLevel = $level = NULL;
+        $namespace = $isClass = $isNamespace = NULL;
         $classes = [];
 
         foreach($tokens as $item)
@@ -100,11 +100,14 @@ class PhpParser
                     if (!is_array($item)) continue;
                     if (count($item)<2) continue;
 
-                    if ($item[0]==316 && $item[2]==2) {
+                    if ($item[1]=="namespace") $isNamespace = true;
+                    if ($item[1]=="class") $isClass = true;
+
+                    if ($item[0]==316 && $isNamespace) {
                         $namespace = "\\".$item[1];
                         continue;
                     }
-                    if ($item[0]==313) {
+                    if ($item[0]==313 && $isClass) {
                         $classes[] = $namespace."\\".$item[1];
                         continue;
                     }
