@@ -25,6 +25,8 @@ class App
     public $models = [];
     public $timeInit;
     
+    public $cachedLinks = [];
+
     
     public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder=null)
     {

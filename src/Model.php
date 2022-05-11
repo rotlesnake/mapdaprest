@@ -8,7 +8,7 @@ use \MapDapRest\App\Auth\Models\SystemLog;
 class Model extends EloquentModel
 {
 
-
+    public $modelInfo = null;
 
     public static function boot()
     {
@@ -103,20 +103,116 @@ class Model extends EloquentModel
 
 
 
+    public function getFieldLinksCached($field, $full_links=false) {
+        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+        $response_array = ["rows"=>[], "values"=>[], "text"=>""];
+        $APP = App::getInstance();
+        $field_values = $this->{$field};
+        if (gettype($field_values)!=="array") {
+            $field_values = array_map('intval', explode(',', $field_values));
+        }
 
-    public function getFieldLinks($field, $full_links=false) {
-      $response_array = ["rows"=>[], "values"=>[], "text"=>""];
-      $APP = App::getInstance();
-      $field_values = $this->{$field};
-      if (gettype($field_values)!=="array") {
-        $field_values = array_map('intval', explode(',', $field_values));
+      if ($this->modelInfo["columns"][$field]["type"]=="linkTable") {
+          $link_table = $this->modelInfo["columns"][$field]["table"];
+          $link_field = $this->modelInfo["columns"][$field]["field"];
+          $link_field_max = 250;
+          if (isset($this->modelInfo["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo["columns"][$field]["field_maxlen"];
+
+          $cnt = 0;
+          if (!isset($APP->cachedLinks[$link_table])) { $cnt = $APP->getModel($link_table)::count(); }
+          if ($cnt > 1500) {
+              $APP->cachedLinks[$link_table] = [];
+              $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
+              foreach ($rows as $row) {
+                  $APP->cachedLinks[$link_table][$row->id] = $row;
+              }
+          }
+          if (!isset($APP->cachedLinks[$link_table])) {
+              $APP->cachedLinks[$link_table] = [];
+              $rows = $APP->getModel($link_table)::get();
+              foreach ($rows as $row) {
+                  $APP->cachedLinks[$link_table][$row->id] = $row;
+              }
+          }
+
+          $rows = [];
+          foreach ($field_values as $val) {
+              $rows[] = $APP->cachedLinks[$link_table][$val];
+          }
+ 
+          $response_array["rows"] = [];
+          foreach ($rows as $item) {
+              if (!$item) continue;
+              if (strpos($link_field,"[")===false) {
+                  $str = $item->{$link_field};
+                  if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
+                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+
+                  if ($full_links) {
+                      $crow = $item->getConvertedRow();
+                      array_push($response_array["rows"], $crow);
+                  } else {
+                      array_push($response_array["rows"], $item->toArray());
+                  }
+              } else {
+                  $crow = $item->getConvertedRow();
+                  $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
+                                 if (isset($crow[$prms[1]])) {
+                                    $str = $crow[$prms[1]];
+                                    if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
+                                    return $str; 
+                                 } else { return ""; }
+                        }, $link_field);
+                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+                  array_push($response_array["rows"], $crow);
+              }
+          }//foreach
+
+          $response_text="";
+          foreach ($response_array["values"] as $item) {
+              $response_text .= "|".$item["text"];
+          }
+          $response_array["text"] = substr($response_text,1);
+
+          return $response_array;
+      }//linkTable
+
+
+      if ($this->modelInfo["columns"][$field]["type"]=="select") {
+          $selects = $this->modelInfo["columns"][$field]["items"];
+
+          foreach ($field_values as $key=>$val) {
+              if (!isset($selects[ $val ])) continue;
+              array_push($response_array["values"], ["value"=>(int)$val, "text"=>$selects[ $val ]]);
+          }
+
+          $response_text="";
+          foreach ($response_array["values"] as $item) {
+              $response_text .= "|".$item["text"];
+          }
+          $response_array["text"] = substr($response_text,1);
+
+          return $response_array;
       }
 
-      if ($this->modelInfo()["columns"][$field]["type"]=="linkTable") {
-          $link_table = $this->modelInfo()["columns"][$field]["table"];
-          $link_field = $this->modelInfo()["columns"][$field]["field"];
+      return $response_array;
+    }//getFieldLinksCached
+
+
+    public function getFieldLinks($field, $full_links=false) {
+        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+        $response_array = ["rows"=>[], "values"=>[], "text"=>""];
+        $APP = App::getInstance();
+        $field_values = $this->{$field};
+        if (gettype($field_values)!=="array") {
+            $field_values = array_map('intval', explode(',', $field_values));
+        }
+
+      if ($this->modelInfo["columns"][$field]["type"]=="linkTable") {
+          $link_table = $this->modelInfo["columns"][$field]["table"];
+          $link_field = $this->modelInfo["columns"][$field]["field"];
           $link_field_max = 250;
-          if (isset($this->modelInfo()["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo()["columns"][$field]["field_maxlen"];
+          if (isset($this->modelInfo["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo["columns"][$field]["field_maxlen"];
  
           $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
           $response_array["rows"] = [];
@@ -157,8 +253,8 @@ class Model extends EloquentModel
       }//linkTable
 
 
-      if ($this->modelInfo()["columns"][$field]["type"]=="select") {
-          $selects = $this->modelInfo()["columns"][$field]["items"];
+      if ($this->modelInfo["columns"][$field]["type"]=="select") {
+          $selects = $this->modelInfo["columns"][$field]["items"];
 
           foreach ($field_values as $key=>$val) {
               if (!isset($selects[ $val ])) continue;
@@ -185,12 +281,14 @@ class Model extends EloquentModel
     //******************* CONVERT FOR OUT*******************************************************
     public function getConvertedRow($fastMode=false, $full_links=false){
         $APP = App::getInstance();
-        $tablename = $this->modelInfo()["table"];
+        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+
+        $tablename = $this->modelInfo["table"];
         $item = [];
         $item["id"] = $this->id;
  
         //Каждую строку разбираем на поля, проверяем уровни доступа, заполняем и отдаем
-        foreach ($this->modelInfo()["columns"] as $x=>$y) {
+        foreach ($this->modelInfo["columns"] as $x=>$y) {
             if (!$APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
             if (!isset($this->{$x})) continue; //Поле отсутствует
 
@@ -199,7 +297,7 @@ class Model extends EloquentModel
             if ($y["type"]=="linkTable") {
                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
-                    $FieldLinks = $this->getFieldLinks($x, $full_links);
+                    $FieldLinks = $this->getFieldLinksCached($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
                     if (isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                     if ($full_links || isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $FieldLinks["rows"];
@@ -208,7 +306,7 @@ class Model extends EloquentModel
             if ($y["type"]=="select") {
                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
-                    $FieldLinks = $this->getFieldLinks($x, $full_links);
+                    $FieldLinks = $this->getFieldLinksCached($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
                     if ($full_links || isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                 }
@@ -261,10 +359,11 @@ class Model extends EloquentModel
     public function fillRow($action, $params, &$fill_count=null)
     {
         $APP = App::getInstance();
-        $tablename = $this->modelInfo()["table"];
+        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+        $tablename = $this->modelInfo["table"];
 
         $i=0;
-        foreach ($this->modelInfo()["columns"] as $x=>$y) {
+        foreach ($this->modelInfo["columns"] as $x=>$y) {
           if (isset($y["is_virtual"]) && $y["is_virtual"]) continue;      //Поле виртуальное
           if (!isset($params[$x]))  continue;                             //Поле отсутствует
           if (!$APP->auth->hasRoles($y[$action])) continue;               //Нет прав не заполняем поле
