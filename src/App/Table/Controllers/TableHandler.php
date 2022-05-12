@@ -103,10 +103,10 @@ class TableHandler
                        if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
                            $findinset = "";
                            foreach($s_value as $value){
-                               $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0";
+                               $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0 ";
                            }
                            $findinset = "(".substr($findinset, 3).")";
-                           $MODEL = $MODEL->whereRaw($findinset, [$s_value]);
+                           $MODEL = $MODEL->whereRaw($findinset, $s_value);
                        } else {
                            $MODEL = $MODEL->whereIn($s_field, $s_value);
                        }
