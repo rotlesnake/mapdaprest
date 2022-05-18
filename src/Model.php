@@ -16,7 +16,7 @@ class Model extends EloquentModel
         
         
         static::creating(function($model) {
-	  $app = \MapDapRest\App::getInstance();
+          $app = \MapDapRest\App::getInstance();
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
              $model->created_by_user = $app->auth->getFields()['id'];
@@ -28,7 +28,7 @@ class Model extends EloquentModel
           }
         });
         static::created(function($model) {
-	  $app = \MapDapRest\App::getInstance();
+          $app = \MapDapRest\App::getInstance();
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
@@ -50,7 +50,7 @@ class Model extends EloquentModel
           return $model->beforeEdit($model);
         });
         static::updated(function($model) {
-	  $app = \MapDapRest\App::getInstance();
+          $app = \MapDapRest\App::getInstance();
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
@@ -72,7 +72,7 @@ class Model extends EloquentModel
           return $model->beforeDelete($model);
         });
         static::deleted(function($model) {
-	  $app = \MapDapRest\App::getInstance();
+          $app = \MapDapRest\App::getInstance();
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
@@ -88,9 +88,6 @@ class Model extends EloquentModel
 
           $model->afterDelete($model);
         });
-        
-
-       
     }//boot------------------------------------
 
 
@@ -137,7 +134,7 @@ class Model extends EloquentModel
 
           $rows = [];
           foreach ($field_values as $val) {
-              $rows[] = $APP->cachedLinks[$link_table][$val];
+              if (isset($APP->cachedLinks[$link_table][$val])) $rows[] = $APP->cachedLinks[$link_table][$val];
           }
  
           $response_array["rows"] = [];
