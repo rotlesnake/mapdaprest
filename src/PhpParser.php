@@ -17,8 +17,7 @@ class PhpParser
         if ((int)$ver[0] == 7) {
             return $this->extractPhpClasses7($path);
         } else {
-            if ((int)$ver[1] == 0) return $this->extractPhpClasses8($path);
-            if ((int)$ver[1] > 0) return $this->extractPhpClasses81($path);
+            return $this->extractPhpClasses8($path);
         }
     }
 
@@ -59,56 +58,27 @@ class PhpParser
     {
         $code = file_get_contents($path);
         $tokens = token_get_all($code);
-        $namespace = $class = $classLevel = $level = NULL;
-        $classes = [];
-        $count = count($tokens);
-
-        for($i = 0; $i < $count; $i ++)
-        {
-            if ($tokens[$i][0]===T_NAMESPACE)
-            {
-                for ($j=$i+1; $j<$count; $j++)
-                {
-                    if ($tokens[$j][0]==314) {
-                        $namespace = "\\".$tokens[$j][1];
-                        break;
-                    }
-                }
-            }
-            if ($tokens[$i][0]===T_CLASS)
-            {
-                for ($j=$i+1; $j<$count; $j++)
-                    if ($tokens[$j][0]==311) {
-                        $classes[] = $namespace."\\".$tokens[$i+2][1];
-                        break;
-                    }
-            }
-        }
-
-        return $classes;
-    }
-
-    public function extractPhpClasses81($path)
-    {
-        $code = file_get_contents($path);
-        $tokens = token_get_all($code);
         $namespace = $isClass = $isNamespace = NULL;
         $classes = [];
+        $tokenCnt = 0;
 
         foreach($tokens as $item)
         {
                     if (!is_array($item)) continue;
                     if (count($item)<2) continue;
+                    $tokenCnt++;
 
-                    if ($item[1]=="namespace") $isNamespace = true;
-                    if ($item[1]=="class") $isClass = true;
+                    if ($item[1]=="namespace") { $isNamespace = true; $tokenCnt = 0; }
+                    if ($item[1]=="class")     { $isClass = true;     $tokenCnt = 0; }
 
-                    if ($item[0]==316 && $isNamespace) {
+                    if ($isNamespace && $tokenCnt==2) {
                         $namespace = "\\".$item[1];
+                        $isNamespace=false;
                         continue;
                     }
-                    if ($item[0]==313 && $isClass) {
+                    if ($isClass && $tokenCnt==2) {
                         $classes[] = $namespace."\\".$item[1];
+                        $isClass=false;
                         continue;
                     }
         }

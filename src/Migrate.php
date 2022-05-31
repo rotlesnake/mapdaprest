@@ -105,6 +105,7 @@ class Migrate {
                      if (in_array($y["type"], ["integer", "checkBox"]) && $fldType=="integer") continue; 
                      if ($y["type"]=="float" && $fldType=="decimal") continue; 
                      if ($y["type"]=="double" && $fldType=="float") continue; 
+                     if (in_array($y["type"], ["json"])) continue; 
                  }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
                  //Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
@@ -133,7 +134,8 @@ class Migrate {
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }
                  if (in_array($y["type"], ["double"]))  { $fld = $table->double($x)->nullable(); }
-                 if (in_array($y["type"], ["text", "images", "files", "html", "json"]))  { $fld = $table->longText($x)->nullable(); }
+                 if (in_array($y["type"], ["text", "images", "files", "html"]))  { $fld = $table->longText($x)->nullable(); }
+                 if ($y["type"]=="json")  { if ($APP->jsonAsText) { $fld = $table->longText($x)->nullable(); } else { $fld = $table->json($x)->nullable(); } }
                  if (in_array($y["type"], ["date"]))      { $fld = $table->date($x)->nullable(); }
                  if (in_array($y["type"], ["time"]))      { $fld = $table->time($x,0)->nullable(); }
                  if (in_array($y["type"], ["dateTime"]))  { $fld = $table->dateTime($x,0)->nullable(); }
