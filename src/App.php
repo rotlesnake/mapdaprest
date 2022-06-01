@@ -26,7 +26,7 @@ class App
     public $timeInit;
     
     public $cachedLinks = [];
-    public $jsonAsText = false;
+    public $jsonAsText = true;
 
     
     public function __construct($ROOT_PATH, $ROOT_URL="/", $app_folder="App", $app_class="App", $site_folder=null)

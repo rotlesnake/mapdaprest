@@ -98,9 +98,10 @@ class Migrate {
                      if (!isset($y["multiple"]))  { $y["multiple"] = false; }
                      if ($y["type"]=="select" && !$y["multiple"] && $fldType=="integer") continue; 
                      if ($y["type"]=="select" && $y["multiple"] && $fldType=="text") continue; 
+                     if ($y["type"]=="selectText" && $fldType=="text") continue; 
                      if ($y["type"]=="linkTable" && !$y["multiple"] && $fldType=="integer") continue; 
                      if ($y["type"]=="linkTable" && $y["multiple"] && $fldType=="text") continue; 
-                     if (in_array($y["type"], ["text", "images", "files", "html", "json"]) && $fldType=="text") continue; 
+                     if (in_array($y["type"], ["text", "images", "files", "html"]) && $fldType=="text") continue; 
                      if (in_array($y["type"], ["string", "password", "masked", "color"]) && $fldType=="string") continue; 
                      if (in_array($y["type"], ["integer", "checkBox"]) && $fldType=="integer") continue; 
                      if ($y["type"]=="float" && $fldType=="decimal") continue; 
@@ -119,7 +120,7 @@ class Migrate {
                  if (in_array($y["type"], ["select"])) {
                       if (!isset($y["multiple"]))  { $y["multiple"] = false; }
                       if ($y["multiple"]) {
-                         $fld = $table->text($x)->nullable();
+                         $fld = $table->longText($x)->nullable();
                       } else {
                          $fld = $table->integer($x)->nullable();
                       }
@@ -134,7 +135,7 @@ class Migrate {
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }
                  if (in_array($y["type"], ["double"]))  { $fld = $table->double($x)->nullable(); }
-                 if (in_array($y["type"], ["text", "images", "files", "html"]))  { $fld = $table->longText($x)->nullable(); }
+                 if (in_array($y["type"], ["text", "images", "files", "html", "selectText"]))  { $fld = $table->longText($x)->nullable(); }
                  if ($y["type"]=="json")  { if ($APP->jsonAsText) { $fld = $table->longText($x)->nullable(); } else { $fld = $table->json($x)->nullable(); } }
                  if (in_array($y["type"], ["date"]))      { $fld = $table->date($x)->nullable(); }
                  if (in_array($y["type"], ["time"]))      { $fld = $table->time($x,0)->nullable(); }

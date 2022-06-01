@@ -100,180 +100,105 @@ class Model extends EloquentModel
 
 
 
-    public function getFieldLinksCached($field, $full_links=false) {
-        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
-        $response_array = ["rows"=>[], "values"=>[], "text"=>""];
-        $APP = App::getInstance();
-        $field_values = $this->{$field};
-        if (gettype($field_values)!=="array") {
-            $field_values = array_map('intval', explode(',', $field_values));
-        }
-
-      if ($this->modelInfo["columns"][$field]["type"]=="linkTable") {
-          $link_table = $this->modelInfo["columns"][$field]["table"];
-          $link_field = $this->modelInfo["columns"][$field]["field"];
-          $link_field_max = 250;
-          if (isset($this->modelInfo["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo["columns"][$field]["field_maxlen"];
-
-          $cnt = 0;
-          if (!isset($APP->cachedLinks[$link_table])) { $cnt = $APP->getModel($link_table)::count(); }
-          if ($cnt > 1500) {
-              $APP->cachedLinks[$link_table] = [];
-              $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
-              foreach ($rows as $row) {
-                  $APP->cachedLinks[$link_table][$row->id] = $row;
-              }
-          }
-          if (!isset($APP->cachedLinks[$link_table])) {
-              $APP->cachedLinks[$link_table] = [];
-              $rows = $APP->getModel($link_table)::get();
-              foreach ($rows as $row) {
-                  $APP->cachedLinks[$link_table][$row->id] = $row;
-              }
-          }
-
-          $rows = [];
-          foreach ($field_values as $val) {
-              if (isset($APP->cachedLinks[$link_table][$val])) $rows[] = $APP->cachedLinks[$link_table][$val];
-          }
- 
-          $response_array["rows"] = [];
-          foreach ($rows as $item) {
-              if (!$item) continue;
-              if (strpos($link_field,"[")===false) {
-                  $str = $item->{$link_field};
-                  if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
-                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
-
-                  if ($full_links) {
-                      $crow = $item->getConvertedRow();
-                      array_push($response_array["rows"], $crow);
-                  } else {
-                      array_push($response_array["rows"], $item->toArray());
-                  }
-              } else {
-                  $crow = $item->getConvertedRow();
-                  $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
-                                 if (isset($crow[$prms[1]])) {
-                                    $str = $crow[$prms[1]];
-                                    if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
-                                    return $str; 
-                                 } else { return ""; }
-                        }, $link_field);
-                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
-                  array_push($response_array["rows"], $crow);
-              }
-          }//foreach
-
-          $response_text="";
-          foreach ($response_array["values"] as $item) {
-              $response_text .= "|".$item["text"];
-          }
-          $response_array["text"] = substr($response_text,1);
-
-          return $response_array;
-      }//linkTable
-
-
-      if ($this->modelInfo["columns"][$field]["type"]=="select") {
-          $selects = $this->modelInfo["columns"][$field]["items"];
-
-          foreach ($field_values as $key=>$val) {
-              if (!isset($selects[ $val ])) continue;
-              array_push($response_array["values"], ["value"=>(int)$val, "text"=>$selects[ $val ]]);
-          }
-
-          $response_text="";
-          foreach ($response_array["values"] as $item) {
-              $response_text .= "|".$item["text"];
-          }
-          $response_array["text"] = substr($response_text,1);
-
-          return $response_array;
-      }
-
-      return $response_array;
-    }//getFieldLinksCached
-
-
     public function getFieldLinks($field, $full_links=false) {
         if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
         $response_array = ["rows"=>[], "values"=>[], "text"=>""];
         $APP = App::getInstance();
         $field_values = $this->{$field};
-        if (gettype($field_values)!=="array") {
-            $field_values = array_map('intval', explode(',', $field_values));
-        }
+        $field_type = $this->modelInfo["columns"][$field]["type"];
 
-      if ($this->modelInfo["columns"][$field]["type"]=="linkTable") {
-          $link_table = $this->modelInfo["columns"][$field]["table"];
-          $link_field = $this->modelInfo["columns"][$field]["field"];
-          $link_field_max = 250;
-          if (isset($this->modelInfo["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo["columns"][$field]["field_maxlen"];
+        if ($field_type=="linkTable") {
+            if (gettype($field_values)!=="array") $field_values = array_map('intval', explode(',', $field_values));
+            $link_table = $this->modelInfo["columns"][$field]["table"];
+            $link_field = $this->modelInfo["columns"][$field]["field"];
+            $link_field_max = 250;
+            if (isset($this->modelInfo["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo["columns"][$field]["field_maxlen"];
+
+            $cnt = 0;
+            if (!isset($APP->cachedLinks[$link_table])) { $cnt = $APP->getModel($link_table)::count(); }
+            if ($cnt > 1500) {
+                $APP->cachedLinks[$link_table] = [];
+                $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
+                foreach ($rows as $row) {
+                    $APP->cachedLinks[$link_table][$row->id] = $row;
+                }
+            }
+            if (!isset($APP->cachedLinks[$link_table])) {
+                $APP->cachedLinks[$link_table] = [];
+                $rows = $APP->getModel($link_table)::get();
+                foreach ($rows as $row) {
+                    $APP->cachedLinks[$link_table][$row->id] = $row;
+                }
+            }
+
+            $rows = [];
+            foreach ($field_values as $val) {
+                if (isset($APP->cachedLinks[$link_table][$val])) $rows[] = $APP->cachedLinks[$link_table][$val];
+            }
  
-          $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
-          $response_array["rows"] = [];
-
-          foreach ($rows as $item) {
-              if (strpos($link_field,"[")===false) {
-                  $str = $item->{$link_field};
-                  if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
-                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
-
-                  if ($full_links) {
-                      $crow = $item->getConvertedRow();
-                      array_push($response_array["rows"], $crow);
-                  } else {
-                      array_push($response_array["rows"], $item->toArray());
-                  }
-              } else {
-                  $crow = $item->getConvertedRow();
-                  $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
+            $response_array["rows"] = [];
+            foreach ($rows as $item) {
+                if (!$item) continue;
+                if (strpos($link_field,"[")===false) {
+                    $str = $item->{$link_field};
+                    if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
+                    array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+  
+                    if ($full_links) {
+                        $crow = $item->getConvertedRow();
+                        array_push($response_array["rows"], $crow);
+                    } else {
+                        array_push($response_array["rows"], $item->toArray());
+                    }
+                } else {
+                    $crow = $item->getConvertedRow();
+                    $str = preg_replace_callback('|\[(.*)\]|isU', function($prms) use($crow, $link_field_max) {
                                  if (isset($crow[$prms[1]])) {
                                     $str = $crow[$prms[1]];
                                     if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                                     return $str; 
                                  } else { return ""; }
-                        }, $link_field);
-                  array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
-                  array_push($response_array["rows"], $crow);
-              }
-          }//foreach
+                          }, $link_field);
+                    array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
+                    array_push($response_array["rows"], $crow);
+                }
+            }//foreach
 
-          $response_text="";
-          foreach ($response_array["values"] as $item) {
-              $response_text .= "|".$item["text"];
-          }
-          $response_array["text"] = substr($response_text,1);
+            $response_text="";
+            foreach ($response_array["values"] as $item) {
+                $response_text .= "|".$item["text"];
+            }
+            $response_array["text"] = substr($response_text,1);
+  
+            return $response_array;
+        }//linkTable
 
-          return $response_array;
-      }//linkTable
 
+        if ($field_type=="select" || $field_type=="selectText") {
+            if ($field_type=="select" && gettype($field_values)!=="array") $field_values = array_map('intval', explode(',', $field_values));
+            if ($field_type=="selectText") $field_values = explode(',', $field_values);
+            $selects = $this->modelInfo["columns"][$field]["items"];
 
-      if ($this->modelInfo["columns"][$field]["type"]=="select") {
-          $selects = $this->modelInfo["columns"][$field]["items"];
+            foreach ($field_values as $key=>$val) {
+                if (!isset($selects[ $val ])) continue;
+                if ($field_type=="select") array_push($response_array["values"], ["value"=>(int)$val, "text"=>$selects[ $val ]]);
+                if ($field_type=="selectText") array_push($response_array["values"], ["value"=>$val, "text"=>$selects[ $val ]]);
+            }
 
-          foreach ($field_values as $key=>$val) {
-              if (!isset($selects[ $val ])) continue;
-              array_push($response_array["values"], ["value"=>(int)$val, "text"=>$selects[ $val ]]);
-          }
+            $response_text="";
+            foreach ($response_array["values"] as $item) {
+                $response_text .= "|".$item["text"];
+            }
+            $response_array["text"] = substr($response_text,1);
 
-          $response_text="";
-          foreach ($response_array["values"] as $item) {
-              $response_text .= "|".$item["text"];
-          }
-          $response_array["text"] = substr($response_text,1);
+            return $response_array;
+        }
 
-          return $response_array;
-      }
-
-      return $response_array;
+        return $response_array;
     }//getFieldLinks
 
 
 
-
-    
 
     //******************* CONVERT FOR OUT*******************************************************
     public function getConvertedRow($fastMode=false, $full_links=false){
@@ -294,16 +219,21 @@ class Model extends EloquentModel
             if ($y["type"]=="linkTable") {
                 if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
                 if (!$fastMode) {
-                    $FieldLinks = $this->getFieldLinksCached($x, $full_links);
+                    $FieldLinks = $this->getFieldLinks($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
                     if (isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                     if ($full_links || isset($y["object"]) && $y["object"]) $item[$x."_rows"] = $FieldLinks["rows"];
                 }
             } 
-            if ($y["type"]=="select") {
-                if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
+            if ($y["type"]=="select" || $y["type"]=="selectText") {
+                if ($y["type"]=="select") {
+                    if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = array_map('intval', explode(',', $item[$x])); } else { $item[$x] = (int)$this->{$x}; }
+                }
+                if ($y["type"]=="selectText") {
+                    if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); } else { $item[$x] = $this->{$x}; }
+                }
                 if (!$fastMode) {
-                    $FieldLinks = $this->getFieldLinksCached($x, $full_links);
+                    $FieldLinks = $this->getFieldLinks($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
                     if ($full_links || isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
                 }
