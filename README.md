@@ -8,7 +8,7 @@ composer install rotlesnake/mapdaprest
 
 # 
 # 
-# Init rest full app
+# Init app
 application folder structure
 ```
 +App
