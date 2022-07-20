@@ -63,6 +63,19 @@ class OpenApi {
                                                                                                                                 "delete"=>["type"=>"array", "items"=>["type"=>"integer"] ],
                                                                                                                                 "columns"=>["type"=>"object", "properties"=>["fieldname"=>["\$ref"=>"#/components/schemas/tableField"]] ],
                                                                                                                                ] ];
+
+
+        $oajson["components"]["schemas"]["ErrorResponse"] = ["title"=>"Ошибка", "type"=>"object", "properties"=>[
+                                                                                                                 "error"=>["type"=>"integer", "description"=>"Код ошибки", "default"=>"1"],
+                                                                                                                 "message"=>["type"=>"string","description"=>"Сообщение"],
+                                                                                                                 ] ];
+        $oajson["components"]["schemas"]["SuccessResponse"] = ["title"=>"Ошибка", "type"=>"object", "properties"=>[
+                                                                                                                 "error"=>["type"=>"integer", "description"=>"Код ошибки", "default"=>"0"],
+                                                                                                                 "result"=>["type"=>"object", "description"=>"Результат"],
+                                                                                                                 ] ];
+
+
+
         $oajson["components"]["parameters"] = [];
         $oajson["components"]["parameters"]["tableId"] = ["in"=>"path", "name"=>"id", "description"=>"id записи", "required"=>true, "schema"=>["type"=>"integer", "default"=>"1"] ];
         $oajson["components"]["parameters"]["tablePage"] = ["in"=>"query", "name"=>"page", "description"=>"Номер страницы", "required"=>false, "schema"=>["type"=>"integer", "default"=>"1"] ];
@@ -72,6 +85,10 @@ class OpenApi {
         $oajson["components"]["parameters"]["tableFilterGet"] = ["in"=>"query", "name"=>"filter[]", "description"=>"Фильтрация записей", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["\$ref"=>"#/components/schemas/filterRows"]] ];
         $oajson["components"]["parameters"]["tableFieldsPost"] = ["in"=>"query", "name"=>"fields", "description"=>"Список полей (иначе выдаст все поля)", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["type"=>"string","default"=>"name"] ]];
         $oajson["components"]["parameters"]["tableFilterPost"] = ["in"=>"query", "name"=>"filter", "description"=>"Фильтрация записей", "required"=>false, "schema"=>["type"=>"array", "default"=>[], "items"=>["\$ref"=>"#/components/schemas/filterRows"]] ];
+
+        $oajson["components"]["parameters"]["login"] = ["in"=>"query", "name"=>"login", "description"=>"Логин", "required"=>true, "schema"=>["type"=>"string", "default"=>"UserName"] ];
+        $oajson["components"]["parameters"]["password"] = ["in"=>"query", "name"=>"password", "description"=>"Пароль", "required"=>true, "schema"=>["type"=>"string", "default"=>"12345678"] ];
+        $oajson["components"]["parameters"]["token"] = ["in"=>"query", "name"=>"token", "description"=>"Токен", "required"=>true, "schema"=>["type"=>"string", "default"=>"a1f2c3..."] ];
 
 
         //Собираем описание контроллеров
