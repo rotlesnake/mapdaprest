@@ -56,7 +56,7 @@ class Auth
                 $ModelUsers = $this->ModelUsers;
                 $tmpuser = $ModelUsers::where('login', $credentials['login'])->where('status', 1)->first();
                 if ($tmpuser && password_verify($credentials['password'], $tmpuser->password)) {
-                    if ($tmpuser && strtotime("now") < strtotime($tmpuser->token_expire) ) {
+                    if ($tmpuser && strlen($tmpuser->token)>10 && strtotime("now") < strtotime($tmpuser->token_expire) ) {
                         $this->user = $tmpuser;
                         setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
                         return true;
@@ -90,7 +90,7 @@ class Auth
             if (isset($credentials['token'])) {
                 $ModelUsers = $this->ModelUsers;
                 $tmpuser = $ModelUsers::where('token', $credentials['token'])->where('status', 1)->first();
-                if ($tmpuser && strtotime("now") < strtotime($tmpuser->token_expire) ) { 
+                if ($tmpuser && strlen($tmpuser->token)>10 && strtotime("now") < strtotime($tmpuser->token_expire) ) { 
                     $this->user = $tmpuser;
                     return true;
                 }
