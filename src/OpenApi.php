@@ -88,7 +88,7 @@ class OpenApi {
 
         $oajson["components"]["parameters"]["login"] = ["in"=>"query", "name"=>"login", "description"=>"Логин", "required"=>true, "schema"=>["type"=>"string", "default"=>"UserName"] ];
         $oajson["components"]["parameters"]["password"] = ["in"=>"query", "name"=>"password", "description"=>"Пароль", "required"=>true, "schema"=>["type"=>"string", "default"=>"12345678"] ];
-        $oajson["components"]["parameters"]["token"] = ["in"=>"query", "name"=>"token", "description"=>"Токен", "required"=>true, "schema"=>["type"=>"string", "default"=>"a1f2c3..."] ];
+        $oajson["components"]["parameters"]["token"] = ["in"=>"query", "name"=>"token", "description"=>"Токен", "required"=>false, "schema"=>["type"=>"string", "default"=>"a1f2c3..."] ];
 
 
         //Собираем описание контроллеров
