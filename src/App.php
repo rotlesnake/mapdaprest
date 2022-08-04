@@ -61,7 +61,7 @@ class App
         }
 
         $this->DB = new \Illuminate\Database\Capsule\Manager();
-        $this->DB->addConnection($settings);
+        $this->DB->addConnection($settings, "default");
         $this->DB->setEventDispatcher(new \Illuminate\Events\Dispatcher(new \Illuminate\Container\Container));
         $this->DB->setAsGlobal();
         $this->DB->bootEloquent();
@@ -82,6 +82,10 @@ class App
            die();
         }
 
+    }
+
+    public function addDatabse($settings, $name="external") {
+        $this->DB->addConnection($settings, $name);
     }
   
 
