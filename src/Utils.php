@@ -112,6 +112,16 @@ class Utils {
         return json_encode($obj);
     }
 
+    //вхождение элемента или массива в массив
+    public static function inArray($arr1, $arr2) {
+        if (!is_array($arr1)) return in_array($arr1, $arr2);
+        $rez = false;
+        foreach($arr1 as $v) {
+            if (in_array($v, $arr2)) $rez = true;
+        }
+        return $rez;
+    }
+
     //Дату в формат SQL yyyy-mm-dd
     public static function convDateToSQL($dt, $withtime=true) {
         if (strlen($dt)<9) return '';
