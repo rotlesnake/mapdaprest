@@ -151,11 +151,16 @@ class TableHandler
         if (count($sort)==0 && isset($tableInfo["sortBy"])) { $sort = $tableInfo["sortBy"]; }
         if (count($sort)==0 && isset($tableInfo["orderBy"])) { $sort = $tableInfo["orderBy"]; }
         foreach ($sort as $ndx=>$fld) { //перебираем поля 
-            $ord = "asc";
-            if ($request->hasParam("sortDesc") && isset($request->params["sortDesc"][$ndx]) && $request->params["sortDesc"][$ndx]) $ord = "desc";
-            if (substr($fld,0,1) == "-") {
-               $fld = substr($fld,1);
-               $ord = "desc";
+            if (gettype($fld)=="array") {
+                $ord = $fld["dir"];
+                $fld = $fld["field"];
+            } else {
+                $ord = "asc";
+                if ($request->hasParam("sortDesc") && isset($request->params["sortDesc"][$ndx]) && $request->params["sortDesc"][$ndx]) $ord = "desc";
+                if (substr($fld,0,1) == "-") {
+                   $fld = substr($fld,1);
+                   $ord = "desc";
+                }
             }
             if (substr($fld,-5)=="_text") $fld=substr($fld,0,-5);
             $sort[$ndx] = ($ord=="desc" ? "-".$fld : $fld);
