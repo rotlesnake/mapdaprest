@@ -141,7 +141,7 @@ class Migrate {
                  if (in_array($y["type"], ["time"]))      { $fld = $table->time($x,0)->nullable(); }
                  if (in_array($y["type"], ["dateTime"]))  { $fld = $table->dateTime($x,0)->nullable(); }
                  if (in_array($y["type"], ["dateTimeTz"])) { $fld = $table->dateTimeTz($x,0)->nullable(); }
-                 if (in_array($y["type"], ["timestamp"]))  { $fld = $table->timestamp($x,0); }
+                 if (in_array($y["type"], ["timestamp"]))  { $fld = $table->timestamp($x,0)->nullable(); }
 
                  if (isset($y["default"])) $fld->default($y["default"]);
                  if (isset($y["unsigned"])) $fld->unsigned();
