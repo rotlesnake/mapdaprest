@@ -40,9 +40,9 @@ class TableHandler
         //Оставляем разрешенные поля
         foreach ($this->tableInfo["columns"] as $x=>$y) {
             //если у поля нет разрешений то добавляем их
-            if (!isset($y["read"])) $this->tableInfo["columns"][$x]["read"] = $this->tableInfo["read"];
-            if (!isset($y["add"])) $this->tableInfo["columns"][$x]["add"] = $this->tableInfo["add"];
-            if (!isset($y["edit"])) $this->tableInfo["columns"][$x]["edit"] = $this->tableInfo["edit"];
+            if (!isset($y["read"])) { $this->tableInfo["columns"][$x]["read"] = $this->tableInfo["read"];  $y["read"] = $this->tableInfo["read"]; }
+            if (!isset($y["add"]))  { $this->tableInfo["columns"][$x]["add"]  = $this->tableInfo["add"];    $y["add"] = $this->tableInfo["add"]; }
+            if (!isset($y["edit"])) { $this->tableInfo["columns"][$x]["edit"] = $this->tableInfo["edit"];  $y["edit"] = $this->tableInfo["edit"]; }
             //Оставляем разрешенные поля
             if (!$this->APP->auth->hasRoles($y["read"])) { unset($this->tableInfo["columns"][$x]); continue; }
             if (!$this->APP->auth->hasRoles($y["edit"])) { $this->tableInfo["columns"][$x]["protected"]=true; }
