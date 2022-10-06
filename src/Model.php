@@ -98,10 +98,24 @@ class Model extends EloquentModel
         return $query->whereRaw("FIND_IN_SET(?, ".$field.") > 0", [$values]);
     }
 
+    public function getModelInfo($auth=null) {
+        $modelInfo = $this->modelInfo();
+        foreach ($modelInfo["columns"] as $x=>$y) {
+            //если у поля нет разрешений то добавляем их
+            if (!isset($y["read"])) { $modelInfo["columns"][$x]["read"] = $modelInfo["read"];  $y["read"] = $modelInfo["read"]; }
+            if (!isset($y["add"]))  { $modelInfo["columns"][$x]["add"]  = $modelInfo["add"];   $y["add"] = $modelInfo["add"]; }
+            if (!isset($y["edit"])) { $modelInfo["columns"][$x]["edit"] = $modelInfo["edit"];  $y["edit"] = $modelInfo["edit"]; }
+            //Оставляем разрешенные поля
+            if ($auth && !$auth->hasRoles($y["read"])) { unset($modelInfo["columns"][$x]); continue; }
+            if ($auth && !$auth->hasRoles($y["edit"])) { $modelInfo["columns"][$x]["protected"]=true; }
+            $modelInfo["columns"][$x]["name"]=$x; //Добавляем имя поля
+        }
+        return $modelInfo;
+    }
 
 
     public function getFieldLinks($field, $full_links=false) {
-        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+        if (!$this->modelInfo) $this->modelInfo = $this->getModelInfo();
         $response_array = ["rows"=>[], "values"=>[], "text"=>""];
         $APP = App::getInstance();
         $field_values = $this->{$field};
@@ -203,7 +217,7 @@ class Model extends EloquentModel
     //******************* CONVERT FOR OUT*******************************************************
     public function getConvertedRow($fastMode=false, $full_links=false){
         $APP = App::getInstance();
-        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+        if (!$this->modelInfo) $this->modelInfo = $this->getModelInfo();
 
         $tablename = $this->modelInfo["table"];
         $item = [];
@@ -286,7 +300,7 @@ class Model extends EloquentModel
     public function fillRow($action, $params, &$fill_count=null)
     {
         $APP = App::getInstance();
-        if (!$this->modelInfo) $this->modelInfo = $this->modelInfo();
+        if (!$this->modelInfo) $this->modelInfo = $this->getModelInfo();
         $tablename = $this->modelInfo["table"];
 
         $i=0;
