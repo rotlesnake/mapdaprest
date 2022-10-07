@@ -26,6 +26,7 @@ class AnyController  extends \MapDapRest\Controller
          if ($action=="add")    $rows = $tableHandler->add($tablename, $request);
          if ($action=="edit")   $rows = $tableHandler->edit($tablename, $id, $request);
          if ($action=="delete") $rows = $tableHandler->delete($tablename, $id);
+         if ($action=="restore") $rows = $tableHandler->restore($tablename, $id);
 
          if ($action=="get")    {  //table/users/get/1    {fields:['id','name'], filter:[ {field:name, oper:'like', value:'asd'} ], sort:['-name'], itemsPerPage:100, page:1, parent_table:[name:users , id:999] }
             $rows = $tableHandler->get($tablename, $id, $request);

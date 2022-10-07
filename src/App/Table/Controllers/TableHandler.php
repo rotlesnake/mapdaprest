@@ -189,7 +189,8 @@ class TableHandler
         $rows_count = $MODEL->count();
         $MODEL = $MODEL->offset( ($page-1)*$limit )->limit($limit);
 
-
+        if ($request->hasParam("withTrashed") || $request->hasParam("with_trashed")) $MODEL = $MODEL->withTrashed();
+        if ($request->hasParam("onlyTrashed") || $request->hasParam("only_trashed")) $MODEL = $MODEL->onlyTrashed();
 
         $rows = [];
         //GET
@@ -411,6 +412,21 @@ class TableHandler
 
 
     
+    //********************* RESTORE **************************************************************************************************
+    public function restore($tablename, $id) {
+        if (!$this->loadModelInfo($tablename, "delete")) return $this->lastError;
+
+        $modelClass = $this->modelClass;
+        $tableInfo = $this->tableInfo;
+        $json_response = ["error"=>0];
+       
+        $modelClass::onlyTrashed()->where("id", $id)->restore();
+        $row = $modelClass::find($id); //Считываем данные из базы и отдаем клиенту
+
+        $json_response["rows"] = [ $row->getConvertedRow() ];
+        return $json_response;
+    }
+    //*****************************************************************************************************************************
 
 
 
