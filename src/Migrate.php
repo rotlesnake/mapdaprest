@@ -87,7 +87,7 @@ class Migrate {
 
                foreach ($tableInfo["columns"] as $x=>$y) {
                  //колонка системная тогда ничего не делаем
-                 if (in_array($x, ["id","created_at","updated_at","created_by_user"])) { continue; }
+                 if (in_array($x, ["id","created_at","updated_at","deleted_at","created_by_user"])) { continue; }
                  //колонка уже есть тогда проверяем тип, если тип не поменялся тогда ничего не делаем
                  $columnExists = false;
                  if ($APP->DB->schema()->hasColumn($tableInfo["table"],$x)) { 
