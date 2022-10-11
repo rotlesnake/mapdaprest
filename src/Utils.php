@@ -124,7 +124,7 @@ class Utils {
 
     //Дату в формат SQL yyyy-mm-dd
     public static function convDateToSQL($dt, $withtime=true) {
-        if (strlen($dt)<9) return '';
+        if (strlen($dt)<10) return null;
         if (strpos(substr($dt,0,10),'-')!==false) { return $dt; }
 
         $out=substr($dt,6,4)."-".substr($dt,3,2)."-".substr($dt,0,2); 
@@ -134,7 +134,7 @@ class Utils {
 
     //Дату в формат даты dd.mm.yyyy
     public static function convDateToDate($dt, $withtime=true) {
-        if (strlen($dt)<9) return '';
+        if (strlen($dt)<10) return null;
         if (strpos(substr($dt,0,10),'.')!==false) { return $dt; }
         if (substr($dt,0,1)=="-") { $dt=substr($dt,1); }
 
