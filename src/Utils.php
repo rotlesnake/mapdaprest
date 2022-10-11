@@ -315,6 +315,24 @@ class Utils {
         return $arr;
     }
 
+    //Получить acl на пользователя
+    public static function getUserAcl($user_id, $full=false) {
+        if (Utils::loadModels()===false) return [];
+	$APP = \MapDapRest\App::getInstance();
+        if (!$APP->hasModel("user_access")) return [];
+	$aclList = $APP->DB::table("user_access")
+                            ->where("user_id", "=", $user_id)
+                            ->join("app_access_list", "app_access_list.id","=","user_access.app_access_id")
+                            ->select("app_access_list.slug","app_access_list.name")
+                            ->get();
+        if ($full) return $aclList;
+        $arr = [];
+        foreach ($aclList as $row) {
+            array_push($arr, $row->slug);
+        }
+        return $arr;
+    }
+
 
     public static function extToIcon($ext=".png"){
         if (in_array($ext, [".png"])) return "https://img.icons8.com/color/64/000000/png.png";

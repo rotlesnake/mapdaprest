@@ -8,6 +8,7 @@ class Auth
 
 	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\Users";
 	public $user = null;
+	public $user_acl = null;
 	
 	public function __construct(){
 
@@ -162,15 +163,10 @@ class Auth
         public function getRoles() {
             return Roles::whereIn("id", explode(',', $this->user->role_id));
         }
-        //Получить список ролей [name]
-        public function getRoleNames() {
-            $roles = $this->getRoles();
-            if (!$roles) return [];
-            $arr = [];
-            foreach ($roles as $row) {
-                array_push($arr, $row->name);
-            }
-            return $arr;
+        //Получить user acl
+        public function getAcl() {
+            if (!$this->user_acl) $this->user_acl = \MapDapRest\Utils::getUserAcl($this->user->id);
+            return $this->user_acl;
         }
 
         //Поля таблицы пользователя
@@ -209,10 +205,10 @@ class Auth
             if (count($checkList)==0) return false;
 
             $roleIds = array_map('intval', explode(',', $this->user->role_id));
-            $roleNames = $this->getRoleNames();
+            $acl = $this->getAcl();
             foreach ($checkList as $v) {
                 if ((int)$v>0 && in_array((int)$v, $roleIds)) return true;
-                if (gettype($v)=="string" && strlen($v)>1 && in_array($v, $roleNames)) return true;
+                if (gettype($v)=="string" && strlen($v)>1 && in_array($v, $acl)) return true;
             }
             return false;
         }
