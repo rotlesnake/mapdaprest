@@ -200,6 +200,18 @@ class Auth
             return $fields;
         }
 
+        public function hasAcl($checkList=[]) {
+            if (gettype($checkList)!="array") $checkList = explode(",", $checkList);
+            if (count($checkList)==0) return false;
+
+            $roleIds = array_map('intval', explode(',', $this->user->role_id));
+            $acl = $this->getAcl();
+            foreach ($checkList as $v) {
+                if ((int)$v>0 && in_array((int)$v, $roleIds)) return true;
+                if (gettype($v)=="string" && strlen($v)>1 && in_array($v, $acl)) return true;
+            }
+            return false;
+        }
         public function hasRoles($checkList=[]) {
             if (gettype($checkList)!="array") $checkList = explode(",", $checkList);
             if (count($checkList)==0) return false;

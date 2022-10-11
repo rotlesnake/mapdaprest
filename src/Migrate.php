@@ -45,6 +45,7 @@ class Migrate {
 
 
         $extDir = $APP->APP_PATH;
+        self::importAcl($extDir);
         $all_models = static::receiveAllModels($extDir, $all_models);
         $rez .= static::doMigrate($all_models);
 
@@ -55,6 +56,56 @@ class Migrate {
         return $rez;
     }
 
+    public static function importAcl($extDir) {
+        $APP = App::getInstance();
+        if (!$APP->hasModel("user_access")) return;
+
+        if ($dh = opendir($extDir)) {
+            while (($file = readdir($dh)) !== false) {
+               $module_id = self::addAcl(["module/App/$file" => "Модуль module/App/$file"]);
+               if (file_exists($extDir."/".$file."/Settings.php")) {
+                   $class = "\\App\\$file\\Settings";
+                   if (property_exists($class,"acl")) self::addAcl($class::$acl, $module_id);
+               }
+               if ($file != "." && $file != ".." && is_dir($extDir."/".$file) && is_dir($extDir."/".$file."/Models")) {
+                   
+                   $files = glob($extDir.$file."/Models/*.php");
+                   foreach ($files as $model) {
+                       $modelName = basename($model, ".php");
+                       $table_id = self::addAcl(["model/App/$file/Models/$modelName" => "Модель $file/Models/$modelName"]);
+                       $class = "\\App\\$file\\Models\\".basename($model, ".php");
+                       if (!method_exists($class, "modelInfo")) {continue;}
+                       $info = $class::modelInfo();
+                       if (isset($info["acl"])) {
+                           self::addAcl($info["acl"], $table_id);
+                       } else {
+                           $info["acl"] = [
+                                $info["table"]."/view"=>"Просмотр записей",
+                                $info["table"]."/add"=>"Добавление записей",
+                                $info["table"]."/edit"=>"Изменение записей",
+                                $info["table"]."/delete"=>"Удаление записей",
+                           ];
+                           self::addAcl($info["acl"], $table_id);
+                       }
+                   }
+               }
+            }
+            closedir($dh);
+        }
+    }
+    public static function addAcl($list, $parent_id=0) {
+        $APP = App::getInstance();
+        foreach($list as $key=>$name) {
+            $old = $APP->DB::table("app_access_list")->where("slug",$key)->first();
+            if ($old) {
+                $APP->DB::table("app_access_list")->where("slug",$key)->update(["name"=>$name]);
+                $id = $old->id;
+            } else {
+                $id = $APP->DB::table("app_access_list")->insertGetId(["parent_id"=>$parent_id, "slug"=>$key, "name"=>$name]);
+            }
+        }
+        return $id;
+    }
     
     //Выполнить миграцию
     public static function doMigrate($models) {
