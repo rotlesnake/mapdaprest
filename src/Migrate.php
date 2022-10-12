@@ -98,7 +98,7 @@ class Migrate {
         foreach($list as $key=>$name) {
             $old = $APP->DB::table("app_access_list")->where("slug",$key)->first();
             if ($old) {
-                $APP->DB::table("app_access_list")->where("slug",$key)->update(["name"=>$name]);
+                if ($name != $old->name) $APP->DB::table("app_access_list")->where("slug",$key)->update(["name"=>$name]);
                 $id = $old->id;
             } else {
                 $id = $APP->DB::table("app_access_list")->insertGetId(["parent_id"=>$parent_id, "slug"=>$key, "name"=>$name]);
