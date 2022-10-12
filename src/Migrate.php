@@ -59,20 +59,22 @@ class Migrate {
     public static function importAcl($extDir) {
         $APP = App::getInstance();
         if (!$APP->hasModel("user_access")) return;
+        //$APP->DB::statement("truncate table supp_app_access_list");
 
         if ($dh = opendir($extDir)) {
             while (($file = readdir($dh)) !== false) {
-               $module_id = self::addAcl(["module/App/$file" => "Модуль module/App/$file"]);
+               if ($file == "." || $file == ".." || !is_dir($extDir."/".$file)) continue;
+
+               $module_id = self::addAcl(["module/App/$file" => "Модуль $file"]);
                if (file_exists($extDir."/".$file."/Settings.php")) {
                    $class = "\\App\\$file\\Settings";
                    if (property_exists($class,"acl")) self::addAcl($class::$acl, $module_id);
                }
-               if ($file != "." && $file != ".." && is_dir($extDir."/".$file) && is_dir($extDir."/".$file."/Models")) {
-                   
+               if (is_dir($extDir."/".$file."/Models")) {
                    $files = glob($extDir.$file."/Models/*.php");
                    foreach ($files as $model) {
                        $modelName = basename($model, ".php");
-                       $table_id = self::addAcl(["model/App/$file/Models/$modelName" => "Модель $file/Models/$modelName"], $module_id);
+                       $table_id = self::addAcl(["model/App/$file/Models/$modelName" => "Модель $file/$modelName"], $module_id);
                        $class = "\\App\\$file\\Models\\".basename($model, ".php");
                        if (!method_exists($class, "modelInfo")) {continue;}
                        $info = $class::modelInfo();
