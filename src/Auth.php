@@ -185,7 +185,7 @@ class Auth
                   unset($fields[$v]);
                }
             }
-            
+            $fields["acl"] = $this->getAcl();
             return $fields;
         }
 
