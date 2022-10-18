@@ -75,7 +75,10 @@ class Response
           header("$k: $v");
        }
 
-       if ($this->body==null) die(); 
+       if ($this->body==null) {
+           if ($this->error) json_encode($this->error);
+           die(); 
+       }
        
        if (gettype($this->body)=="array") {
           if ($this->error) $this->body = array_merge( $this->error , $this->body );
