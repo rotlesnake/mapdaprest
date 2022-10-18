@@ -15,7 +15,7 @@ class LoginController extends \MapDapRest\Controller
         if ($request->hasParam("token")) {
             $data = ["token"=>$request->params["token"]];
             $this->APP->auth->login($data);
-            return;
+            if (!$this->APP->auth->isGuest()) return;
         }        
         if ($request->hasParam("login")) {
             $data = ["login"=>$request->params["login"], "password"=>$request->params["password"]];
