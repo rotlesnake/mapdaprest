@@ -12,16 +12,17 @@ class LoginController extends \MapDapRest\Controller
     public function __construct($app, $request, $response, $args)
     {
         $this->APP = $app;
+        if ($request->hasParam("login")) {
+            $data = ["login"=>$request->params["login"], "password"=>$request->params["password"]];
+            $this->APP->auth->login($data);
+            if (!$this->APP->auth->isGuest()) return;
+        }
         if ($request->hasParam("token")) {
             $data = ["token"=>$request->params["token"]];
             $this->APP->auth->login($data);
             if (!$this->APP->auth->isGuest()) return;
         }        
-        if ($request->hasParam("login")) {
-            $data = ["login"=>$request->params["login"], "password"=>$request->params["password"]];
-            $this->APP->auth->login($data);
-            return;
-        }
+        return ["error"=>1, "message"=>"Ошибка в логине или пароле"];
     }
 
 
