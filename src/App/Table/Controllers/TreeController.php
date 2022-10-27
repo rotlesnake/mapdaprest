@@ -46,7 +46,6 @@ class TreeController extends \MapDapRest\Controller
 
     public function anyAction($request, $response, $controller, $tablename, $args)
     {
- 
         if (!$this->loadModelInfo($tablename, "read")) return $this->lastError;
         $modelClass = $this->modelClass;
         $tableInfo = $this->tableInfo;
@@ -77,8 +76,7 @@ class TreeController extends \MapDapRest\Controller
            if ($action=="edit" && $id>0)   $rows = $tableHandler->edit($tablename, $id, $request);
            if ($action=="delete")          $rows = $tableHandler->delete($tablename, $id);
 
-           //$this->setTreeTable($modelClass, $request->params);
-           //$json_response = $this->getTreeTable($modelClass, 0);
+           $rows = $this->resortLevel($tablename, (int)$request->params["parent_id"], $rows);
            return $rows;
         }
     }
@@ -127,5 +125,15 @@ class TreeController extends \MapDapRest\Controller
     }
 
 
+    public function resortLevel($tablename, $parent_id, $allrows) {
+        $TABLE = $this->APP->getModel($tablename);
+        $rows = $TABLE::where("parent_id", $parent_id)->orderBy("sort")->get(); 
+        foreach ($rows as $key=>$row) {
+            $row->sort = (($key+1)*10);
+            $row->save();
+            if ($allrows["rows"][0]["id"]==$row->id) $allrows["rows"][0]["sort"]==$row->sort;
+        }
 
+        return $allrows;
+    }
 }
