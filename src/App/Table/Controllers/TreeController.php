@@ -82,7 +82,7 @@ class TreeController extends \MapDapRest\Controller
     }
 
 
-    public function getTreeTable($model, $parent_id=0) {
+    public function getTreeTable($model, $parent_id=0, $tree_level=0, $tree_pnum=0, $tree_parent_pnum=[]) {
         $json_response = [];
 
         $modelRequest = $model::filterRead()->where("parent_id", $parent_id)->orderBy($this->sortField);
@@ -113,10 +113,18 @@ class TreeController extends \MapDapRest\Controller
 
         $items = $modelRequest->get();
         foreach ($items as $item) {
+             $tree_pnum++;
              $item_tree = $item->getConvertedRow();
              $item_tree["parent_id"] = (int)$item_tree["parent_id"];
              $item_tree["sort"] = isset($item_tree["sort"]) ? (int)$item_tree["sort"] : 0;
-             $item_tree["children"] = $this->getTreeTable($model, $item->id);
+             $item_tree["tree_level"] = $tree_level;
+             $item_tree["tree_pnum"] = $tree_pnum;
+             $item_tree["tree_pnums"] = $tree_parent_pnum;
+             $item_tree["tree_pnums"][] = $tree_pnum;
+
+             $parent_pnum=$tree_parent_pnum;
+             $parent_pnum[] = $tree_pnum;
+             $item_tree["children"] = $this->getTreeTable($model, $item->id, $tree_level+1, 0, $parent_pnum);
              if (count($item_tree["children"]) == 0) unset($item_tree["children"]);
 
              array_push($json_response, $item_tree);
