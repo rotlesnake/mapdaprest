@@ -64,7 +64,7 @@ class TreeController extends \MapDapRest\Controller
         //Добавление / Изменение элемента
         if ($request->method=="POST") {
            $tableHandler = new TableHandler($this->APP);
-           $action = trim($args[0]);
+           $action = strtolower(trim($args[0]));
            $id = (isset($args[1])? (int)$args[1] : 0);
            if ($request->hasParam("filter")) $this->treeFilter = $request->getParam("filter");
            if (!$request->hasParam("parent_id")) $request->params["parent_id"] = 0;
@@ -76,7 +76,7 @@ class TreeController extends \MapDapRest\Controller
            if ($action=="edit" && $id>0)   $rows = $tableHandler->edit($tablename, $id, $request);
            if ($action=="delete")          $rows = $tableHandler->delete($tablename, $id);
 
-           $rows = $this->resortLevel($tablename, (int)$request->params["parent_id"], $rows);
+           if ($action != "get") { $rows = $this->resortLevel($tablename, (int)$request->params["parent_id"], $rows); }
            return $rows;
         }
     }
