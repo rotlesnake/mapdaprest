@@ -273,6 +273,7 @@ class Utils {
     }
 
     public static function log($str, $object=null, $log_filename="app_log.txt") {
+        if (defined('DISABLE_APP_LOG') && DISABLE_APP_LOG===true) return;
         $APP = App::getInstance();
         $backtrace = debug_backtrace();
         $root_path = ($APP ? $APP->ROOT_PATH : ROOT_PATH);
