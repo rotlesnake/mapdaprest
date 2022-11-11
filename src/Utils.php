@@ -272,6 +272,17 @@ class Utils {
         return false;
     }
 
+    public static function log($str, $object=null, $log_filename="app_log.txt") {
+        $APP = App::getInstance();
+        $backtrace = debug_backtrace();
+        $root_path = ($APP ? $APP->ROOT_PATH : ROOT_PATH);
+        $log_str = date("Y-m-d H:i:s") . " | line: ".$backtrace[0]["line"]." | from: ".$backtrace[0]["file"]."\r\n";
+        $log_str .= $str."\r\n";
+        if ($object) $log_str .= "---- data ----\r\n".print_r($object,true)."\r\n";
+        $log_str .= "--------------------------------\r\n";
+        file_put_contents($root_path."App/".$log_filename, $log_str, FILE_APPEND);
+    }
+
     public static function getFilenameModels() {
         $APP = App::getInstance();
         $root_path = ($APP ? $APP->ROOT_PATH : ROOT_PATH);
