@@ -101,19 +101,27 @@ class TableHandler
                     if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
                     if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
                     
-                    if ($s_oper=="in") {
+                    if ($s_oper=="in" || $s_oper=="not_in") {
                        if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
                        foreach($s_value as $key=>$val) { if (!$val) unset($s_value[$key]); }
                        if (count($s_value) == 0) continue;
                        if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
                            $findinset = "";
                            foreach($s_value as $value){
-                               $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0 ";
+                               if ($s_oper=="in") {
+                                   $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0 ";
+                               } else {
+                                   $findinset .= "or FIND_IN_SET(?, ".$s_field.") = 0 ";
+                               }
                            }
                            $findinset = "(".substr($findinset, 3).")";
                            $MODEL = $MODEL->whereRaw($findinset, $s_value);
                        } else {
-                           $MODEL = $MODEL->whereIn($s_field, $s_value);
+                           if ($s_oper=="in") {
+                               $MODEL = $MODEL->whereIn($s_field, $s_value);
+                           } else {
+                               $MODEL = $MODEL->whereNotIn($s_field, $s_value);
+                           }
                        }
                     } else {
                        if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
