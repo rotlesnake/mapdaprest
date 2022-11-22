@@ -297,13 +297,13 @@ class Model extends EloquentModel
             $fext = substr($fname, -4,4);
             $fpath = $APP->FULL_URL."uploads/$type/$table_name/".$row_id."_".$field_name."_".$fname;
             $caption = isset($y["caption"]) ? $y["caption"] : "";
-            array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath, "icon"=>\MapDapRest\Utils::extToIcon($fext)]);
+            if (strlen($fname)>0) array_push($files, ["type"=>1, "name"=>$fname, "caption"=>$caption, "src"=>$fpath, "icon"=>\MapDapRest\Utils::extToIcon($fext)]);
          } else {
             $y["name"] = urldecode($y["src"]);
             if (strrpos($y["name"], "/") !== false) $y["name"] = substr($y["name"], strrpos($y["name"], "/")+1 );
             $fext = substr($y["name"], -4,4);
             $y["icon"] = \MapDapRest\Utils::extToIcon($fext);
-            array_push($files, $y);
+            if (strlen($y["src"])>0) array_push($files, $y);
          }
        }
        return $files; //[type:1, name:'filename', caption:'description', src:'http:// or base64']
@@ -328,7 +328,7 @@ class Model extends EloquentModel
  
           //Если картики или фалы то подготавливаем массив в специальном формате
           if ($y["type"]=="images" || $y["type"]=="files") {
-              $files = $this->prepareFileUploads($params[$x], $tablename, $this->id, $x, $y);
+              $files = $this->prepareFileUploads($params[$x], $tablename, $this->id, $x, $y, $this->{$x});
               if ($files) { $this->{$x} = $files; }
           } else {
               $this->{$x} = $params[$x];
@@ -361,7 +361,7 @@ class Model extends EloquentModel
 
     
     //******************* SET FILES *******************************************************
-    public function prepareFileUploads($files_array, $table_name="", $row_id=0, $field_name="", $field_params=[]){
+    public function prepareFileUploads($files_array, $table_name="", $row_id=0, $field_name="", $field_params=[], $oldValue){
         if (gettype($files_array)=="string") $files_array = json_decode($files_array,true);
         if (!is_array($files_array)) return false;
 
@@ -376,7 +376,7 @@ class Model extends EloquentModel
                 $fileInfo = [];
                 $fname = \MapDapRest\Utils::getSlug($files_array[$i]["name"], true);
                 $fsrc = $files_array[$i]["src"];
-                if (strlen($fname)<2) continue;
+                //if (strlen($fname)<2) continue;
                 $base64_pos = strpos($fsrc, 'base64,');
                 if (substr($fsrc,0,5)=="data:" || $base64_pos!==false) {
                     $fsrc = substr($fsrc, $base64_pos+7 );
