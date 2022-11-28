@@ -162,8 +162,6 @@ class Migrate {
                      if (in_array($y["type"], ["json"])) continue; 
                  }
                  if (isset($y["virtual"]) && $y["virtual"]) { continue; }
-                 //Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
-                 if ($y["type"]=="linkTable" && !$APP->DB->schema()->hasTable($y["table"])) { $rez .= " - Поле не создано требуется повторная миграция (<font color=red>".$x."</font>) <br>\r\n";  continue; }
 
                  $rez .= " - Добавляем поле (".$x.") <br>\r\n";
 
@@ -202,6 +200,9 @@ class Migrate {
                    if ($y["index"]=="index") { $fld->index(); }
                    if ($y["index"]=="unique") { $fld->unique(); }
                  }
+
+                 //Создаем constrains для linkTable но Если ссылка на таблицу но таблицы нет то откладываем это действие на потом
+                 //if ($y["type"]=="linkTable" && !$APP->DB->schema()->hasTable($y["table"])) { $rez .= " - Поле не создано требуется повторная миграция (<font color=red>".$x."</font>) <br>\r\n";  continue; }
 
                  if ($columnExists) { $fld->change(); $rez .= " - Модифицируем поле (".$x.") <br>\r\n"; }
                }//foreach
