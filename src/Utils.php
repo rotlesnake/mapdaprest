@@ -208,16 +208,19 @@ class Utils {
         if (file_exists($outFile)) unlink($outFile);
         copy($inFile, $outFile);
 
-        $params = [];
-        foreach($fields as $key=>$val) {
-             $params["{{".$key."}}"] = $val;
-        }
-
         $zip = new \ZipArchive();
         if (!$zip->open($docxFile)) { return ["error"=>1, "message"=>"File not open."]; }
         $documentXml = $zip->getFromName('word/document.xml');
-        $documentXml = str_replace(array_keys($params), array_values($params), $documentXml);
-        $documentXml = preg_replace('|{{(.*)}}|isU', '', $documentXml);
+        //$documentXml = str_replace(array_keys($params), array_values($params), $documentXml);
+        //$documentXml = preg_replace('|{{(.*)}}|isU', '', $documentXml);
+        while (strpos($documentXml, "{{") !== false ) {
+            $pos = strpos($documentXml, "{{");
+            $pos_end = strpos($documentXml, "}}", $pos)-$pos;
+            $text = substr($documentXml, $pos+strlen("{{"), $pos_end-strlen("}}"));
+            $rez = trim( strip_tags($text) );
+            if (isset($fields[$rez])) { $rez = $fields[$rez]; } else { $rez = "($rez)"; }
+            $documentXml = substr_replace($documentXml, $rez, $pos, $pos_end+strlen("}}"));
+        }
         $zip->deleteName('word/document.xml');
         $zip->addFromString('word/document.xml', $documentXml);
         $zip->close();
