@@ -97,6 +97,7 @@ class Migrate {
     }
     public static function addAcl($list, $parent_id=0) {
         $APP = App::getInstance();
+        $id = 0;
         foreach($list as $key=>$name) {
             $old = $APP->DB::table("app_access_list")->where("slug",$key)->first();
             if ($old) {
