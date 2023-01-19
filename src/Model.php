@@ -272,6 +272,7 @@ class Model extends EloquentModel
             if ($y["type"]=="float")     { $item[$x] = (float)$this->{$x}; }
             if ($y["type"]=="double")    { $item[$x] = (double)$this->{$x}; }
             if ($y["type"]=="checkBox")  { $item[$x] = (int)$this->{$x}; $item[$x."_text"] = ($item[$x]==1?"Да":"Нет"); }
+            if ($y["type"]=="checkBoxText")  { $item[$x] = (int)$this->{$x}; $item[$x."_text"] = ($item[$x]==1?$y["label"]:""); }
             if ($y["type"]=="images")    { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "image", $tablename, $this->id, $x); }
             if ($y["type"]=="files" )    { $item[$x] = $this->getUploadedFiles(json_decode($item[$x],true), $APP, "file",  $tablename, $this->id, $x); }
             if ($y["type"]=="json" && gettype($item[$x])=="string") { $item[$x] = json_decode($this->{$x}, true); }

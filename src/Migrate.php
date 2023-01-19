@@ -157,7 +157,7 @@ class Migrate {
                      if ($y["type"]=="linkTable" && $y["multiple"] && $fldType=="text") continue; 
                      if (in_array($y["type"], ["text", "images", "files", "html"]) && $fldType=="text") continue; 
                      if (in_array($y["type"], ["string", "password", "masked", "color"]) && $fldType=="string") continue; 
-                     if (in_array($y["type"], ["integer", "checkBox"]) && $fldType=="integer") continue; 
+                     if (in_array($y["type"], ["integer", "checkBox", "checkBoxText"]) && $fldType=="integer") continue; 
                      if ($y["type"]=="float" && $fldType=="decimal") continue; 
                      if ($y["type"]=="double" && $fldType=="float") continue; 
                      if (in_array($y["type"], ["json"])) continue; 
@@ -167,7 +167,7 @@ class Migrate {
                  $rez .= " - Добавляем поле (".$x.") <br>\r\n";
 
                  if (in_array($y["type"], ["string", "password", "masked", "color"]))  { $fld = $table->string($x)->nullable(); }
-                 if (in_array($y["type"], ["integer", "checkBox"])) { $fld = $table->integer($x)->nullable(); }
+                 if (in_array($y["type"], ["integer", "checkBox", "checkBoxText"])) { $fld = $table->integer($x)->nullable(); }
                  if (in_array($y["type"], ["bigInteger"])) { $fld = $table->bigInteger($x)->nullable(); }
                  if (in_array($y["type"], ["select"])) {
                       if (!isset($y["multiple"]))  { $y["multiple"] = false; }
