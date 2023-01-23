@@ -411,5 +411,13 @@ class Utils {
 
         return $arr;
     }
+    public static function getAllColumnItems() {
+        $types = self::getAllColumnTypes();
+        $items = [];
+        foreach($types as $type) {
+            $items[$type["value"]] = $type["text"];
+        }
+        return $items;
+    }
 
 }//CLASS************************************
