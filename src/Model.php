@@ -98,6 +98,8 @@ class Model extends EloquentModel
         return $query->whereRaw("FIND_IN_SET(?, ".$field.") > 0", [$values]);
     }
 
+
+
     public function getModelInfo($auth=null) {
         $modelInfo = $this->modelInfo();
         foreach ($modelInfo["columns"] as $x=>$y) {
@@ -110,10 +112,16 @@ class Model extends EloquentModel
             if ($auth && !$auth->hasRoles($y["edit"])) { $modelInfo["columns"][$x]["protected"]=true; }
             $modelInfo["columns"][$x]["name"]=$x; //Добавляем имя поля
         }
+        if (isset($modelInfo["extendTable"]) && isset($modelInfo["extendTable"]["properties"])) {
+            $APP = App::getInstance();
+            $modelInfo["columns_extended"] = [];
+            $properties = $APP->DB::table($modelInfo["extendTable"]["properties"])->orderBy("sort")->get();
+            foreach ($properties as $prop) {
+                $modelInfo["columns_extended"][] = $prop;
+            }
+        }
         return $modelInfo;
     }
-
-
     public static function getStaticModelInfo($auth=null) {
         $modelInfo = self::modelInfo();
         foreach ($modelInfo["columns"] as $x=>$y) {
@@ -126,8 +134,17 @@ class Model extends EloquentModel
             if ($auth && !$auth->hasRoles($y["edit"])) { $modelInfo["columns"][$x]["protected"]=true; }
             $modelInfo["columns"][$x]["name"]=$x; //Добавляем имя поля
         }
+        if (isset($modelInfo["extendTable"]) && isset($modelInfo["extendTable"]["properties"])) {
+            $APP = App::getInstance();
+            $modelInfo["columns_extended"] = [];
+            $properties = $APP->DB::table($modelInfo["extendTable"]["properties"])->orderBy("sort")->get();
+            foreach ($properties as $prop) {
+                $modelInfo["columns_extended"][] = $prop;
+            }
+        }
         return $modelInfo;
     }
+
 
 
     public function getFieldLinks($field, $full_links=false) {
@@ -281,6 +298,15 @@ class Model extends EloquentModel
             if ($y["type"]=="dateTime")  { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], true);  }
             if ($y["type"]=="timestamp") { $item[$x."_text"] = \MapDapRest\Utils::convDateToDate($item[$x], true);  }
         }
+
+        if (isset($this->modelInfo["columns_extended"])) {
+            $item["extended_values"] = [];
+            $values = $APP->DB::table($this->modelInfo["extendTable"]["values"])->where("object_id",$item["id"])->get();
+            foreach ($values as $val) {
+                $item["extended_values"][$val->name] = $val->value;
+            }
+        }
+
         return $item;
     }
     //******************* CONVERT FOR OUT *******************************************************
