@@ -336,13 +336,7 @@ class Model extends EloquentModel
               if (is_array($params[$x]) && !in_array($y["type"],["json"])) {  $this->{$x} = \MapDapRest\Utils::arrayToString($params[$x]);  } //массив преобразуем в строку [12,32,34] -> 12,32,34
           }
 
-          if ($y["type"]=="json")   { 
-              if ($APP->jsonAsText) {
-                  $this->{$x} = \MapDapRest\Utils::objectToString($params[$x]); 
-              } else { 
-                  $this->{$x} = $params[$x]; 
-              }
-          }
+          if ($y["type"]=="json")       { $this->{$x} = \MapDapRest\Utils::objectToString($params[$x]); }
           if ($y["type"]=="time")       { $this->{$x} = strlen($params[$x])==0 ? null : $params[$x]; }
           if ($y["type"]=="password")   { $this->{$x} = password_hash($params[$x], PASSWORD_DEFAULT); } //пароль хешируем
           if (!empty($y["default"]) && $action=="add" && strlen((string)$params[$x])==0) { $this->{$x} = $y["default"]; } //при добавлении поля если оно пустое то заполняем его значение по умолчанию
@@ -350,7 +344,6 @@ class Model extends EloquentModel
           if ($y["type"]=="date")       { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, false); }
           if ($y["type"]=="dateTime")   { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, true);  }
           if ($y["type"]=="timestamp")  { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, true);  }
-
           $i++;
         }
         if ($fill_count!==null) $fill_count = $i;
