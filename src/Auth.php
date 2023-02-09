@@ -8,6 +8,7 @@ class Auth
 
 	public $ModelUsers = "\\MapDapRest\\App\\Auth\\Models\\Users";
 	public $user = null;
+	public $user_token = null;
 	public $user_acl = null;
 	
 	public function __construct(){
@@ -49,57 +50,56 @@ class Auth
         //Авторизуемся в системе входные параметры [login, password, refresh_token, token]
         public function login($credentials) {
             $APP = App::getInstance();
-            $hours_token = 6;
-            $hours_refresh_token = 96;
+            $ModelUserToken = $APP->getModel("user_tokens");
+            $ModelUsers = $this->ModelUsers;
             $this->user = null;
 
+            //Удаляем просроченные токены
+            $APP->DB::table("user_tokens")->where("expire", "<=", date("Y-m-d"))->delete();
+
             if (isset($credentials['login'])) {
-                $ModelUsers = $this->ModelUsers;
                 $tmpuser = $ModelUsers::where('login', $credentials['login'])->where('status', 1)->first();
                 if ($tmpuser && password_verify($credentials['password'], $tmpuser->password)) {
-                    if ($tmpuser && strlen($tmpuser->token)>10 && strtotime("now") < strtotime($tmpuser->token_expire) ) {
-                        $this->user = $tmpuser;
-                        setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
-                        return true;
-                    }
-                    $this->user = $tmpuser;
-                    $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_token." hours"));
-                    $this->user->token = sha1($credentials['login'].$this->user->password.$this->user->token_expire);
-                    $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_refresh_token." hours"));
-                    $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
-                    $this->user->save();
-                    setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
-                    return true;
-                }
-            }
-
-            if (isset($credentials['refresh_token'])) {
-                $ModelUsers = $this->ModelUsers;
-                $tmpuser = $ModelUsers::where('refresh_token', $credentials['refresh_token'])->where('status', 1)->first();
-                if ($tmpuser && strtotime("now") < strtotime($tmpuser->refresh_token_expire) ) { 
-                    $this->user = $tmpuser;
-                    $this->user->token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_token." hours"));
-                    $this->user->token = sha1($credentials['login'].$this->user->password.$this->user->token_expire);
-                    $this->user->refresh_token_expire = date("Y-m-d H:i:s", strtotime("+".$hours_refresh_token." hours"));
-                    $this->user->refresh_token = sha1($credentials['login'].$this->user->password.$this->user->refresh_token_expire);
-                    $this->user->save();
-                    setcookie("token", $this->user->token, time()+($hours_token*60*60), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
+                    $this->appendToken($tmpuser);
                     return true;
                 }
             }
     
             if (isset($credentials['token'])) {
-                $ModelUsers = $this->ModelUsers;
-                $tmpuser = $ModelUsers::where('token', $credentials['token'])->where('status', 1)->first();
-                if ($tmpuser && strlen($tmpuser->token)>10 && strtotime("now") < strtotime($tmpuser->token_expire) ) { 
-                    $this->user = $tmpuser;
-                    return true;
+                $tmptoken = $ModelUserToken::where('token', $credentials['token'])->first();
+                if ($tmptoken && strlen($tmptoken->token)>10 && strtotime("now") < strtotime($tmptoken->expire) ) { 
+                    $tmpuser = $ModelUsers::find($tmptoken->user_id);
+                    if ($tmpuser && $tmpuser->status == 1) {
+                        $this->user_token = $tmptoken;
+                        $this->user = $tmpuser;
+                        $tmptoken->touch();
+                        return true;
+                    }
                 }
             }
 
             return false;
         }
 
+
+        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96) {
+            $APP = App::getInstance();
+            $this->user = $tmpuser;
+
+            $ModelUserToken = $APP->getModel("user_tokens");
+            $tmptoken = new $ModelUserToken();
+            $tmptoken->user_id = $tmpuser->id;
+            $tmptoken->token = sha1($tmpuser->login . $tmpuser->password . time());
+            $tmptoken->expire = date("Y-m-d H:i:s", strtotime("now +".$hours_token." hours"));
+            $tmptoken->browser_ip    = \MapDapRest\Utils::getRemoteIP();
+            $tmptoken->browser_agent = isset($APP->request) ? $APP->request->getHeader("user-agent") : "";
+            $tmptoken->save();
+
+            $this->user_token = $tmptoken;
+
+            setcookie("token", $this->user_token->token, strtotime($this->user_token->expire), $APP->ROOT_URL, $_SERVER["SERVER_NAME"]);
+            return true;
+        }
 
         public function setUser($id) {
             $ModelUsers = $this->ModelUsers;
@@ -108,15 +108,18 @@ class Auth
                 $this->user = $tmpuser;
                 return true;
             }
+            return false;
         }
 
         //Забываем данные авторизации, становимся гостем
         public function logout() {
             if (!$this->user) return;
-            $this->user->token = "";
-            $this->user->token_expire = date("Y-m-d H:i:s");
-            $this->user->save();
+            if (!$this->user_token) return;
+
+            $this->user_token->delete();
+
             $this->user = null;
+            $this->user_token = null;
             setcookie( "token", "", time()-3600, '/', '');
         }
 
@@ -185,7 +188,6 @@ class Auth
                   unset($fields[$v]);
                }
             }
-            $fields["acl"] = $this->getAcl();
             return $fields;
         }
 
@@ -193,10 +195,9 @@ class Auth
         //Поля таблицы пользователя
         public function getAllFields() {
             $fields = $this->user->getConvertedRow();
-            $fields["token"] = $this->user->token;
-            $fields["token_expire"] = $this->user->token_expire;
-            $fields["refresh_token"] = $this->user->refresh_token;
-            $fields["refresh_token_expire"] = $this->user->refresh_token_expire;
+            $fields["acl"] = $this->getAcl();
+            $fields["token"] = isset($this->user_token) ? $this->user_token->token : "";
+            $fields["token_expire"] = isset($this->user_token) ? $this->user_token->expire : "";
             return $fields;
         }
 

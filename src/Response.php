@@ -122,14 +122,13 @@ class Response
         }
        
         $this->timeFinish = round(microtime(true) * 1000);
-        $this->timeDuration = round($this->timeFinish - $this->timeStart, 3);
-        $timeDurationFull  = round($this->timeFinish - $this->timeInit, 3);
+        $this->timeDuration  = round($this->timeFinish - $this->timeInit, 3);
 
         $response = [];
         $response["ok"] = $error_code == 0;
         $response["error"] = $error_code;
         $response["result"] = $body;
-        $response["time"] = ["start"=>$this->timeStart, "finish"=>$this->timeFinish, "duration"=>$this->timeDuration, "duration_full"=>$timeDurationFull];
+        $response["time"] = ["start"=>$this->timeInit, "finish"=>$this->timeFinish, "duration"=>$this->timeDuration];
 
         echo json_encode($response);
         die();

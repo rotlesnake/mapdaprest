@@ -2,9 +2,9 @@
 namespace MapDapRest\App\Auth\Models;
 
 
-class UserAccess extends \MapDapRest\Model
+class UserTokens extends \MapDapRest\Model
 {
-    protected $table = "user_access";
+    protected $table = "user_tokens";
     protected $primaryKey = 'id';
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
@@ -86,10 +86,10 @@ class UserAccess extends \MapDapRest\Model
       $acc_all = [1,2];
       
       return [
-	"table"=>"user_access",
+	"table"=>"user_tokens",
 	"primary_key"=>"id",
 	"category"=>"Система",
-	"name"=>"Доступ пользователя к возможностям системы",
+	"name"=>"Токены доступа",
 
         "sortBy"=>["id"],
         "itemsPerPage"=>100,
@@ -114,7 +114,11 @@ class UserAccess extends \MapDapRest\Model
 		"created_by_user" => ["type"=>"linkTable", "label"=>"Создано пользователем", "table"=>"users", "field"=>"login", "read"=>$acc_all, "add"=>[], "edit"=>[] ],
 
 		"user_id" => ["type"=>"linkTable", "label"=>"Пользователь", "table"=>"users", "field"=>"login" ],
-		"app_access_id" => ["type"=>"linkTable", "label"=>"Разрешение", "table"=>"app_access_list", "field"=>"[name] ([slug])" ],
+		"token" => ["type"=>"string", "label"=>"Токен",  ],
+		"expire" => ["type"=>"dateTime", "label"=>"Срок действия",  ],
+
+		"browser_agent" => ["type"=>"text", "label"=>"Браузер",  ],
+		"browser_ip" => ["type"=>"string", "label"=>"IP адрес",  ],
 	],
 
 	"seeds"=> [

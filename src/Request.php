@@ -52,7 +52,7 @@ class Request
 
     public function getHeader($name)
     {
-        return $this->headers[$name];
+        return isset($this->headers[$name]) ? $this->headers[$name] : "";
     }
 
     
@@ -96,7 +96,7 @@ class Request
 
     public function getParam($name)
     {
-        return $this->params[$name];
+        return isset($this->params[$name]) ? $this->params[$name] : "";
     }
 
     public function setParam($name, $value)

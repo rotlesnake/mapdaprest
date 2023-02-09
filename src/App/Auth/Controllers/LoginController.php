@@ -1,5 +1,4 @@
 <?php
-
 namespace MapDapRest\App\Auth\Controllers;
 
 class LoginController extends \MapDapRest\Controller
@@ -13,33 +12,31 @@ class LoginController extends \MapDapRest\Controller
     {
         $this->APP = $app;
         if ($request->hasParam("login")) {
-            $data = ["login"=>$request->params["login"], "password"=>$request->params["password"]];
+            $data = ["login"=>$request->getParam("login"), "password"=>$request->getParam("password")];
             $this->APP->auth->login($data);
             if (!$this->APP->auth->isGuest()) return;
         }
         if ($request->hasParam("token")) {
-            $data = ["token"=>$request->params["token"]];
+            $data = ["token"=>$request->getParam("token")];
             $this->APP->auth->login($data);
             if (!$this->APP->auth->isGuest()) return;
         }        
-        return ["error"=>1, "message"=>"Ошибка в логине или пароле"];
+        return $response->sendError(["message"=>"Ошибка в логине или пароле"], 500);
     }
 
 
 
     public function indexAction($request, $response, $params) {
        if ($this->APP->auth->isGuest()) {
-           $response->setResponseCode(401);
-           $response->setError(1, "Пользователь не найден");
            if ($request->hasHeader('token')) { 
-               $response->setError(3, "Токен просрочен либо не действителен");
+               $response->sendError(["message"=>"Токен просрочен либо не действителен"], 401);
            }
-           return [];
+           $response->sendError(["message"=>"Пользователь не найден"], 401);
        }
 
        $user = $this->APP->auth->getFields();
        \MapDapRest\App\Auth\Events\Emits::userLogin($this->APP->auth);
-       return ["status"=>1, "token"=>$user["token"], "user"=>$user];
+       $response->sendSuccess(["token"=>$user["token"], "user"=>$user]);
     }
 
 }

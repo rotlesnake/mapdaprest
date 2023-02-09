@@ -20,8 +20,8 @@ class App
     public $app_class;
     
     public $auth = null;
-    public $request;
-    public $response;
+    public $request = null;
+    public $response = null;
     public $models = [];
     public $timeInit;
     

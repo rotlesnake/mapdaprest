@@ -62,7 +62,7 @@ class Users extends \MapDapRest\Model
 
     public static function modelInfo() {
       $acc_admin = [1];
-      $acc_all = [1,2,3,4,5,6,7,8];
+      $acc_all = \MapDapRest\Utils::getAllRoles();
       
       return [
 	"table"=>"users",
@@ -76,14 +76,11 @@ class Users extends \MapDapRest\Model
         "itemsPerPageVariants"=>[50,100,200,300,500,1000],
 
 	"read"=>$acc_all,
-	"add"=>[],
-	"edit"=>[],
+	"add"=>$acc_admin,
+	"edit"=>$acc_admin,
 	"delete"=>[],
 	
 	"type"=>"standart",
-
-        //"parentTables"=>[["table"=>"user", "id"=>"user_id"]],
-        //"childrenTables"=>[["table"=>"user_posts", "id"=>"user_id"]],
 
         "filter"=>[
             "created_by_user"=>[
@@ -93,128 +90,15 @@ class Users extends \MapDapRest\Model
         ],
 
 	"columns"=>[
-		"id"=>[
- 			"type"=>"integer",
- 			"label"=>"id",
- 			"width"=>200,
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"created_at"=>[
- 			"type"=>"timestamp",
- 			"label"=>"Дата создания",
- 			"width"=>200,
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"updated_at"=>[
- 			"type"=>"timestamp",
- 			"label"=>"Дата изменения",
- 			"width"=>200,
- 			"hidden"=>true,
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"created_by_user"=>[
- 			"type"=>"linkTable",
- 			"label"=>"Создано пользователем",
- 			"table"=>"users",
- 			"field"=>"[login]",
- 			"multiple"=>false,
- 			"typeSelect"=>"table",
- 			"object"=>false,
- 			"width"=>200,
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
+                   "id"=>["type"=>"integer", "label"=>"id", "read"=>$acc_all, "add"=>[], "edit"=>[] ], 
+                   "created_at"=>["type"=>"timestamp", "label"=>"Дата создания", "read"=>$acc_all, "hidden"=>true, "add"=>[], "edit"=>[] ], 
+                   "updated_at"=>["type"=>"timestamp", "label"=>"Дата изменения", "read"=>$acc_all, "hidden"=>true, "add"=>[], "edit"=>[] ], 
+                   "created_by_user"=>["type"=>"linkTable", "label"=>"Создано пользователем", "table"=>"users", "field"=>"login", "hidden"=>true, "read"=>$acc_all, "add"=>[], "edit"=>[] ], 
 
-
-		"login"=>[
- 			"type"=>"string",
- 			"label"=>"Логин",
- 			"placeholder"=>"Фамилия Имя - пользователя",
- 			"hint"=>"Уникальное поле",
-                        "index"=>"unique",
- 			"width"=>200,
- 			"rules"=>"[ v => v.length>2 || 'Обязательное поле' ]",
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"password"=>[
- 			"type"=>"password",
- 			"label"=>"Пароль",
- 			"width"=>200,
- 			"rules"=>"[ v => v.length==0 || v.length>7 || 'Минимальная длинна 8 символов' ]",
- 			"defaut"=>"12345678",
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"role_id"=>[
- 			"type"=>"linkTable",
- 			"label"=>"Роли",
- 			"table"=>"roles",
- 			"field"=>"[name]",
- 			"multiple"=>false,
- 			"typeSelect"=>"table",
- 			"object"=>false,
- 			"width"=>200,
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"status"=>[
- 			"type"=>"select",
- 			"label"=>"Статус",
- 			"typeSelect"=>"combobox",
- 			"items"=>["1"=>"Активный", "0"=>"Заблокирован"],
- 			"defaut"=>"1",
- 			"width"=>200,
- 			"read"=>$acc_all,
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"token"=>[
- 			"type"=>"string",
- 			"label"=>"Токен",
-                        "index"=>"index",
- 			"width"=>200,
- 			"read"=>[],
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"token_expire"=>[
- 			"type"=>"dateTime",
- 			"label"=>"Срок токена",
- 			"width"=>200,
- 			"read"=>[],
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"refresh_token"=>[
- 			"type"=>"string",
- 			"label"=>"Токен",
-                        "index"=>"index",
- 			"width"=>200,
- 			"read"=>[],
- 			"add"=>[],
- 			"edit"=>[],
-		],
-		"refresh_token_expire"=>[
- 			"type"=>"dateTime",
- 			"label"=>"Срок токена",
- 			"width"=>200,
- 			"read"=>[],
- 			"add"=>[],
- 			"edit"=>[],
-		],
-
-
+                   "login"=>["type"=>"string", "label"=>"Логин", "index"=>"unique", "rules"=>"[v=>v && v.length > 3 || 'Обязательное поле']"], 
+                   "password"=>["type"=>"password", "label"=>"Пароль",  ], 
+                   "role_id"=>["type"=>"linkTable", "label"=>"Роли", "table"=>"roles", "field"=>"description", "multiple"=>false,  ], 
+                   "status"=>["type"=>"select", "label"=>"Статус", "typeSelect"=>"combobox", "items"=>["-1"=>"Заблокирован", "1"=>"Активный", ], "default"=>"1",  ], 
 	],
 
 

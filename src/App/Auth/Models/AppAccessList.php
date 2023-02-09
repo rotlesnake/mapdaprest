@@ -98,12 +98,11 @@ class AppAccessList extends \MapDapRest\Model
         "itemsPerPageVariants"=>[50,100,200,300,500,1000],
 
 	"read"=>$acc_all,
-	"add"=>$acc_all,
-	"edit"=>$acc_all,
+	"add"=>$acc_admin,
+	"edit"=>$acc_admin,
 	"delete"=>[],
 
         "parentTables"=>[["table"=>"auth_capabilities", "field"=>"parent_id"], ["table"=>"auth_capabilities", "field"=>"sort"]],
-        //"childrenTables"=>[["table"=>"user_posts", "field"=>"user_id"]],
 	
         "filter"=>[
             "created_at"=>["label"=>"Дата создания", "filterType"=>"like"],
@@ -116,11 +115,11 @@ class AppAccessList extends \MapDapRest\Model
 		"updated_at" => ["type"=>"timestamp", "label"=>"Дата изменения", "read"=>$acc_all, "add"=>[], "edit"=>[] ],
 		"created_by_user" => ["type"=>"linkTable", "label"=>"Создано пользователем", "table"=>"users", "field"=>"login", "read"=>$acc_all, "add"=>[], "edit"=>[] ],
 
-		"parent_id" => ["type"=>"integer", "label"=>"parent_id", "read"=>$acc_all, "add"=>[], "edit"=>[] ],
-		"sort" => ["type"=>"integer", "label"=>"sort", "read"=>$acc_all, "add"=>[], "edit"=>[] ],
+		"parent_id" => ["type"=>"integer", "label"=>"parent_id",  ],
+		"sort" => ["type"=>"integer", "label"=>"sort",  ],
 
-		"slug" => ["type"=>"string", "label"=>"Код функционала", "index"=>"unique", "read"=>$acc_all, "add"=>[], "edit"=>[] ], 
-		"name" => ["type"=>"string", "label"=>"Наименование функционала",  "read"=>$acc_all, "add"=>[], "edit"=>[] ], 
+		"slug" => ["type"=>"string", "label"=>"Код функционала", "index"=>"unique",  ], 
+		"name" => ["type"=>"string", "label"=>"Наименование функционала",   ], 
 	],
 
 	"seeds"=> [
