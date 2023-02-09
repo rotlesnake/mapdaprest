@@ -57,7 +57,11 @@ class UserTokens extends \MapDapRest\Model
     //фильтр на чтение
     public function scopeFilterRead($query)
     {
-        return $query;
+	$APP = \MapDapRest\App::getInstance();
+        if (!$APP->auth->user) { throw new Exception('user not found'); }
+        if ($APP->auth->user->hasRoles([1])) return $query;
+
+        return $query->where('user_id', '=', $APP->auth->user->id);
     }
 
     //фильтр на изменение
@@ -83,7 +87,7 @@ class UserTokens extends \MapDapRest\Model
 
     public static function modelInfo() {
       $acc_admin = [1];
-      $acc_all = [1,2];
+      $acc_all = \MapDapRest\Utils::getAllRoles();
       
       return [
 	"table"=>"user_tokens",
@@ -95,10 +99,10 @@ class UserTokens extends \MapDapRest\Model
         "itemsPerPage"=>100,
         "itemsPerPageVariants"=>[50,100,200,300,500,1000],
 
-	"read"=>[1,2],
-	"add"=>[1],
-	"edit"=>[1],
-	"delete"=>[1],
+	"read"=>$acc_all,
+	"add"=>$acc_admin,
+	"edit"=>$acc_admin,
+	"delete"=>$acc_admin,
 
         "parentTables"=>[["table"=>"user", "field"=>"user_id"]],
 	
