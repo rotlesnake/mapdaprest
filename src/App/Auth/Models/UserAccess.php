@@ -92,7 +92,7 @@ class UserAccess extends \MapDapRest\Model
 	"name"=>"Доступ пользователя к возможностям системы",
 
         "sortBy"=>["id"],
-        "itemsPerPage"=>100,
+        "itemsPerPage"=>300,
         "itemsPerPageVariants"=>[50,100,200,300,500,1000],
 
 	"read"=>[1,2],

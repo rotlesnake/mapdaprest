@@ -74,19 +74,11 @@ class Migrate {
                    $files = glob($extDir.$file."/Models/*.php");
                    foreach ($files as $model) {
                        $modelName = basename($model, ".php");
-                       $table_id = self::addAcl(["model/App/$file/Models/$modelName" => "Модель $file/$modelName"], $module_id);
                        $class = "\\App\\$file\\Models\\".basename($model, ".php");
                        if (!method_exists($class, "modelInfo")) {continue;}
                        $info = $class::modelInfo();
                        if (isset($info["acl"])) {
-                           self::addAcl($info["acl"], $table_id);
-                       } else {
-                           $info["acl"] = [
-                                $info["table"]."/view"=>"Просмотр записей",
-                                $info["table"]."/add"=>"Добавление записей",
-                                $info["table"]."/edit"=>"Изменение записей",
-                                $info["table"]."/delete"=>"Удаление записей",
-                           ];
+                           $table_id = self::addAcl(["model/App/$file/Models/$modelName" => "Модель $file/$modelName"], $module_id);
                            self::addAcl($info["acl"], $table_id);
                        }
                    }
