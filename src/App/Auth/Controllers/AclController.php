@@ -13,7 +13,13 @@ class AclController extends \MapDapRest\Controller
         $user_id = $request->getParam("user_id");
         $acl = $request->getParam("acl");
         $this->APP->DB::table("user_access")->where("user_id",$user_id)->whereNotIn("app_access_id", $acl)->delete();
-        $old_acl = $this->APP->DB::table("user_access")->where("user_id",$user_id)->whereIn("app_access_id", $acl)->select("app_access_id")->get()->toArray();
+
+        $old_acls = $this->APP->DB::table("user_access")->where("user_id",$user_id)->whereIn("app_access_id", $acl)->select("app_access_id")->get();
+        $old_acl = [];
+        foreach($old_acls as $row) {
+            $old_acl[] = $row->app_access_id;
+        }
+
         foreach($acl as $id) {
             if (!in_array($id, $old_acl)) {
                 $this->APP->DB::table("user_access")->insert(["user_id"=>$user_id, "app_access_id"=>$id]);
