@@ -164,23 +164,20 @@ class Model extends EloquentModel
             $cnt = 0;
             if (!isset($APP->cachedLinks[$link_table])) { $cnt = $APP->getModel($link_table)::count(); }
             if ($cnt > 1500) {
-                $APP->cachedLinks[$link_table] = [];
                 $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
-                foreach ($rows as $row) {
-                    $APP->cachedLinks[$link_table][$row->id] = $row;
+            } else {
+                if (!isset($APP->cachedLinks[$link_table])) {
+                    $APP->cachedLinks[$link_table] = [];
+                    $rows = $APP->getModel($link_table)::get();
+                    foreach ($rows as $row) {
+                       $APP->cachedLinks[$link_table][$row->id] = $row;
+                    }
                 }
-            }
-            if (!isset($APP->cachedLinks[$link_table])) {
-                $APP->cachedLinks[$link_table] = [];
-                $rows = $APP->getModel($link_table)::get();
-                foreach ($rows as $row) {
-                    $APP->cachedLinks[$link_table][$row->id] = $row;
-                }
-            }
 
-            $rows = [];
-            foreach ($field_values as $val) {
-                if (isset($APP->cachedLinks[$link_table][$val])) $rows[] = $APP->cachedLinks[$link_table][$val];
+                $rows = [];
+                foreach ($field_values as $val) {
+                    if (isset($APP->cachedLinks[$link_table][$val])) $rows[] = $APP->cachedLinks[$link_table][$val];
+                }
             }
  
             $response_array["rows"] = [];
