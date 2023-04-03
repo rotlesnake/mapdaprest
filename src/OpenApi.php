@@ -116,7 +116,7 @@ class OpenApi {
         foreach ($models as $tableName=>$row) {
             $class = $row["class"];
             $moduleName = $row["module"];
-            $tableInfo = $class::modelInfo();
+            $tableInfo = $class::getStaticModelInfo();
             $oajson["components"]["schemas"][$tableName] = ["title"=>$tableName." (".$tableInfo["name"].")", "type"=>"object", "properties"=>[] ];
             foreach ($tableInfo["columns"] as $x=>$y) {
                 $type = "string";

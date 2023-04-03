@@ -91,7 +91,7 @@ class AppAccessList extends \MapDapRest\Model
 	"table"=>"app_access_list",
 	"primary_key"=>"id",
 	"category"=>"Система",
-	"name"=>"Возможности системы",
+	"name"=>"Список всех возможных функций системы",
 
         "sortBy"=>["id"],
         "itemsPerPage"=>100,
