@@ -52,6 +52,7 @@ class TreeController extends \MapDapRest\Controller
         $json_response = [];
         $json_response = ["error"=>0, "info"=>[], "rows"=>[]];
 
+        //if ($tableInfo["sortBy"] && count($tableInfo["sortBy"])>0) $this->sortField = $tableInfo["sortBy"][0];
         if ($request->hasParam("sort")) $this->sortField = $request->getParam("sort");
 
         //Получить всё дерево
@@ -115,7 +116,7 @@ class TreeController extends \MapDapRest\Controller
         foreach ($items as $item) {
              $tree_pnum++;
              $item_tree = $item->getConvertedRow();
-             $item_tree["parent_id"] = (int)$item_tree["parent_id"];
+             $item_tree["parent_id"] = (int)($item_tree["parent_id"] ?? 0);
              $item_tree["sort"] = isset($item_tree["sort"]) ? (int)$item_tree["sort"] : 0;
              $item_tree["tree_level"] = $tree_level;
              $item_tree["tree_pnum"] = $tree_pnum;
