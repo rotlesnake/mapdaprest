@@ -378,7 +378,7 @@ class Model extends EloquentModel
 
     
     //******************* SET FILES *******************************************************
-    public function prepareFileUploads($files_array, $table_name="", $row_id=0, $field_name="", $field_params=[], $oldValue){
+    public function prepareFileUploads($files_array, $table_name="", $row_id=0, $field_name="", $field_params=[], $oldValue=null){
         if (gettype($files_array)=="string") $files_array = json_decode($files_array,true);
         if (!is_array($files_array)) return false;
 
