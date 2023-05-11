@@ -140,7 +140,9 @@ class TreeController extends \MapDapRest\Controller
         foreach ($rows as $key=>$row) {
             $row->sort = (($key+1)*10);
             $row->save();
-            if ($allrows["rows"][0]["id"]==$row->id) $allrows["rows"][0]["sort"]==$row->sort;
+            if ($allrows["rows"][0] && $allrows["rows"][0]["id"]==$row->id) {
+                $allrows["rows"][0]["sort"]==$row->sort;
+            }
         }
 
         return $allrows;
