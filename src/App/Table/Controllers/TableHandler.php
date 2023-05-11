@@ -41,6 +41,76 @@ class TableHandler
     }
 
 
+    public function extractFiltter($tableInfo, $filter_type, $filter, $MODEL) {
+            foreach ($filter as $x=>$y) { //перебираем поля 
+                if (gettype($filter[$x])=="array" && count($filter[$x])>0) {
+                    $MODEL->where(function($query) use ($tableInfo, $filter_type, $filter, $x, $MODEL) {
+                        return $this->extractFiltter($tableInfo, "OR", $filter[$x], $query);
+                    });
+                }//isArray
+
+                $s_value=$filter[$x]["value"] ?? null;
+                if ($s_value !== null) {  //поле есть - формируем фильтр
+                    $s_field=$filter[$x]["field"]; 
+                    $s_oper=$filter[$x]["oper"] ?? ""; 
+                    if (strlen($s_oper)==0) $s_oper=$filter[$x]["type"] ?? ""; 
+                    $s_value=$filter[$x]["value"];
+
+                    if ($tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
+                    if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
+                    if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
+                    if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
+                    
+                    if ($s_oper=="in" || $s_oper=="not_in") {
+                       if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
+                       foreach($s_value as $key=>$val) { if (!$val) unset($s_value[$key]); }
+                       if (count($s_value) == 0) continue;
+                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
+                           $findinset = "";
+                           foreach($s_value as $value){
+                               if ($s_oper=="in") {
+                                   $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0 ";
+                               } else {
+                                   $findinset .= "or FIND_IN_SET(?, ".$s_field.") = 0 ";
+                               }
+                           }
+                           $findinset = "(".substr($findinset, 3).")";
+                           $MODEL = $MODEL->whereRaw($findinset, $s_value);
+                       } else {
+                           if ($s_oper=="in") {
+                               $MODEL = $MODEL->whereIn($s_field, $s_value);
+                           } else {
+                               $MODEL = $MODEL->whereNotIn($s_field, $s_value);
+                           }
+                       }
+                    } else {
+                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
+
+                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
+                           $MODEL = $MODEL->findInSet($s_field, $s_value); 
+                       } else {
+                           if (substr($tableInfo["columns"][$s_field]["type"],0,4)=="date" && $s_value=="0000-00-00") {
+                               if ($s_oper == "=") {
+                                   $MODEL = $MODEL->whereRaw("( ".$s_field." is null  or  LENGTH(".$s_field.") = 0 or ".$s_field."='0000-00-00' )"); 
+                               } else {
+                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null  or  LENGTH(".$s_field.") > 0 and ".$s_field.$s_oper."'0000-00-00' )"); 
+                               }
+                               continue;
+                           }
+
+                           if (strtoupper($filter_type) == "OR") { 
+                               $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
+                           } else { 
+                               $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
+                           }
+                       }
+                    }
+                } //if value
+            }//foreach
+
+        return $MODEL;
+    }
+
 
     //******************* GET *******************************************************
     public function get($tablename, $id, $request)
@@ -80,9 +150,18 @@ class TableHandler
             if (gettype($filter[0])=="string" && $filter[0][0]=="{") {
                 foreach ($filter as $x=>$y) $filter[$x] = json_decode($filter[$x], true);
             }
+            $MODEL = $this->extractFiltter($tableInfo, $filter_type, $filter, $MODEL);
+/*
             foreach ($filter as $x=>$y) { //перебираем поля 
-                if (isset($filter[$x]["value"])) {  //поле есть - формируем фильтр
-                    $s_field=$filter[$x]["field"]; $s_oper=$filter[$x]["oper"]; $s_value=$filter[$x]["value"];
+                if (gettype($filter[$x])=="array" && count($filter[$x])>0) {
+                }//isArray
+
+                $s_value=$filter[$x]["value"] ?? null;
+                if ($s_value !== null) {  //поле есть - формируем фильтр
+                    $s_field=$filter[$x]["field"]; 
+                    $s_oper=$filter[$x]["oper"] ?? ""; 
+                    if (strlen($s_oper)==0) $s_oper=$filter[$x]["type"] ?? ""; 
+                    $s_value=$filter[$x]["value"];
 
                     if ($tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
                     if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
@@ -117,18 +196,27 @@ class TableHandler
                        if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
                            $MODEL = $MODEL->findInSet($s_field, $s_value); 
                        } else {
+                           if (substr($tableInfo["columns"][$s_field]["type"],0,4)=="date" && $s_value=="0000-00-00") {
+                               if ($s_oper == "=") {
+                                   $MODEL = $MODEL->whereRaw("( ".$s_field." is null  or  LENGTH(".$s_field.") = 0 or ".$s_field."='0000-00-00' )"); 
+                               } else {
+                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null  or  LENGTH(".$s_field.") > 0) and ".$s_field.$s_oper."'0000-00-00' )"); 
+                               }
+                               continue;
+                           }
+
                            if (strtoupper($filter_type) == "OR") { 
-                              $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
+                               $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
                            } else { 
-                              $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
+                               $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
                            }
                        }
                     }
-                }
-            }
+                } //if value
+            }//foreach
+*/
 
         }//filter----------------------------------------------------------------------------------
-
         //Это дочерняя таблица - тогда фильтруем записи по родителю  -
         //parent : [table:'users', field:'user_id', value:999]
         if ($request->hasParam("parent")) {
@@ -144,6 +232,7 @@ class TableHandler
              }
         }//----------------------------------------------------------------------------------
 
+//file_put_contents(__DIR__."/debug.txt", $MODEL->toSql() );
 
 
         //Сортировка по умолчанию из модели если в аргументах нет требований сортировки sort[] || order[] ---------------------------------------
@@ -269,7 +358,6 @@ class TableHandler
         $modelClass = $this->modelClass;
         $tableInfo = $this->tableInfo;
         $json_response = ["error"=>0];
- 
         //Создаем запись
         $row = new $modelClass();
         try { 
@@ -279,6 +367,7 @@ class TableHandler
 
         $fill_count=0;
         $row = $row->fillRow("add", $request->params, $fill_count);  //Заполняем строку данными из формы
+
         if ($fill_count==0) return ["error"=>7, "message"=>"fields not filled"];
 
         //Это дочерняя таблица - тогда устанавливаем поля родителя
@@ -297,6 +386,7 @@ class TableHandler
  
         //Событие
         if (method_exists($modelClass, "beforePost")) {  if ($modelClass::beforePost("add", $row, $request->params)===false) { return ["error"=>4, "message"=>"break by beforePost"]; };  }
+//file_put_contents(__DIR__."/add_debug.txt", print_r($row,1));
 
         try {
             $result = $row->save(); //Сохраняем запись
