@@ -93,7 +93,7 @@ class TableHandler
                                if ($s_oper == "=") {
                                    $MODEL = $MODEL->whereRaw("( ".$s_field." is null  or  LENGTH(".$s_field.") = 0 or ".$s_field."='0000-00-00' )"); 
                                } else {
-                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null  or  LENGTH(".$s_field.") > 0 and ".$s_field.$s_oper."'0000-00-00' )"); 
+                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null  and  LENGTH(".$s_field.") > 0 and ".$s_field.$s_oper."'0000-00-00' )"); 
                                }
                                continue;
                            }
@@ -151,71 +151,6 @@ class TableHandler
                 foreach ($filter as $x=>$y) $filter[$x] = json_decode($filter[$x], true);
             }
             $MODEL = $this->extractFiltter($tableInfo, $filter_type, $filter, $MODEL);
-/*
-            foreach ($filter as $x=>$y) { //перебираем поля 
-                if (gettype($filter[$x])=="array" && count($filter[$x])>0) {
-                }//isArray
-
-                $s_value=$filter[$x]["value"] ?? null;
-                if ($s_value !== null) {  //поле есть - формируем фильтр
-                    $s_field=$filter[$x]["field"]; 
-                    $s_oper=$filter[$x]["oper"] ?? ""; 
-                    if (strlen($s_oper)==0) $s_oper=$filter[$x]["type"] ?? ""; 
-                    $s_value=$filter[$x]["value"];
-
-                    if ($tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
-                    if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
-                    if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
-                    if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
-                    
-                    if ($s_oper=="in" || $s_oper=="not_in") {
-                       if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
-                       foreach($s_value as $key=>$val) { if (!$val) unset($s_value[$key]); }
-                       if (count($s_value) == 0) continue;
-                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
-                           $findinset = "";
-                           foreach($s_value as $value){
-                               if ($s_oper=="in") {
-                                   $findinset .= "or FIND_IN_SET(?, ".$s_field.") > 0 ";
-                               } else {
-                                   $findinset .= "or FIND_IN_SET(?, ".$s_field.") = 0 ";
-                               }
-                           }
-                           $findinset = "(".substr($findinset, 3).")";
-                           $MODEL = $MODEL->whereRaw($findinset, $s_value);
-                       } else {
-                           if ($s_oper=="in") {
-                               $MODEL = $MODEL->whereIn($s_field, $s_value);
-                           } else {
-                               $MODEL = $MODEL->whereNotIn($s_field, $s_value);
-                           }
-                       }
-                    } else {
-                       if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
-
-                       if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
-                           $MODEL = $MODEL->findInSet($s_field, $s_value); 
-                       } else {
-                           if (substr($tableInfo["columns"][$s_field]["type"],0,4)=="date" && $s_value=="0000-00-00") {
-                               if ($s_oper == "=") {
-                                   $MODEL = $MODEL->whereRaw("( ".$s_field." is null  or  LENGTH(".$s_field.") = 0 or ".$s_field."='0000-00-00' )"); 
-                               } else {
-                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null  or  LENGTH(".$s_field.") > 0) and ".$s_field.$s_oper."'0000-00-00' )"); 
-                               }
-                               continue;
-                           }
-
-                           if (strtoupper($filter_type) == "OR") { 
-                               $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
-                           } else { 
-                               $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
-                           }
-                       }
-                    }
-                } //if value
-            }//foreach
-*/
-
         }//filter----------------------------------------------------------------------------------
         //Это дочерняя таблица - тогда фильтруем записи по родителю  -
         //parent : [table:'users', field:'user_id', value:999]
