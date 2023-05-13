@@ -60,6 +60,7 @@ class TableHandler
                     if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
                     if ($s_oper=="like")   { $s_value = "%".$s_value."%"; }
                     if ($s_oper=="begins") { $s_oper="like"; $s_value = $s_value."%"; }
+                    if ($s_oper=="ends") { $s_oper="like"; $s_value = "%".$s_value; }
                     
                     if ($s_oper=="in" || $s_oper=="not_in") {
                        if (gettype($s_value)=="string" || gettype($s_value)=="integer") { $s_value=explode(",", $s_value); }
