@@ -49,12 +49,11 @@ class TableHandler
                     });
                 }//isArray
 
-                $s_value=$filter[$x]["value"] ?? null;
-                if ($s_value !== null) {  //поле есть - формируем фильтр
-                    $s_field=$filter[$x]["field"]; 
-                    $s_oper=$filter[$x]["oper"] ?? ""; 
-                    if (strlen($s_oper)==0) $s_oper=$filter[$x]["type"] ?? ""; 
-                    $s_value=$filter[$x]["value"];
+                $s_value = $filter[$x]["value"] ?? null;
+                $s_field = $filter[$x]["field"] ?? null; 
+                $s_oper = $filter[$x]["oper"] ?? null; 
+                if (!$s_oper) $s_oper = $filter[$x]["type"] ?? null; 
+                if ($s_field !== null && $s_oper !== null && $s_value !== null) {  //поле есть - формируем фильтр
 
                     if ($tableInfo["columns"][$s_field]["type"]=="date")     { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, false); }
                     if ($tableInfo["columns"][$s_field]["type"]=="dateTime") { $s_value = \MapDapRest\Utils::convDateToSQL($s_value, true); }
