@@ -87,7 +87,11 @@ class TableHandler
                        if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
 
                        if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
-                           $MODEL = $MODEL->findInSet($s_field, $s_value); 
+                           if (strtoupper($filter_type) == "OR") { 
+                               $MODEL = $MODEL->orFindInSet($s_field, $s_value); 
+                           } else { 
+                               $MODEL = $MODEL->findInSet($s_field, $s_value); 
+                           }
                        } else {
                            if (substr($tableInfo["columns"][$s_field]["type"],0,4)=="date" && $s_value=="0000-00-00") {
                                if ($s_oper == "=") {

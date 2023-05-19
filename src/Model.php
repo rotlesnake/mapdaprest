@@ -97,6 +97,10 @@ class Model extends EloquentModel
     {
         return $query->whereRaw("FIND_IN_SET(?, ".$field.") > 0", [$values]);
     }
+    public function scopeOrFindInSet($query, $field, $values)
+    {
+        return $query->orWhereRaw("FIND_IN_SET(?, ".$field.") > 0", [$values]);
+    }
 
 
 
