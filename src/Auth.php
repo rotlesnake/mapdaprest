@@ -194,6 +194,7 @@ class Auth
 
         //Поля таблицы пользователя
         public function getAllFields() {
+	    if (!$this->user) return [];
             $fields = $this->user->getConvertedRow();
             $fields["acl"] = $this->getAcl();
             $fields["token"] = isset($this->user_token) ? $this->user_token->token : "";
