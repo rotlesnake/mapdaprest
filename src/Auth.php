@@ -105,8 +105,7 @@ class Auth
             $ModelUsers = $this->ModelUsers;
             $tmpuser = $ModelUsers::where('id', $id)->where('status', 1)->first();
             if ($tmpuser) { 
-                $this->user = $tmpuser;
-                return true;
+                return $this->appendToken($tmpuser);
             }
             return false;
         }
