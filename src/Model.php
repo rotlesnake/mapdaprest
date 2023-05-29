@@ -251,7 +251,8 @@ class Model extends EloquentModel
     //******************* CONVERT FOR OUT*******************************************************
     public function getConvertedRow($fastMode=false, $full_links=false){
         $APP = App::getInstance();
-        if (!$this->modelInfo) $this->modelInfo = $this->getModelInfo();
+        if (!$APP->cachedModelsInfo[$this->table]) { $APP->cachedModelsInfo[$this->table] = $this->getModelInfo(); }
+        $this->modelInfo = $APP->cachedModelsInfo[$this->table];
 
         $tablename = $this->modelInfo["table"];
         $item = [];

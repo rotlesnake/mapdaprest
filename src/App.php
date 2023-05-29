@@ -26,6 +26,7 @@ class App
     public $timeInit;
     
     public $cachedLinks = [];
+    public $cachedModelsInfo = [];
     public $jsonAsText = true;
 
     
