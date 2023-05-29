@@ -167,7 +167,7 @@ class Auth
         }
         //Получить user acl
         public function getAcl() {
-            if (!$this->user_acl) $this->user_acl = \MapDapRest\Utils::getUserAcl($this->user->id);
+            if (!isset($this->user_acl)) $this->user_acl = \MapDapRest\Utils::getUserAcl($this->user->id);
             return $this->user_acl;
         }
 
@@ -193,7 +193,7 @@ class Auth
 
         //Поля таблицы пользователя
         public function getAllFields() {
-            if (!$this->user) return [];
+            if (!isset($this->user)) return [];
             $fields = $this->user->getConvertedRow();
             $fields["acl"] = $this->getAcl();
             $fields["token"] = isset($this->user_token) ? $this->user_token->token : "";
