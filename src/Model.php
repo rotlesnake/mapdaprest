@@ -251,7 +251,7 @@ class Model extends EloquentModel
     //******************* CONVERT FOR OUT*******************************************************
     public function getConvertedRow($fastMode=false, $full_links=false){
         $APP = App::getInstance();
-        if (!$APP->cachedModelsInfo[$this->table]) { $APP->cachedModelsInfo[$this->table] = $this->getModelInfo(); }
+        if (!($APP->cachedModelsInfo[$this->table] ?? null)) { $APP->cachedModelsInfo[$this->table] = $this->getModelInfo(); }
         $this->modelInfo = $APP->cachedModelsInfo[$this->table];
 
         $tablename = $this->modelInfo["table"];
@@ -367,7 +367,7 @@ class Model extends EloquentModel
           if ($y["type"]=="json")       { $this->{$x} = \MapDapRest\Utils::objectToString($params[$x]); }
           if ($y["type"]=="time")       { $this->{$x} = strlen($params[$x])==0 ? null : $params[$x]; }
           if ($y["type"]=="password")   { $this->{$x} = password_hash($params[$x], PASSWORD_DEFAULT); } //пароль хешируем
-          if (!empty($y["default"]) && $action=="add" && strlen((string)$params[$x])==0) { $this->{$x} = $y["default"]; } //при добавлении поля если оно пустое то заполняем его значение по умолчанию
+          if (!empty($y["default"]) && $action=="add" && strlen(\MapDapRest\Utils::arrayToString($params[$x]))==0) { $this->{$x} = $y["default"]; } //при добавлении поля если оно пустое то заполняем его значение по умолчанию
           //Меняем даты в формат SQL
           if ($y["type"]=="date")       { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, false); }
           if ($y["type"]=="dateTime")   { $this->{$x} = \MapDapRest\Utils::convDateToSQL($this->{$x}, true);  }
