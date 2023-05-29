@@ -82,14 +82,14 @@ class Auth
         }
 
 
-        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96) {
+        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96, $customToken=null) {
             $APP = App::getInstance();
             $this->user = $tmpuser;
 
             $ModelUserToken = $APP->getModel("user_tokens");
             $tmptoken = new $ModelUserToken();
             $tmptoken->user_id = $tmpuser->id;
-            $tmptoken->token = sha1($tmpuser->login . $tmpuser->password . time());
+            $tmptoken->token = $customToken ? $customToken : sha1($tmpuser->login . $tmpuser->password . time());
             $tmptoken->expire = date("Y-m-d H:i:s", strtotime("now +".$hours_token." hours"));
             $tmptoken->browser_ip    = \MapDapRest\Utils::getRemoteIP();
             $tmptoken->browser_agent = isset($APP->request) ? $APP->request->getHeader("user-agent") : "";
@@ -193,7 +193,7 @@ class Auth
 
         //Поля таблицы пользователя
         public function getAllFields() {
-	    if (!$this->user) return [];
+            if (!$this->user) return [];
             $fields = $this->user->getConvertedRow();
             $fields["acl"] = $this->getAcl();
             $fields["token"] = isset($this->user_token) ? $this->user_token->token : "";
