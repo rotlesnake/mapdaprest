@@ -220,7 +220,7 @@ class Utils {
             $pos_end = strpos($documentXml, "}}", $pos)-$pos;
             $text = substr($documentXml, $pos+strlen("{{"), $pos_end-strlen("}}"));
             $text = trim( strip_tags($text) );
-            if (isset($fields[$text])) { $text = $fields[$rez]; } else { $text = ""; }
+            if (isset($fields[$text])) { $text = $fields[$text]; } else { $text = ""; }
             $documentXml = substr_replace($documentXml, $text, $pos, $pos_end+strlen("}}"));
             if ($i > 500) break;
         }
@@ -247,7 +247,7 @@ class Utils {
             $pos_end = strpos($documentXml, "}}", $pos)-$pos;
             $text = substr($documentXml, $pos+strlen("{{"), $pos_end-strlen("}}"));
             $text = trim( strip_tags($text) );
-            if (isset($fields[$text])) { $text = $fields[$rez]; } else { $text = ""; }
+            if (isset($fields[$text])) { $text = $fields[$text]; } else { $text = ""; }
             $documentXml = substr_replace($documentXml, $text, $pos, $pos_end+strlen("}}"));
             if ($i > 500) break;
         }
