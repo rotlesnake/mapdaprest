@@ -141,8 +141,7 @@ class TreeController extends \MapDapRest\Controller
             $row->sort = (($key+1)*10);
             $row->save();
             if ($allrows["rows"][0] && $allrows["rows"][0]["id"]==$row->id) {
-                $allrows["rows"][0]["sort"]==0;
-                $allrows["rows"][0]["sort"]==$row->sort;
+                $allrows["rows"][0]["sort"]=$row->sort;
             }
         }
 
