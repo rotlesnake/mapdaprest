@@ -53,14 +53,16 @@ class Auth
             $ModelUserToken = $APP->getModel("user_tokens");
             $ModelUsers = $this->ModelUsers;
             $this->user = null;
+            $this->user_token = null;
+            $this->user_acl = null;
 
             //Удаляем просроченные токены
             $APP->DB::table("user_tokens")->where("expire", "<=", date("Y-m-d"))->delete();
 
-            if (isset($credentials['login'])) {
+            if (isset($credentials['login']) && isset($credentials['password'])) {
                 $tmpuser = $ModelUsers::where('login', $credentials['login'])->where('status', 1)->first();
                 if ($tmpuser && password_verify($credentials['password'], $tmpuser->password)) {
-                    $this->appendToken($tmpuser);
+                    $this->appendToken($tmpuser, isset($tmpuser->token_hours) ? $tmpuser->token_hours : 3);
                     return true;
                 }
             }
@@ -82,14 +84,14 @@ class Auth
         }
 
 
-        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96, $customToken=null) {
+        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96) {
             $APP = App::getInstance();
             $this->user = $tmpuser;
 
             $ModelUserToken = $APP->getModel("user_tokens");
             $tmptoken = new $ModelUserToken();
             $tmptoken->user_id = $tmpuser->id;
-            $tmptoken->token = $customToken ? $customToken : sha1($tmpuser->login . $tmpuser->password . time());
+            $tmptoken->token = sha1($tmpuser->login . $tmpuser->password . time());
             $tmptoken->expire = date("Y-m-d H:i:s", strtotime("now +".$hours_token." hours"));
             $tmptoken->browser_ip    = \MapDapRest\Utils::getRemoteIP();
             $tmptoken->browser_agent = isset($APP->request) ? $APP->request->getHeader("user-agent") : "";
@@ -102,10 +104,15 @@ class Auth
         }
 
         public function setUser($id) {
+            $this->user = null;
+            $this->user_token = null;
+            $this->user_acl = null;
+		
             $ModelUsers = $this->ModelUsers;
             $tmpuser = $ModelUsers::where('id', $id)->where('status', 1)->first();
             if ($tmpuser) { 
-                return $this->appendToken($tmpuser);
+                $this->user = $tmpuser;
+                return true;
             }
             return false;
         }
@@ -119,6 +126,7 @@ class Auth
 
             $this->user = null;
             $this->user_token = null;
+            $this->user_acl = null;
             setcookie( "token", "", time()-3600, '/', '');
         }
 
@@ -167,7 +175,7 @@ class Auth
         }
         //Получить user acl
         public function getAcl() {
-            if (!isset($this->user_acl)) $this->user_acl = \MapDapRest\Utils::getUserAcl($this->user->id);
+            if (!$this->user_acl) $this->user_acl = \MapDapRest\Utils::getUserAcl($this->user->id);
             return $this->user_acl;
         }
 
@@ -193,7 +201,6 @@ class Auth
 
         //Поля таблицы пользователя
         public function getAllFields() {
-            if (!isset($this->user)) return [];
             $fields = $this->user->getConvertedRow();
             $fields["acl"] = $this->getAcl();
             $fields["token"] = isset($this->user_token) ? $this->user_token->token : "";
