@@ -119,14 +119,13 @@ class Auth
 
         //Забываем данные авторизации, становимся гостем
         public function logout() {
-            if (!$this->user) return;
+            $this->user = null;
+            $this->user_acl = null;
             if (!$this->user_token) return;
 
             $this->user_token->delete();
-
-            $this->user = null;
             $this->user_token = null;
-            $this->user_acl = null;
+
             setcookie( "token", "", time()-3600, '/', '');
         }
 
