@@ -32,14 +32,18 @@ class Model extends EloquentModel
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
-             $log = new SystemLog();
-             $log->user_id = $app->auth->getFields()['id'];
-             $log->created_by_user = $log->user_id;
-             $log->table_name = $model->table;
-             $log->row_id = $model->id;
-             $log->action = 1;
-             $log->fields = $model;
-             $log->save();
+              $needAddLog = true;
+              if (property_exists($model, "ignoreSysLog") && $model->ignoreSysLog === true) $needAddLog = false;
+              if ($needAddLog) {
+                  $log = new SystemLog();
+                  $log->user_id = $app->auth->getFields()['id'];
+                  $log->created_by_user = $log->user_id;
+                  $log->table_name = $model->table;
+                  $log->row_id = $model->id;
+                  $log->action = 1;
+                  $log->fields = $model;
+                  $log->save();
+              }
           }
 
           $model->afterAdd($model);
@@ -47,6 +51,8 @@ class Model extends EloquentModel
 
 
         static::updating(function($model) {
+          $app = \MapDapRest\App::getInstance();
+          if (array_key_exists("updated_by_user", $model->toArray())) $model->updated_by_user = $app->auth->getFields()['id'];
           return $model->beforeEdit($model);
         });
         static::updated(function($model) {
@@ -54,14 +60,18 @@ class Model extends EloquentModel
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
-             $log = new SystemLog();
-             $log->user_id = $app->auth->getFields()['id'];
-             $log->created_by_user = $log->user_id;
-             $log->table_name = $model->table;
-             $log->row_id = $model->id;
-             $log->action = 2;
-             $log->fields = $model;
-             $log->save();
+              $needAddLog = true;
+              if (property_exists($model, "ignoreSysLog") && $model->ignoreSysLog === true) $needAddLog = false;
+              if ($needAddLog) {
+                  $log = new SystemLog();
+                  $log->user_id = $app->auth->getFields()['id'];
+                  $log->created_by_user = $log->user_id;
+                  $log->table_name = $model->table;
+                  $log->row_id = $model->id;
+                  $log->action = 2;
+                  $log->fields = $model;
+                  $log->save();
+              }
           }
 
           $model->afterEdit($model);
@@ -69,6 +79,11 @@ class Model extends EloquentModel
         
 
         static::deleting(function($model) {
+          $app = \MapDapRest\App::getInstance();
+          if (array_key_exists("deleted_by_user", $model->toArray())) {
+              $model->deleted_by_user = $app->auth->getFields()['id'];
+              $model->save();
+          }
           return $model->beforeDelete($model);
         });
         static::deleted(function($model) {
@@ -76,14 +91,18 @@ class Model extends EloquentModel
           if ($app->auth) {
              if ($app->auth->isGuest()) { throw new \Exception('user not found'); }
 
-             $log = new SystemLog();
-             $log->user_id = $app->auth->getFields()['id'];
-             $log->created_by_user = $log->user_id;
-             $log->table_name = $model->table;
-             $log->row_id = $model->id;
-             $log->action = 3;
-             $log->fields = $model;
-             $log->save();
+              $needAddLog = true;
+              if (property_exists($model, "ignoreSysLog") && $model->ignoreSysLog === true) $needAddLog = false;
+              if ($needAddLog) {
+                  $log = new SystemLog();
+                  $log->user_id = $app->auth->getFields()['id'];
+                  $log->created_by_user = $log->user_id;
+                  $log->table_name = $model->table;
+                  $log->row_id = $model->id;
+                  $log->action = 3;
+                  $log->fields = $model;
+                  $log->save();
+              }
           }
 
           $model->afterDelete($model);
@@ -165,6 +184,8 @@ class Model extends EloquentModel
             $link_field_max = 250;
             if (isset($this->modelInfo["columns"][$field]["field_maxlen"])) $link_field_max = $this->modelInfo["columns"][$field]["field_maxlen"];
 
+            $rows = $APP->getModel($link_table)::whereIn('id', $field_values )->get();
+/*
             $cnt = 0;
             if (!isset($APP->cachedLinks[$link_table])) { $cnt = $APP->getModel($link_table)::count(); }
             if ($cnt > 1500) {
@@ -183,7 +204,7 @@ class Model extends EloquentModel
                     if (isset($APP->cachedLinks[$link_table][$val])) $rows[] = $APP->cachedLinks[$link_table][$val];
                 }
             }
- 
+*/ 
             $response_array["rows"] = [];
             foreach ($rows as $item) {
                 if (!$item) continue;
@@ -249,7 +270,7 @@ class Model extends EloquentModel
 
 
     //******************* CONVERT FOR OUT*******************************************************
-    public function getConvertedRow($fastMode=false, $full_links=false){
+    public function getConvertedRow($fastMode=false, $full_links=false, $null_fields=false){
         $APP = App::getInstance();
         if (!($APP->cachedModelsInfo[$this->table] ?? null)) { $APP->cachedModelsInfo[$this->table] = $this->getModelInfo(); }
         $this->modelInfo = $APP->cachedModelsInfo[$this->table];
@@ -261,7 +282,11 @@ class Model extends EloquentModel
         //Каждую строку разбираем на поля, проверяем уровни доступа, заполняем и отдаем
         foreach ($this->modelInfo["columns"] as $x=>$y) {
             if (!$APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
-            if (!isset($this->{$x})) { $item[$x] = null;  continue; } //Поле отсутствует
+            if ($null_fields && !isset($this->{$x})) { 
+                $item[$x] = null;
+                continue; 
+            }
+            if (!isset($this->{$x})) continue; //Поле отсутствует
 
             $item[$x] = $this->{$x};
 
@@ -281,11 +306,11 @@ class Model extends EloquentModel
                 if ($y["type"]=="selectText") {
                     if (isset($y["multiple"]) && $y["multiple"]) { $item[$x] = explode(',', $item[$x]); } else { $item[$x] = $this->{$x}; }
                 }
-                if (!$fastMode) {
+//                if (!$fastMode) {
                     $FieldLinks = $this->getFieldLinks($x, $full_links);
                     $item[$x."_text"] = $FieldLinks["text"];
                     if ($full_links || isset($y["multiple"]) && $y["multiple"]) $item[$x."_values"] = $FieldLinks["values"];
-                }
+//                }
             }
             if ($y["type"]=="integer")   { $item[$x] = (int)$this->{$x}; }
             if ($y["type"]=="float")     { $item[$x] = (float)$this->{$x}; }
@@ -432,6 +457,7 @@ class Model extends EloquentModel
                 $fileInfo["name"] = $fname;
                 $fileInfo["caption"] = (isset($files_array[$i]["caption"]) ? $files_array[$i]["caption"] : '');
                 $fileInfo["src"] = $APP->ROOT_URL."uploads/".$table_name."/".$row_id."_".$field_name."_".$fname;
+                //$fileInfo["path"] = ROOT_PATH."uploads/".$table_name."/".$row_id."_".$field_name."_".$fname;
                 array_push($files, $fileInfo );
             } else {
                 //is url
