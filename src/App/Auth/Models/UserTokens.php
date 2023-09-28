@@ -4,6 +4,7 @@ namespace MapDapRest\App\Auth\Models;
 
 class UserTokens extends \MapDapRest\Model
 {
+    public $ignoreSysLog = true;
     protected $table = "user_tokens";
     protected $primaryKey = 'id';
     const CREATED_AT = 'created_at';
