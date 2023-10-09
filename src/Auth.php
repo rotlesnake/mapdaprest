@@ -121,9 +121,7 @@ class Auth
         public function logout() {
             $this->user = null;
             $this->user_acl = null;
-            if (!$this->user_token) return;
-
-            $this->user_token->delete();
+            if (!$this->user_token) $this->user_token->delete();
             $this->user_token = null;
 
             setcookie( "token", "", time()-3600, '/', '');
