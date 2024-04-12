@@ -50,6 +50,7 @@ class TableHandler
                 }//isArray
 
                 $s_value = $filter[$x]["value"] ?? null;
+                $s_value = (string)$s_value;
                 $s_field = $filter[$x]["field"] ?? null; 
                 $s_oper = $filter[$x]["oper"] ?? null; 
                 if (!$s_oper) $s_oper = $filter[$x]["type"] ?? null; 
