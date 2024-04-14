@@ -94,9 +94,9 @@ class Request
         return isset($this->params[$name]);
     }
 
-    public function getParam($name)
+    public function getParam($name, $defVal = "")
     {
-        return isset($this->params[$name]) ? $this->params[$name] : "";
+        return isset($this->params[$name]) ? $this->params[$name] : $defVal;
     }
 
     public function setParam($name, $value)
