@@ -31,7 +31,7 @@ class Roles extends \MapDapRest\Model
 
     public static function modelInfo() {
       $acc_admin = [1];
-      $acc_all = [1,2,3,4,5,6,7,8];
+      $acc_all = [1];
       
       return [
 	"table"=>"roles",

@@ -32,6 +32,17 @@ class Migrate {
     }
 
 
+    public static function hasIndex($tableName, $indexName, $indexType) {
+        $APP = App::getInstance();
+        if (is_array($indexName)) $indexName = implode("_", $indexName);
+        $indexName = $tableName."_".$indexName."_".$indexType;
+        $indexesFound = $APP->DB->schema()->getIndexes($tableName);
+        foreach($indexesFound as $ndx) {
+            if ($ndx["name"]==$indexName) return true;
+        }
+        return false;
+    }
+
 
     public static function migrate($onlyModules = [], $onlyTables = []) {
         $rez="";
@@ -191,7 +202,8 @@ die();
                       if ($y["multiple"]) {
                          $fld = $table->text($x)->nullable();
                       } else {
-                         $fld = $table->integer($x)->unsigned()->index()->nullable();
+                         $fld = $table->integer($x)->unsigned()->nullable();
+                         if (!self::hasIndex($tableInfo["table"], $x, "index")) $fld->index();
                       }
                  }
                  if (in_array($y["type"], ["float"]))   { $fld = $table->decimal($x, 15,2)->nullable(); }
@@ -207,8 +219,8 @@ die();
                  if (isset($y["default"])) $fld->default($y["default"]);
                  if (isset($y["unsigned"])) $fld->unsigned();
                  if (isset($y["index"])) { 
-                   if ($y["index"]=="index") { $fld->index(); }
-                   if ($y["index"]=="unique") { $fld->unique(); }
+                   if ($y["index"]=="index" && !self::hasIndex($tableInfo["table"], $x, "index")) { $fld->index(); }
+                   if ($y["index"]=="unique" && !self::hasIndex($tableInfo["table"], $x, "unique")) { $fld->unique(); }
                  }
 
                  //Создаем constrains для linkTable но Если ссылка на таблицу но таблицы нет то откладываем это действие на потом

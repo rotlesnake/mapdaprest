@@ -85,7 +85,7 @@ class AppAccessList extends \MapDapRest\Model
 
     public static function modelInfo() {
       $acc_admin = [1];
-      $acc_all = \MapDapRest\Utils::getAllRoles();
+      $acc_all = [1];
       
       return [
 	"table"=>"app_access_list",
