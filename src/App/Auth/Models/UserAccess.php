@@ -89,7 +89,7 @@ class UserAccess extends \MapDapRest\Model
 	"table"=>"user_access",
 	"primary_key"=>"id",
 	"category"=>"Система",
-	"name"=>"Доступ пользователя к функциям системы",
+	"name"=>"Доступ пользователя к возможностям системы",
 
         "sortBy"=>["id"],
         "itemsPerPage"=>300,

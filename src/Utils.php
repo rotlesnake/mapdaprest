@@ -157,7 +157,7 @@ class Utils {
 
     //Дату в формат даты dd.mm.yyyy
     public static function convDateToDate($dt, $withtime=true) {
-        if (strlen($dt)<10) return null;
+        if (strlen($dt ?? "")<10) return null;
         if (strpos(substr($dt,0,10),'.')!==false) { return $dt; }
         if (substr($dt,0,1)=="-") { $dt=substr($dt,1); }
 
@@ -220,7 +220,7 @@ class Utils {
             $pos_end = strpos($documentXml, "}}", $pos)-$pos;
             $text = substr($documentXml, $pos+strlen("{{"), $pos_end-strlen("}}"));
             $text = trim( strip_tags($text) );
-            if (isset($fields[$text])) { $text = $fields[$text]; } else { $text = ""; }
+            if (isset($fields[$text])) { $text = $fields[$rez]; } else { $text = ""; }
             $documentXml = substr_replace($documentXml, $text, $pos, $pos_end+strlen("}}"));
             if ($i > 500) break;
         }
@@ -247,7 +247,7 @@ class Utils {
             $pos_end = strpos($documentXml, "}}", $pos)-$pos;
             $text = substr($documentXml, $pos+strlen("{{"), $pos_end-strlen("}}"));
             $text = trim( strip_tags($text) );
-            if (isset($fields[$text])) { $text = $fields[$text]; } else { $text = ""; }
+            if (isset($fields[$text])) { $text = $fields[$rez]; } else { $text = ""; }
             $documentXml = substr_replace($documentXml, $text, $pos, $pos_end+strlen("}}"));
             if ($i > 500) break;
         }
@@ -353,6 +353,14 @@ class Utils {
             array_push($arr, $row->{$fieldName});
         }
         return $arr;
+    }
+
+
+    public static function sendTelegramMessage($bot_token, $chat_d, $msg) {
+        if (strlen($msg) == 0) return;
+        $telegram = new \App\Devices\Controllers\Telegram($bot_token);
+        $content = ['chat_id' => $chat_d, 'text' => $msg, 'parse_mode' => "HTML"];
+        $rez = $telegram->sendMessage($content);
     }
 
 

@@ -66,7 +66,17 @@ class App
         $this->DB->setEventDispatcher(new \Illuminate\Events\Dispatcher(new \Illuminate\Container\Container));
         $this->DB->setAsGlobal();
         $this->DB->bootEloquent();
+    }
 
+    public function addDatabse($settings, $name="external") {
+        $this->DB->addConnection($settings, $name);
+        return $this->DB->connection($name);
+    }
+    public function getDatabse($name="external") {
+        return $this->DB->connection($name);
+    }
+
+    public function connectDB() {
         try {
            $this->DB->connection()->getPdo();
 
@@ -84,14 +94,16 @@ class App
         }
 
     }
-
-    public function addDatabse($settings, $name="external") {
-        $this->DB->addConnection($settings, $name);
-    }
   
 
     public function setAuth($auth) {
+        $this->connectDB();
         $this->auth = $auth;
+        $this->request = new Request($this);
+        $this->response = new Response($this);
+        if (method_exists($this->auth, "autoLogin")) {
+            $this->auth->autoLogin( $this->request );
+        }
     }
  
 

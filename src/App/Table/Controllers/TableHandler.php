@@ -41,6 +41,13 @@ class TableHandler
     }
 
 
+public function getSqlWithBindings($query)
+{
+    return vsprintf(str_replace('?', '%s', $query->toSql()), collect($query->getBindings())->map(function ($binding) {
+        return is_numeric($binding) ? "'{$binding}'" : "'{$binding}'";
+    })->toArray());
+}
+
     public function extractFiltter($tableInfo, $filter_type, $filter, $MODEL) {
             foreach ($filter as $x=>$y) { //перебираем поля 
                 if (gettype($filter[$x])=="array" && count($filter[$x])>0) {
@@ -50,7 +57,7 @@ class TableHandler
                 }//isArray
 
                 $s_value = $filter[$x]["value"] ?? null;
-                $s_value = (string)$s_value;
+                $s_value = is_array($s_value) ? $s_value : (string)$s_value;
                 $s_field = $filter[$x]["field"] ?? null; 
                 $s_oper = $filter[$x]["oper"] ?? null; 
                 if (!$s_oper) $s_oper = $filter[$x]["type"] ?? null; 
@@ -79,6 +86,7 @@ class TableHandler
                            $MODEL = $MODEL->whereRaw($findinset, $s_value);
                        } else {
                            if ($s_oper=="in") {
+                               $s_value = array_map(function($binding){ return trim($binding); }, $s_value);
                                $MODEL = $MODEL->whereIn($s_field, $s_value);
                            } else {
                                $MODEL = $MODEL->whereNotIn($s_field, $s_value);
@@ -88,22 +96,31 @@ class TableHandler
                        if (gettype($s_value)=="array") { $s_value = \MapDapRest\Utils::arrayToString($s_value); if (strlen($s_value)==0) continue; }
 
                        if (isset($tableInfo["columns"][$s_field]["multiple"]) && $tableInfo["columns"][$s_field]["multiple"]===true) {
-                           if (strtoupper($filter_type) == "OR") { 
+                           if (strtoupper($filter_type ?? "") == "OR") { 
                                $MODEL = $MODEL->orFindInSet($s_field, $s_value); 
                            } else { 
                                $MODEL = $MODEL->findInSet($s_field, $s_value); 
                            }
                        } else {
-                           if (substr($tableInfo["columns"][$s_field]["type"],0,4)=="date" && $s_value=="0000-00-00") {
+                           if (substr($tableInfo["columns"][$s_field]["type"],0,4)=="date" && ($s_value=="0000-00-00" || strtoupper($s_value ?? "")=="NULL")) {
                                if ($s_oper == "=") {
-                                   $MODEL = $MODEL->whereRaw("( ".$s_field." is null  or  LENGTH(".$s_field.") = 0 or ".$s_field."='0000-00-00' )"); 
+                                   $MODEL = $MODEL->whereRaw("( ".$s_field." is null or LENGTH(".$s_field.") = 0 or ".$s_field."='0000-00-00' )"); 
                                } else {
-                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null  and  LENGTH(".$s_field.") > 0 and ".$s_field.$s_oper."'0000-00-00' )"); 
+                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null and LENGTH(".$s_field.") > 0 and ".$s_field.$s_oper."'0000-00-00' )"); 
                                }
                                continue;
                            }
 
-                           if (strtoupper($filter_type) == "OR") { 
+                           if (strtoupper($s_value ?? "")=="NULL") {
+                               if ($s_oper == "=") {
+                                   $MODEL = $MODEL->whereRaw("(".$s_field." is null OR ".$s_field."='')"); 
+                               } else {
+                                   $MODEL = $MODEL->whereRaw("(".$s_field." is not null AND ".$s_field."<>'')"); 
+                               }
+                               continue;
+                           }
+
+                           if (strtoupper($filter_type ?? "") == "OR") { 
                                $MODEL = $MODEL->orWhere($s_field, $s_oper, $s_value);  
                            } else { 
                                $MODEL = $MODEL->where($s_field, $s_oper, $s_value); 
@@ -112,6 +129,9 @@ class TableHandler
                     }
                 } //if value
             }//foreach
+
+//file_put_contents(__DIR__."/_filter.txt", print_r($MODEL->toSql(),1)." \r\n=========================\r\n", FILE_APPEND);
+//file_put_contents(__DIR__."/_filter.txt", print_r($this->getSqlWithBindings($MODEL),1)." \r\n=========================\r\n", FILE_APPEND);
 
         return $MODEL;
     }
@@ -136,6 +156,7 @@ class TableHandler
         if ($request->hasParam("fields")) $fields = $request->getParam("fields");
         $allowFields=["id"];
         foreach ($tableInfo["columns"] as $x=>$y) {
+           if ($x=="id")  continue;
            if (count($fields)>0 && !in_array($x, $fields))  continue;
            if (isset($y["is_virtual"]) && $y["is_virtual"]) continue;
            if ($this->APP->auth->hasRoles($y["read"])) array_push($allowFields, $x);
@@ -223,7 +244,9 @@ class TableHandler
             $rows = $MODEL->where("id", $id)->get();
             if (count($rows)>1) return ["error"=>6, "message"=>"scope filterRead error"];
         } else {
+//file_put_contents(__DIR__."/_filter.txt", print_r($this->getSqlWithBindings($MODEL),1)." \r\n=========================\r\n", FILE_APPEND);
             $rows = $MODEL->get();
+//file_put_contents(__DIR__."/_filter.txt", "count: ".count($rows)." \r\n=========================\r\n", FILE_APPEND);
         }
 
 

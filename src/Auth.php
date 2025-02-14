@@ -84,17 +84,19 @@ class Auth
         }
 
 
-        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96) {
+        public function appendToken($tmpuser, $hours_token=3, $hours_refresh_token=96, $comment="") {
             $APP = App::getInstance();
-            $this->user = $tmpuser;
+            if ($tmpuser) $this->user = $tmpuser;
 
             $ModelUserToken = $APP->getModel("user_tokens");
             $tmptoken = new $ModelUserToken();
-            $tmptoken->user_id = $tmpuser->id;
-            $tmptoken->token = sha1($tmpuser->login . $tmpuser->password . time());
+            $tmptoken->user_id = $this->user->id;
             $tmptoken->expire = date("Y-m-d H:i:s", strtotime("now +".$hours_token." hours"));
+            if ($hours_token === 0) $tmptoken->expire = "3001-01-01";
+            $tmptoken->token = sha1($this->user->login . $this->user->password . $tmptoken->expire . time());
             $tmptoken->browser_ip    = \MapDapRest\Utils::getRemoteIP();
             $tmptoken->browser_agent = isset($APP->request) ? $APP->request->getHeader("user-agent") : "";
+            $tmptoken->comment = $comment;
             $tmptoken->save();
 
             $this->user_token = $tmptoken;
@@ -107,7 +109,7 @@ class Auth
             $this->user = null;
             $this->user_token = null;
             $this->user_acl = null;
-		
+
             $ModelUsers = $this->ModelUsers;
             $tmpuser = $ModelUsers::where('id', $id)->where('status', 1)->first();
             if ($tmpuser) { 
@@ -121,7 +123,7 @@ class Auth
         public function logout() {
             $this->user = null;
             $this->user_acl = null;
-            if (!$this->user_token) $this->user_token->delete();
+            if ($this->user_token) $this->user_token->delete();
             $this->user_token = null;
 
             setcookie( "token", "", time()-3600, '/', '');

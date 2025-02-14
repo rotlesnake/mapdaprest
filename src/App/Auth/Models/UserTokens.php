@@ -119,11 +119,12 @@ class UserTokens extends \MapDapRest\Model
 		"created_by_user" => ["type"=>"linkTable", "label"=>"Создано пользователем", "table"=>"users", "field"=>"login", "read"=>$acc_all, "add"=>[], "edit"=>[] ],
 
 		"user_id" => ["type"=>"linkTable", "label"=>"Пользователь", "table"=>"users", "field"=>"login" ],
-		"token" => ["type"=>"text", "label"=>"Токен",  ],
+		"token" => ["type"=>"string", "label"=>"Токен",  ],
 		"expire" => ["type"=>"dateTime", "label"=>"Срок действия",  ],
 
 		"browser_agent" => ["type"=>"text", "label"=>"Браузер",  ],
 		"browser_ip" => ["type"=>"string", "label"=>"IP адрес",  ],
+		"comment" => ["type"=>"text", "label"=>"Комментарий",  ],
 	],
 
 	"seeds"=> [

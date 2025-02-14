@@ -76,18 +76,18 @@ class Response
        }
 
        if ($this->body==null) {
-           if ($this->error) json_encode($this->error);
+           if ($this->error) json_encode($this->error, JSON_PARTIAL_OUTPUT_ON_ERROR);
            die(); 
        }
        
        if (gettype($this->body)=="array") {
           if ($this->error) $this->body = array_merge( $this->error , $this->body );
-          $this->body = json_encode($this->body);
+          $this->body = json_encode($this->body, JSON_PARTIAL_OUTPUT_ON_ERROR);
        }
        if (gettype($this->body)=="object") {
           $this->body = Utils::objectToArray($this->body);
           if ($this->error) $this->body = array_merge( $this->error , $this->body );
-          $this->body = json_encode($this->body);
+          $this->body = json_encode($this->body, JSON_PARTIAL_OUTPUT_ON_ERROR);
        }
 
        echo $this->body;
@@ -130,7 +130,7 @@ class Response
         $response["result"] = $body;
         $response["time"] = ["start"=>$this->timeInit, "finish"=>$this->timeFinish, "duration"=>$this->timeDuration];
 
-        echo json_encode($response);
+        echo json_encode($response, JSON_PARTIAL_OUTPUT_ON_ERROR);
         die();
     }
 

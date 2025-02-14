@@ -6,20 +6,20 @@ class Migrate {
 
 
     //Сгенерировать список всех моделей в папках
-    public static function receiveAllModels($extDir, $all_models=[]) {
+    public static function receiveAllModels($extDir, $all_models=[], $onlyModules = [], $onlyTables = []) {
         $php_parser = new PhpParser();
 
         if ($dh = opendir($extDir)) {
             while (($file = readdir($dh)) !== false) {
                if ($file != "." && $file != ".." && is_dir($extDir."/".$file) && is_dir($extDir."/".$file."/Models")) {
-                   
+                   if (count($onlyModules)>0 && !in_array($file, $onlyModules)) { continue; }
                    $files = glob($extDir.$file."/Models/*.php");
                    foreach ($files as $model) {
                        $classes = $php_parser->extractPhpClasses($model);
                        $class = $classes[0];
                        if (!method_exists($class, "modelInfo")) {continue;}
                        $info = $class::modelInfo();
-    
+                       if (count($onlyTables)>0 && !in_array($info["table"], $onlyTables)) { echo $info["table"]."\r\n"; continue; }
                        $all_models[$info["table"]] = $class;
                    }
                }
@@ -33,30 +33,43 @@ class Migrate {
 
 
 
-    public static function migrate() {
+    public static function migrate($onlyModules = [], $onlyTables = []) {
         $rez="";
+        if (!is_array($onlyModules)) $onlyModules=[];
+        if (!is_array($onlyTables)) $onlyTables=[];
 
         $APP = App::getInstance();
         $all_models = [];
 
         $extDir = __DIR__."/App/";
-        $all_models = static::receiveAllModels($extDir, $all_models);
+        $all_models = static::receiveAllModels($extDir, $all_models, $onlyModules, $onlyTables);
         $rez .= static::doMigrate($all_models);
-
 
         $extDir = $APP->APP_PATH;
-        self::importAcl($extDir);
-        $all_models = static::receiveAllModels($extDir, $all_models);
+        self::importAcl($extDir, $onlyModules, $onlyTables);
+
+        $all_models = static::receiveAllModels($extDir, $all_models, $onlyModules, $onlyTables);
+
+/*
+echo "<pre>"; print_r($onlyModules); 
+echo "<pre>"; print_r($onlyTables); 
+echo "<pre>"; print_r($all_models); 
+die();
+*/
         $rez .= static::doMigrate($all_models);
 
-
         if (!file_exists(__DIR__."/cache")) { mkdir(__DIR__."/cache", 0777); };
+        $all_models = [];
+        $extDir = __DIR__."/App/";
+        $all_models = static::receiveAllModels($extDir, $all_models);
+        $extDir = $APP->APP_PATH;
+        $all_models = static::receiveAllModels($extDir, $all_models);
         file_put_contents(Utils::getFilenameModels(), json_encode($all_models));
 
         return $rez;
     }
 
-    public static function importAcl($extDir) {
+    public static function importAcl($extDir, $onlyModules = [], $onlyTables = []) {
         $APP = App::getInstance();
         if (!$APP->hasModel("user_access")) return;
         //$APP->DB::statement("truncate table supp_app_access_list");
@@ -64,6 +77,8 @@ class Migrate {
         if ($dh = opendir($extDir)) {
             while (($file = readdir($dh)) !== false) {
                if ($file == "." || $file == ".." || !is_dir($extDir."/".$file)) continue;
+
+               if (count($onlyModules)>0 && !in_array($file, $onlyModules)) continue;
 
                $module_id = self::addAcl(["module/App/$file" => "Модуль $file"]);
                if (file_exists($extDir."/".$file."/Settings.php")) {
@@ -77,6 +92,7 @@ class Migrate {
                        $class = "\\App\\$file\\Models\\".basename($model, ".php");
                        if (!method_exists($class, "modelInfo")) {continue;}
                        $info = $class::modelInfo();
+                       if (count($onlyTables)>0 && !in_array($info["table"], $onlyTables)) continue;
                        if (isset($info["acl"])) {
                            $table_id = self::addAcl(["model/App/$file/Models/$modelName" => "Модель $file/$modelName"], $module_id);
                            self::addAcl($info["acl"], $table_id);
@@ -123,6 +139,7 @@ class Migrate {
                  $table->increments('id');
                  $table->integer('created_by_user')->unsigned()->nullable()->default(0);
                  $table->timestamps();
+                 if (isset($tableInfo["columns"]["deleted_at"])) $table->softDeletes();
                  
                  if ($APP->db_settings && isset($APP->db_settings['engine'])) $table->engine = $APP->db_settings['engine'];
                });

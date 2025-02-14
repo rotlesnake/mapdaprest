@@ -210,7 +210,7 @@ class Model extends EloquentModel
                 if (!$item) continue;
                 if (strpos($link_field,"[")===false) {
                     $str = $item->{$link_field};
-                    if (strlen($str) > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
+                    if (strlen($str ?? "") > $link_field_max) $str = mb_substr($str, 0,$link_field_max)."... ";
                     array_push($response_array["values"], ["value"=>(int)$item->id, "text"=>$str]);
   
                     if ($full_links) {
@@ -282,6 +282,7 @@ class Model extends EloquentModel
         //Каждую строку разбираем на поля, проверяем уровни доступа, заполняем и отдаем
         foreach ($this->modelInfo["columns"] as $x=>$y) {
             if (!$APP->auth->hasRoles($y["read"])) continue; //Чтение поля запрещено
+
             if ($null_fields && !isset($this->{$x})) { 
                 $item[$x] = null;
                 continue; 
